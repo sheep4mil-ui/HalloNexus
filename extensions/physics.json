@@ -1,7 +1,25 @@
 {
   "extensionName": "Logic, Mathematics & Pipeline Automation Core",
-  "category": "LOGIC & AUTOMATION PIPELINE",
+  "category": "LOGIC",
   "newBlocks": [
+    {
+      "blockName": "ALLOCATE ITEM POINTER GRID",
+      "tooltip": "Carves out a fixed contiguous item memory storage block in safe user RAM to track weapons or inventory data.",
+      "sideMenuFields": [
+        { "label": "Max Capacity Slots Count", "type": "number", "default": 10 },
+        { "label": "Bytes Per Item Slot", "type": "number", "default": 2 }
+      ],
+      "ez80AssemblyTemplate": "ld a, {MaxCapacitySlotsCount}\nld b, {BytesPerItemSlot}\ncall _AllocateItemPointerGrid"
+    },
+    {
+      "blockName": "SET INVENTORY ATTRIBUTE MATRIX FLAG",
+      "tooltip": "Executes an assembly bit operation to toggle item properties like equipped, consumable, or collected variables fields.",
+      "sideMenuFields": [
+        { "label": "Item Index Number", "type": "number", "default": 0 },
+        { "label": "Bit Position Offset", "type": "number", "default": 1 }
+      ],
+      "ez80AssemblyTemplate": "ld a, {ItemIndexNumber}\nld b, {BitPositionOffset}\ncall _SetInventoryAttributeMatrixFlag"
+    },
     {
       "blockName": "COMPARE HARDWARE VALUE REGISTERS",
       "tooltip": "Evaluates two data variables or positions against a mathematical operator condition to trigger logical switches.",
@@ -21,74 +39,6 @@
         { "label": "Value Modifier", "type": "number", "default": 1 }
       ],
       "ez80AssemblyTemplate": "ld hl, ({TargetRegister})\nld de, {ValueModifier}\nadd hl, de\nld ({TargetRegister}), hl"
-    },
-    {
-      "blockName": "PIPELINE GENERATE EDGE TILES",
-      "tooltip": "Triggers local asset automation filters to automatically generate pixel-matched shoreline/edge transitions inside the drawer.",
-      "sideMenuFields": [
-        { "label": "Primary Asset Pointer", "type": "text", "default": "GrassTile" },
-        { "label": "Secondary Asset Pointer", "type": "text", "default": "WaterTile" }
-      ],
-      "ez80AssemblyTemplate": "call _ProcessAIPixelMatchedTileTransitions"
-    },
-    {
-      "blockName": "SCAN LOGIC WIRE DEADLOCKS",
-      "tooltip": "Scans active wire connection charts to trace circular logical dependency deadlocks before compilation steps execute.",
-      "sideMenuFields": [
-        { "label": "Active Canvas Graph Array Registry Address", "type": "text", "default": "GraphRegistry" }
-      ],
-      "ez80AssemblyTemplate": "ld hl, {ActiveCanvasGraphArrayRegistryAddress}\ncall _ScanLogicWireDeadlocks"
-    },
-    {
-      "blockName": "ALLOCATE PROGRESSION VARIABLE",
-      "tooltip": "Registers an open-ended variable tracker index inside persistence tables to keep unlocked metrics stable across sequels.",
-      "sideMenuFields": [
-        { "label": "Save Matrix ID Offset Key", "type": "text", "default": "LevelUnlockedFlag" },
-        { "label": "Default Value Byte", "type": "number", "default": 0 }
-      ],
-      "ez80AssemblyTemplate": "ld hl, {SaveMatrixIDOffsetKey}\nld a, {DefaultValueByte}\ncall _AllocateProgressionVariable"
-    },
-    {
-      "blockName": "ENCRYPT STATE BINARY BLOCK",
-      "tooltip": "Runs a symmetric XOR bitwise calculation loop across saved data tables to protect parameters from memory cheat injectors.",
-      "sideMenuFields": [
-        { "label": "Target Save Sector RAM Pointer", "type": "text", "default": "SaveSector" },
-        { "label": "Cipher Key Constant", "type": "number", "default": 165 }
-      ],
-      "ez80AssemblyTemplate": "ld hl, {TargetSaveSectorRAMPointer}\nld a, {CipherKeyConstant}\ncall _EncryptStateBinaryBlock"
-    },
-    {
-      "blockName": "FORCE HARDWARE FLASH SAVE PASS",
-      "tooltip": "Bypasses slow delta background save clocks to trigger an absolute direct flash overwrite operation to storage blocks.",
-      "sideMenuFields": [
-        { "label": "AppVar Sector Destination Address", "type": "text", "default": "FlashDestination" }
-      ],
-      "ez80AssemblyTemplate": "ld hl, {AppVarSectorDestinationAddress}\ncall _ForceHardwareFlashSavePass"
-    },
-    {
-      "blockName": "COMPACT DATA MEMORY HEAP SECTORS",
-      "tooltip": "Gathers disjointed RAM variables pointers closer together to maximize unallocated contiguous memory blocks.",
-      "sideMenuFields": [
-        { "label": "Defragmentation Base RAM Sector Address", "type": "text", "default": "HeapStart" }
-      ],
-      "ez80AssemblyTemplate": "ld hl, {DefragmentationBaseRAMSectorAddress}\ncall _CompactDataMemoryHeapSectors"
-    },
-    {
-      "blockName": "EVALUATE ACCUMULATOR GREATER THAN EQUAL",
-      "tooltip": "Fast hardware instruction match that shoots execution flow down alternate pins if values intersect constraints.",
-      "sideMenuFields": [
-        { "label": "Target Register Mapping Address", "type": "text", "default": "Player_Score" },
-        { "label": "Comparison Register Mapping DE", "type": "number", "default": 100 }
-      ],
-      "ez80AssemblyTemplate": "ld hl, ({TargetRegisterMappingAddress})\nld de, {ComparisonRegisterMappingDE}\nor a\nsbc hl, de\njr z, _CompareConditionFailed\njr nc, _CompareConditionFailed"
-    },
-    {
-      "blockName": "RESET GLOBAL VARIABLE MATRIX",
-      "tooltip": "Flushes active progress values, scores counters, and flag tables back to default parameters for a clean New Game reset.",
-      "sideMenuFields": [
-        { "label": "Contiguous Variable Address Range Pointer", "type": "text", "default": "GlobalVarMatrix" }
-      ],
-      "ez80AssemblyTemplate": "ld hl, {ContiguousVariableAddressRangePointer}\ncall _ResetGlobalVariableMatrix"
     }
   ]
 }
