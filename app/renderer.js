@@ -66,13 +66,23 @@ async function bootloadExtensions() {
           const blockElement = document.createElement('div');
           blockElement.style.backgroundColor = '#2d3139';
           blockElement.style.padding = '8px';
-          blockElement.style.marginHeight = '4px';
+          blockElement.style.marginBottom = '6px';
           blockElement.style.borderRadius = '4px';
           blockElement.style.fontSize = '12px';
           blockElement.style.cursor = 'pointer';
           blockElement.style.borderLeft = '4px solid #4f46e5';
+          blockElement.style.userSelect = 'none';
           blockElement.title = block.tooltip;
           blockElement.innerText = block.blockName;
+
+          // INTERACTIVE TRIGGER LINK: Click sidebar item to spawn the visual node card
+          blockElement.addEventListener('click', () => {
+            if (window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) {
+              window.HallowNexusCanvas.spawnNodeOnCanvas(block);
+              logToTerminal('Canvas', `Spawned node: "${block.blockName}" onto workspace grid.`);
+            }
+          });
+
           toolboxPanel.appendChild(blockElement);
         });
       });
