@@ -1,12 +1,30 @@
 {
   "extensionName": "Hardware Bus, Interrupt & Launcher Core",
-  "category": "CONTROLS & HARDWARE BUS",
+  "category": "CONTROLS",
   "newBlocks": [
     {
       "blockName": "POLL HARDWARE CONTROLLER",
       "tooltip": "Triggers a hardware key scanning array cycle pass and buffers active hardware bits straight into the main register.",
       "sideMenuFields": [],
       "ez80AssemblyTemplate": "call _GetCSC\nld (CachedHardwareInputBits), a"
+    },
+    {
+      "blockName": "ALLOCATE HOTBAR MATRIX",
+      "tooltip": "Carves out an 8-slot selection pointer index layout in safe calculator RAM to track active player inventory slots.",
+      "sideMenuFields": [
+        { "label": "Slots Size", "type": "number", "default": 8 },
+        { "label": "Active Initial Slot", "type": "number", "default": 1 }
+      ],
+      "ez80AssemblyTemplate": "ld a, {SlotsSize}\nld (MaxHotbarSlots), a\nld a, {ActiveInitialSlot}\nld (CurrentActiveSlotIndex), a"
+    },
+    {
+      "blockName": "IF HOTBAR SHORTCUT PRESSED",
+      "tooltip": "Checks if number keys (1-8) are tapped to instantly overwrite the active inventory item pointer variable.",
+      "sideMenuFields": [
+        { "label": "Target Key Matrix Bit", "type": "text", "default": "sk_1" },
+        { "label": "Assign Slot ID", "type": "number", "default": 1 }
+      ],
+      "ez80AssemblyTemplate": "ld a, (CachedHardwareInputBits)\ncp {TargetKeyMatrixBit}\njr nz, _SkipHotbarIndexChange\nld a, {AssignSlotID}\nld (CurrentActiveSlotIndex), a\n_SkipHotbarIndexChange:"
     },
     {
       "blockName": "ATTACH HARDWARE CLOCK INTERRUPT",
@@ -24,62 +42,6 @@
         { "label": "AppVar Storage Title", "type": "text", "default": "NEXUSAV" }
       ],
       "ez80AssemblyTemplate": "ld hl, {TargetSequelBinary}\nld de, {AppVarStorageTitle}\ncall _ExecuteSecureLauncherPayloadWrapper"
-    },
-    {
-      "blockName": "READ ONBOARD CRYSTAL TIMER",
-      "tooltip": "Polls the calculator's hardware oscillator timer to output precise loop framerate synchronization parameters.",
-      "sideMenuFields": [
-        { "label": "Timer Register Delta Save Target Address", "type": "text", "default": "LoopTimerCache" }
-      ],
-      "ez80AssemblyTemplate": "ld hl, {TimerRegisterDeltaSaveTargetAddress}\ncall _ReadOnboardCrystalTimer"
-    },
-    {
-      "blockName": "SET BUS CPU WAIT STATES",
-      "tooltip": "Injects wait states onto the processor clock line to slow down execution cycles for authentic retro hardware loops.",
-      "sideMenuFields": [
-        { "label": "Wait State Constant Rate", "type": "number", "default": 2 }
-      ],
-      "ez80AssemblyTemplate": "ld a, {WaitStateConstantRate}\ncall _SetBusCPUWaitStates"
-    },
-    {
-      "blockName": "VERIFY RAM BATTERY POWER",
-      "tooltip": "Checks system hardware status lines to guard against core power dumps before executing active filesystem disk saves.",
-      "sideMenuFields": [
-        { "label": "Low Power Level Warning Switch Flag", "type": "text", "default": "PowerFlag" }
-      ],
-      "ez80AssemblyTemplate": "ld hl, {LowPowerLevelWarningSwitchFlag}\ncall _VerifyRAMBatteryPower"
-    },
-    {
-      "blockName": "WRITE SAVE STATE SECTOR",
-      "tooltip": "Flushes volatile project variables and workspace coordinates snap arrays directly to persistent AppVar archive cells.",
-      "sideMenuFields": [
-        { "label": "AppVar File Identifier Title String", "type": "text", "default": "NEXUSSV" }
-      ],
-      "ez80AssemblyTemplate": "ld hl, {AppVarFileIdentifierTitleString}\ncall _WriteSaveStateSector"
-    },
-    {
-      "blockName": "READ SAVE STATE SECTOR",
-      "tooltip": "Pulls archived progress metadata out of permanent calculator storage memory blocks right back into project tables.",
-      "sideMenuFields": [
-        { "label": "AppVar File Identifier Title String", "type": "text", "default": "NEXUSSV" }
-      ],
-      "ez80AssemblyTemplate": "ld hl, {AppVarFileIdentifierTitleString}\ncall _ReadSaveStateSector"
-    },
-    {
-      "blockName": "CLEAR HARDWARE CALL STACK",
-      "tooltip": "Resets the CPU stack pointer register parameters to protect against overflow memory bugs during recursion operations.",
-      "sideMenuFields": [
-        { "label": "Stack Clear Address Boundary", "type": "text", "default": "StackTop" }
-      ],
-      "ez80AssemblyTemplate": "ld hl, {StackClearAddressBoundary}\ncall _ClearHardwareCallStack"
-    },
-    {
-      "blockName": "INTERCEPT OS CRASH SYSTEM",
-      "tooltip": "Hooks system error trap lines to route unexpected fatal crashes straight back into a clean dashboard fallback recovery loop.",
-      "sideMenuFields": [
-        { "label": "Recovery Error Redirect Address Pointer", "type": "text", "default": "CrashRecovery" }
-      ],
-      "ez80AssemblyTemplate": "ld hl, {RecoveryErrorRedirectAddressPointer}\ncall _InterceptOSCrashSystem"
     }
   ]
 }
