@@ -1,34 +1,32 @@
 {
-  "extensionName": "Core Sprite Mechanics Pack",
-  "category": "Sprites",
+  "extensionName": "Sprite Core Pack",
+  "category": "Sprites & Screen",
   "newBlocks": [
     {
-      "blockName": "Initialize Player Sprite",
-      "tooltip": "Sets up the core player object-pool tracking memory array in background RAM.",
+      "blockName": "SUMMON SPRITE",
+      "tooltip": "Allocates memory coordinates and summons a sprite object onto the project grid.",
       "sideMenuFields": [
-        { "label": "Starting X Coordinate", "type": "number", "default": 160 },
-        { "label": "Starting Y Coordinate", "type": "number", "default": 120 },
-        { "label": "Max Health Points", "type": "number", "default": 100 }
+        { "label": "X Register", "type": "number", "default": 160 },
+        { "label": "Y Register", "type": "number", "default": 120 }
       ],
-      "ez80AssemblyTemplate": "ld a, {MaxHealthPoints}\nld (Player_Max_HP), a\nld hl, {StartingXCoordinate}\nld (Player_X_Pos), hl\nld de, {StartingYCoordinate}\nld (Player_Y_Pos), de\ncall _InitPlayerObjectPool"
+      "ez80AssemblyTemplate": "ld hl, {XRegister}\nld (Player_X), hl\nld de, {YRegister}\nld (Player_Y), de\ncall _SummonActiveSprite"
     },
     {
-      "blockName": "Trigger High-Juice Screen Shake",
-      "tooltip": "Executes a hardware-accelerated screen shake by manipulating the VRAM LCD offset line.",
+      "blockName": "SCREEN SHAKE",
+      "tooltip": "Triggers a hardware offset shift pass to execute a viewport camera screen shake.",
       "sideMenuFields": [
-        { "label": "Shake Intensity Scale", "type": "number", "default": 4 },
-        { "label": "Duration In Frames", "type": "number", "default": 15 }
+        { "label": "Intensity", "type": "number", "default": 4 },
+        { "label": "Frames", "type": "number", "default": 15 }
       ],
-      "ez80AssemblyTemplate": "ld a, {ShakeIntensityScale}\nld b, {DurationInFrames}\ncall _ExecuteCameraHardwareShake"
+      "ez80AssemblyTemplate": "ld a, {Intensity}\nld b, {Frames}\ncall _ExecuteScreenShakeMatrix"
     },
     {
-      "blockName": "Emit Object-Pooled Projectile",
-      "tooltip": "Fires a bullet from the recycled memory cache pool to eliminate active processor lag.",
+      "blockName": "DRAW PIXELS",
+      "tooltip": "Draws raw color index map data bytes directly onto the active screen buffer frames.",
       "sideMenuFields": [
-        { "label": "Velocity Vector Speed", "type": "number", "default": 6 },
-        { "label": "Target Destination Offset", "type": "text", "default": "In-Game_Cursor" }
+        { "label": "Data Pointer", "type": "text", "default": "SpriteData" }
       ],
-      "ez80AssemblyTemplate": "ld a, {VelocityVectorSpeed}\ncall _FetchEmptyBulletMemorySlot\ncall _CalculateReticleVectorAngle\ncall _InjectActiveBulletStream"
+      "ez80AssemblyTemplate": "ld hl, {DataPointer}\ncall _DrawTransparentPixelsMatrix"
     }
   ]
 }
