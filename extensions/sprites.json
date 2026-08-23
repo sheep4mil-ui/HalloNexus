@@ -1,5 +1,5 @@
 {
-  "extensionName": "Universal Object, Hitbox & Blitting Engine",
+  "extensionName": "Universal Object, Hitbox & MakeCode Style Sprite Engine",
   "category": "SPRITES",
   "newBlocks": [
     {
@@ -50,14 +50,6 @@
       "ez80AssemblyTemplate": "ld a, {SlotID}\nld b, {MaxSpeed}\ncall _MoveSpriteWithControllers"
     },
     {
-      "blockName": "CAMERA FOLLOW SPRITE",
-      "tooltip": "Locks the viewport scrolling offset camera line variables to stay centered perfectly on an entity's center point.",
-      "sideMenuFields": [
-        { "label": "Slot ID", "type": "number", "default": 1 }
-      ],
-      "ez80AssemblyTemplate": "ld a, {SlotID}\ncall _CameraFollowSprite"
-    },
-    {
       "blockName": "IF OVERLAPPING KIND",
       "tooltip": "Performs continuous proximity bounding-box intersection sweeps between two different sprite kind indices to branch execution logic lanes.",
       "sideMenuFields": [
@@ -84,15 +76,6 @@
         { "label": "Right Offset", "type": "number", "default": 13 }
       ],
       "ez80AssemblyTemplate": "ld a, {TopOffset}\nld b, {BottomOffset}\nld c, {LeftOffset}\nld d, {RightOffset}\ncall _ConfigureSubFullBoundaryHitbox"
-    },
-    {
-      "blockName": "APPLY LIGHTING MASK",
-      "tooltip": "Injects a moving lighting cone, torch, or lighthouse beam using zero-math 1-bit hardware lookup tables.",
-      "sideMenuFields": [
-        { "label": "Shape Array", "type": "text", "default": "FlashlightCone" },
-        { "label": "Slot ID", "type": "number", "default": 1 }
-      ],
-      "ez80AssemblyTemplate": "ld a, {SlotID}\nld hl, {ShapeArray}\ncall _BlitHardwareLightingRasterMask"
     },
     {
       "blockName": "RENDER SCREEN FRAME",
@@ -132,15 +115,6 @@
         { "label": "Slot ID", "type": "number", "default": 1 }
       ],
       "ez80AssemblyTemplate": "ld a, {SlotID}\ncall _ScaleSpriteDouble"
-    },
-    {
-      "blockName": "SET MAP MATRIX",
-      "tooltip": "Binds a 2D tile layout array memory layout block to the retro background map drawing mechanics.",
-      "sideMenuFields": [
-        { "label": "Data Pointer", "type": "text", "default": "LevelMapData" },
-        { "label": "Grid Width", "type": "number", "default": 20 }
-      ],
-      "ez80AssemblyTemplate": "ld hl, {DataPointer}\nld a, {GridWidth}\ncall _LoadGlobalMapMatrix"
     },
     {
       "blockName": "SET TRANSPARENT PALETTE ALPHA",
