@@ -99,12 +99,6 @@
       "ez80AssemblyTemplate": "call _ProcessAIPixelMatchedTileTransitions"
     },
     {
-      "blockName": "SCAN LOGIC WIRE DEADLOCKS",
-      "tooltip": "Scans active wire connection charts to trace circular logical dependency deadlocks before compilation steps execute.",
-      "sideMenuFields": [],
-      "ez80AssemblyTemplate": "call _ScanLogicWireDeadlocks"
-    },
-    {
       "blockName": "ALLOCATE PROGRESSION VARIABLE",
       "tooltip": "Registers an open-ended variable tracker index inside persistence tables to keep unlocked metrics stable across sequels.",
       "sideMenuFields": [
@@ -112,23 +106,6 @@
         { "label": "Default Value Byte", "type": "number", "default": 0 }
       ],
       "ez80AssemblyTemplate": "ld hl, {SaveMatrixIDOffsetKey}\nld a, {DefaultValueByte}\ncall _AllocateProgressionVariable"
-    },
-    {
-      "blockName": "ENCRYPT STATE BINARY BLOCK",
-      "tooltip": "Runs a symmetric XOR bitwise calculation loop across saved data tables to protect parameters from memory cheat injectors.",
-      "sideMenuFields": [
-        { "label": "Target Save Sector RAM Pointer", "type": "text", "default": "SaveSector" },
-        { "label": "Cipher Key Constant", "type": "number", "default": 165 }
-      ],
-      "ez80AssemblyTemplate": "ld hl, {TargetSaveSectorRAMPointer}\nld a, {CipherKeyConstant}\ncall _EncryptStateBinaryBlock"
-    },
-    {
-      "blockName": "FORCE HARDWARE FLASH SAVE PASS",
-      "tooltip": "Bypasses slow delta background save clocks to trigger an absolute direct flash overwrite operation to storage blocks.",
-      "sideMenuFields": [
-        { "label": "AppVar Sector Destination Address", "type": "text", "default": "FlashDestination" }
-      ],
-      "ez80AssemblyTemplate": "ld hl, {AppVarSectorDestinationAddress}\ncall _ForceHardwareFlashSavePass"
     },
     {
       "blockName": "COMPACT DATA MEMORY HEAP SECTORS",
@@ -154,24 +131,6 @@
         { "label": "Contiguous Variable Address Range Pointer", "type": "text", "default": "GlobalVarMatrix" }
       ],
       "ez80AssemblyTemplate": "ld hl, {ContiguousVariableAddressRangePointer}\ncall _ResetGlobalVariableMatrix"
-    },
-    {
-      "blockName": "SET MAP MATRIX",
-      "tooltip": "Binds a 2D tile layout array memory layout block to the retro background map drawing mechanics.",
-      "sideMenuFields": [
-        { "label": "Data Pointer", "type": "text", "default": "LevelMapData" },
-        { "label": "Grid Width", "type": "number", "default": 20 }
-      ],
-      "ez80AssemblyTemplate": "ld hl, {DataPointer}\nld a, {GridWidth}\ncall _LoadGlobalMapMatrix"
-    },
-    {
-      "blockName": "APPLY LIGHTING MASK",
-      "tooltip": "Injects a moving lighting cone, torch, or lighthouse beam using zero-math 1-bit hardware lookup tables.",
-      "sideMenuFields": [
-        { "label": "Shape Array", "type": "text", "default": "FlashlightCone" },
-        { "label": "Slot ID", "type": "number", "default": 1 }
-      ],
-      "ez80AssemblyTemplate": "ld a, {SlotID}\nld hl, {ShapeArray}\ncall _BlitHardwareLightingRasterMask"
     }
   ]
 }
