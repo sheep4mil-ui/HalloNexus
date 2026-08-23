@@ -8,12 +8,24 @@ const aiLogs = document.getElementById('ai-logs');
 const toolboxPanel = document.getElementById('toolbox');
 const ollamaInput = document.getElementById('ollama-input');
 
+let libraryBlocksRegistry = [];
+
 if (btnClean) btnClean.innerText = '⚙️ Compile Project';
 
 btnSquish.addEventListener('click', () => {
   document.body.classList.toggle('squish-active');
   logToTerminal('System', 'Layout updated. Playtest emulator swapped.');
 });
+
+// PERSISTENT DATA SAVE HANDSHAKE LOOP
+async function triggerAutoSavePass() {
+  const stateSnapshot = {
+    nodes: (window.HallowNexusCanvas && window.HallowNexusCanvas.activeGraphNodes) || [],
+    wires: (window.HallowNexusWires && window.HallowNexusWires.establishedWires) || [],
+    chatHistory: aiLogs.innerHTML
+  };
+  await ipcRenderer.invoke('save-project-state', stateSnapshot);
+}
 
 btnClean.addEventListener('click', async () => {
   if (!window.HallowNexusCanvas || !window.HallowNexusCanvas.getWiredExecutionOrder) {
@@ -71,19 +83,63 @@ function logToTerminal(sender, message) {
   const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   aiLogs.innerHTML += `<br><span style="color: #a78bfa;">[${time}]</span> <b>${sender}:</b> ${message}`;
   aiLogs.scrollTop = aiLogs.scrollHeight;
+  triggerAutoSavePass();
 }
 
+// TWO-WAY AGENT WORKSPACE INTEGRATION LOGIC TERMINAL HANDSHAKE
 if (ollamaInput) {
   ollamaInput.addEventListener('keydown', async (e) => {
     if (e.key === 'Enter' && ollamaInput.value.trim() !== '') {
       const userMessage = ollamaInput.value;
       logToTerminal('You', userMessage);
       ollamaInput.value = ''; 
-      logToTerminal('Ollama', 'Streaming pipeline request... querying background model registers...');
-      const aiResponse = await ipcRenderer.invoke('ollama-chat', userMessage);
-      logToTerminal('Ollama', aiResponse.response);
+      
+      logToTerminal('Ollama', 'Packaging workspace memory registers... analyzing wire graph matrix...');
+      
+      const workspaceContext = {
+        nodes: (window.HallowNexusCanvas && window.HallowNexusCanvas.activeGraphNodes) || [],
+        wires: (window.HallowNexusWires && window.HallowNexusWires.establishedWires) || []
+      };
+
+      const serverResult = await ipcRenderer.invoke('ollama-chat', { 
+        userPrompt: userMessage, 
+        currentWorkspaceContext: workspaceContext 
+      });
+
+      try {
+        const actionData = JSON.parse(serverResult.rawPayload.trim());
+        logToTerminal('Ollama', actionData.message);
+
+        if (actionData.action === 'spawn' && actionData.blockName) {
+          const targetTemplate = libraryBlocksRegistry.find(b => b.blockName === actionData.blockName);
+          if (targetTemplate && window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) {
+            window.HallowNexusCanvas.spawnNodeOnCanvas(targetTemplate);
+            logToTerminal('Automation', `Successfully executed agent operation: Spawned block "${actionData.blockName}" onto workspace canvas grid.`);
+          }
+        }
+      } catch (err) {
+        logToTerminal('Ollama', serverResult.rawPayload);
+      }
     }
   });
+}
+
+async function loadSavedProjectData() {
+  const result = await ipcRenderer.invoke('load-project-state');
+  if (result.success && result.data) {
+    if (result.data.chatHistory) {
+      aiLogs.innerHTML = result.data.chatHistory;
+    }
+    if (result.data.nodes && window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) {
+      result.data.nodes.forEach(savedNode => {
+        const matchingTemplate = libraryBlocksRegistry.find(b => b.blockName === savedNode.blockName);
+        if (matchingTemplate) {
+          window.HallowNexusCanvas.spawnNodeOnCanvas(matchingTemplate);
+        }
+      });
+    }
+    logToTerminal('System', 'Successfully synchronized local drive project cache data registers.');
+  }
 }
 
 async function bootloadExtensions() {
@@ -100,6 +156,8 @@ async function bootloadExtensions() {
         toolboxPanel.appendChild(categoryHeader);
 
         ext.newBlocks.forEach(block => {
+          libraryBlocksRegistry.push(block);
+
           const blockElement = document.createElement('div');
           blockElement.style.backgroundColor = '#2d3139';
           blockElement.style.padding = '8px';
@@ -122,6 +180,9 @@ async function bootloadExtensions() {
           toolboxPanel.appendChild(blockElement);
         });
       });
+      
+      // Load disk cache files on script bootup
+      loadSavedProjectData();
     } else if (!result.success) {
       logToTerminal('System Error', `Failed to read extensions: ${result.error}`);
     }
@@ -135,3 +196,7 @@ bootloadExtensions();
 if (window.HallowNexusWires) {
   window.HallowNexusWires.initWireCanvas();
 }
+
+window.addEventListener('mouseup', () => {
+  triggerAutoSavePass();
+});
