@@ -1,47 +1,89 @@
 {
-  "extensionName": "Hardware Bus, Interrupt & Launcher Core",
+  "extensionName": "Hardware Bus, Audio & Input Controller Pack",
   "category": "CONTROLS",
   "newBlocks": [
     {
-      "blockName": "POLL HARDWARE CONTROLLER",
+      "blockName": "POLL KEYBOARD MATRIX",
       "tooltip": "Triggers a hardware key scanning array cycle pass and buffers active hardware bits straight into the main register.",
       "sideMenuFields": [],
       "ez80AssemblyTemplate": "call _GetCSC\nld (CachedHardwareInputBits), a"
     },
     {
-      "blockName": "ALLOCATE HOTBAR MATRIX",
+      "blockName": "ALLOCATE QUICK HOTBAR",
       "tooltip": "Carves out an 8-slot selection pointer index layout in safe calculator RAM to track active player inventory slots.",
       "sideMenuFields": [
-        { "label": "Slots Size", "type": "number", "default": 8 },
-        { "label": "Active Initial Slot", "type": "number", "default": 1 }
+        { "label": "Max Slots", "type": "number", "default": 8 },
+        { "label": "Initial Slot", "type": "number", "default": 1 }
       ],
-      "ez80AssemblyTemplate": "ld a, {SlotsSize}\nld (MaxHotbarSlots), a\nld a, {ActiveInitialSlot}\nld (CurrentActiveSlotIndex), a"
+      "ez80AssemblyTemplate": "ld a, {MaxSlots}\nld (MaxHotbarSlots), a\nld a, {InitialSlot}\nld (CurrentActiveSlotIndex), a"
     },
     {
-      "blockName": "IF HOTBAR SHORTCUT PRESSED",
+      "blockName": "IF SHORTCUT PRESSED",
       "tooltip": "Checks if number keys (1-8) are tapped to instantly overwrite the active inventory item pointer variable.",
       "sideMenuFields": [
-        { "label": "Target Key Matrix Bit", "type": "text", "default": "sk_1" },
-        { "label": "Assign Slot ID", "type": "number", "default": 1 }
+        { "label": "Key Code Bit", "type": "text", "default": "sk_1" },
+        { "label": "Target Slot", "type": "number", "default": 1 }
       ],
-      "ez80AssemblyTemplate": "ld a, (CachedHardwareInputBits)\ncp {TargetKeyMatrixBit}\njr nz, _SkipHotbarIndexChange\nld a, {AssignSlotID}\nld (CurrentActiveSlotIndex), a\n_SkipHotbarIndexChange:"
+      "ez80AssemblyTemplate": "ld a, (CachedHardwareInputBits)\ncp {KeyCodeBit}\njr nz, _SkipHotbarIndexChange\nld a, {TargetSlot}\nld (CurrentActiveSlotIndex), a\n_SkipHotbarIndexChange:"
     },
     {
-      "blockName": "ATTACH HARDWARE CLOCK INTERRUPT",
+      "blockName": "IF BUTTON COMBINATION HELD",
+      "tooltip": "Evaluates two hardware input signals simultaneously, branching to target pins only if both buttons are held at the same clock tick.",
+      "sideMenuFields": [
+        { "label": "Bitmask Key A", "type": "text", "default": "sk_Right" },
+        { "label": "Bitmask Key B", "type": "text", "default": "sk_2nd" }
+      ],
+      "ez80AssemblyTemplate": "ld a, (CachedHardwareInputBits)\nand {BitmaskKeyA}\nld b, a\nld a, (CachedHardwareInputBits)\nand {BitmaskKeyB}\nand b\njr z, _MultiKeyConditionFailed"
+    },
+    {
+      "blockName": "SET CLOCK INTERRUPT SPEED",
       "tooltip": "Hooks into the hardware bus timer to selectively freeze active physics and AI threads while keeping the UI running.",
       "sideMenuFields": [
-        { "label": "Asynchronous Loop State", "type": "text", "default": "Freeze_Physics_Only" }
+        { "label": "Bus Logic Mode", "type": "text", "default": "Freeze_Physics_Only" }
       ],
-      "ez80AssemblyTemplate": "ld a, {AsynchronousLoopState}\ncall _RegisterHardwareClockInterruptBus"
+      "ez80AssemblyTemplate": "ld a, {BusLogicMode_INDEX}\ncall _RegisterHardwareClockInterruptBus"
     },
     {
-      "blockName": "INITIALIZE MULTI-GAME LAUNCHER",
+      "blockName": "PLAY SOUND TONE",
+      "tooltip": "Generates a direct square-wave sound frequency pulse through the 2.5mm link port jack pins.",
+      "sideMenuFields": [
+        { "label": "Frequency Hz", "type": "number", "default": 440 },
+        { "label": "Duration Ms", "type": "number", "default": 250 }
+      ],
+      "ez80AssemblyTemplate": "ld hl, {FrequencyHz}\nld de, {DurationMs}\ncall _GenerateSquareWavePulse"
+    },
+    {
+      "blockName": "PLAY PROCEDURAL CRASH SOUND",
+      "tooltip": "Triggers a rapid procedural white-noise frequency explosion sound layout effect sequence.",
+      "sideMenuFields": [
+        { "label": "Volume Decay", "type": "number", "default": 8 }
+      ],
+      "ez80AssemblyTemplate": "ld a, {VolumeDecay}\ncall _TriggerProceduralNoiseExplosion"
+    },
+    {
+      "blockName": "SET TRACKER TEMPO",
+      "tooltip": "Recalibrates the calculator’s onboard crystal timer interrupt rate to drive chiptune tracker data streams accurately.",
+      "sideMenuFields": [
+        { "label": "BPM Value", "type": "number", "default": 120 }
+      ],
+      "ez80AssemblyTemplate": "ld hl, {BPMValue}\ncall _SetTrackerTempo"
+    },
+    {
+      "blockName": "SUSPEND THREAD TIMED TICK",
+      "tooltip": "Halts active processing script operations and counts clock ticks straight from the calculator’s onboard hardware crystal timer before returning control.",
+      "sideMenuFields": [
+        { "label": "Frames Wait Count", "type": "number", "default": 30 }
+      ],
+      "ez80AssemblyTemplate": "ld b, {FramesWaitCount}\ncall _SuspendThreadTimedTick"
+    },
+    {
+      "blockName": "INITIALIZE MULTI GAME LAUNCHER",
       "tooltip": "Sets up a secure execution wrapper to launch encrypted sequel binaries using a centralized data AppVar file.",
       "sideMenuFields": [
-        { "label": "Target Sequel Binary", "type": "text", "default": "HALLOW2" },
-        { "label": "AppVar Storage Title", "type": "text", "default": "NEXUSAV" }
+        { "label": "Target Program", "type": "text", "default": "HALLOW2" },
+        { "label": "AppVar Sector", "type": "text", "default": "NEXUSAV" }
       ],
-      "ez80AssemblyTemplate": "ld hl, {TargetSequelBinary}\nld de, {AppVarStorageTitle}\ncall _ExecuteSecureLauncherPayloadWrapper"
+      "ez80AssemblyTemplate": "ld hl, {TargetProgram}\nld de, {AppVarSector}\ncall _ExecuteSecureLauncherPayloadWrapper"
     }
   ]
 }
