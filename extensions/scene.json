@@ -1,24 +1,89 @@
 {
-  "extensionName": "Universal Environment Panner & Scene Mask Engine",
-  "category": "SCENE",
+  "extensionName": "Universal Sprite and Character Pack",
+  "category": "SPRITES",
   "newBlocks": [
     {
-      "blockName": "SET MAP MATRIX",
-      "tooltip": "Binds a 2D tile layout array memory layout block to the retro background map drawing mechanics.",
+      "blockName": "CREATE PLAYER",
+      "tooltip": "Spawns the main player character onto the game screen at a set starting location.",
       "sideMenuFields": [
-        { "label": "Data Pointer", "type": "text", "default": "LevelMapData" },
-        { "label": "Grid Width", "type": "number", "default": 20 }
+        { "label": "X Coordinate", "type": "number", "default": 160 },
+        { "label": "Y Coordinate", "type": "number", "default": 120 }
       ],
-      "ez80AssemblyTemplate": "ld hl, {DataPointer}\nld a, {GridWidth}\ncall _LoadGlobalMapMatrix"
+      "ez80AssemblyTemplate": "ld hl, {XCoordinate}\nld (Player_X), hl\nld de, {YCoordinate}\nld (Player_Y), de\ncall _SummonPlayerSprite"
     },
     {
-      "blockName": "APPLY LIGHTING MASK",
-      "tooltip": "Injects a moving lighting cone, torch, or lighthouse beam using zero-math 1-bit hardware lookup tables.",
+      "blockName": "CREATE ENEMY",
+      "tooltip": "Spawns an enemy character into an active slot on the map.",
       "sideMenuFields": [
-        { "label": "Shape Array", "type": "text", "default": "FlashlightCone" },
+        { "label": "Slot ID", "type": "number", "default": 1 },
+        { "label": "X Coordinate", "type": "number", "default": 80 },
+        { "label": "Y Coordinate", "type": "number", "default": 60 }
+      ],
+      "ez80AssemblyTemplate": "ld a, {SlotID}\nld hl, {XCoordinate}\nld de, {YCoordinate}\ncall _SummonEnemySprite"
+    },
+    {
+      "blockName": "MOVE WITH BUTTONS",
+      "tooltip": "Allows the player to move this character dynamically using the arrow keys.",
+      "sideMenuFields": [
+        { "label": "Speed", "type": "number", "default": 4 }
+      ],
+      "ez80AssemblyTemplate": "ld b, {Speed}\ncall _MoveSpriteWithControllers"
+    },
+    {
+      "blockName": "SET SPEED VECTOR",
+      "tooltip": "Gives a character a constant moving speed in a certain direction.",
+      "sideMenuFields": [
+        { "label": "X Speed", "type": "number", "default": 2 },
+        { "label": "Y Speed", "type": "number", "default": 0 }
+      ],
+      "ez80AssemblyTemplate": "ld b, {XSpeed}\nld c, {YSpeed}\ncall _SetSpriteVelocity"
+    },
+    {
+      "blockName": "IF TOUCHING KIND",
+      "tooltip": "Checks if a character is bumping into another type of character to trigger a script path.",
+      "sideMenuFields": [
+        { "label": "Kind Alpha", "type": "text", "default": "Player" },
+        { "label": "Kind Beta", "type": "text", "default": "Enemy" }
+      ],
+      "ez80AssemblyTemplate": "call _CheckSpritesOverlapOfKind\njr nz, _OverlapConditionFailed"
+    },
+    {
+      "blockName": "DESTROY CHAR",
+      "tooltip": "Removes a character cleanly from the game screen map registers.",
+      "sideMenuFields": [
         { "label": "Slot ID", "type": "number", "default": 1 }
       ],
-      "ez80AssemblyTemplate": "ld a, {SlotID}\nld hl, {ShapeArray}\ncall _BlitHardwareLightingRasterMask"
+      "ez80AssemblyTemplate": "ld a, {SlotID}\ncall _DestroySpriteRecord"
+    },
+    {
+      "blockName": "CAMERA FOLLOW CHAR",
+      "tooltip": "Forces the game screen viewport to scroll and lock focus on this character.",
+      "sideMenuFields": [],
+      "ez80AssemblyTemplate": "call _CameraFollowPlayerSprite"
+    },
+    {
+      "blockName": "ANIMATE FRAME RATE",
+      "tooltip": "Sets up a flip-book sequence timing cycle to make sprites walk or run.",
+      "sideMenuFields": [
+        { "label": "Total Frames", "type": "number", "default": 4 },
+        { "label": "Delay Ticks", "type": "number", "default": 8 }
+      ],
+      "ez80AssemblyTemplate": "ld a, {TotalFrames}\nld b, {DelayTicks}\ncall _CycleAnimationFrame"
+    },
+    {
+      "blockName": "FLIP IMAGES",
+      "tooltip": "Flips the sprite image horizontally or vertically to change direction maps.",
+      "sideMenuFields": [
+        { "label": "Flip Left Right", "type": "number", "default": 1 },
+        { "label": "Flip Up Down", "type": "number", "default": 0 }
+      ],
+      "ez80AssemblyTemplate": "ld a, {FlipLeftRight}\nld b, {FlipUpDown}\ncall _FlipSpriteTexture"
+    },
+    {
+      "blockName": "RESIZE IMAGE DOUBLE",
+      "tooltip": "Stretches a sprite to render at double its pixel layout canvas size.",
+      "sideMenuFields": [],
+      "ez80AssemblyTemplate": "call _ScaleSpriteDouble"
     }
   ]
 }
