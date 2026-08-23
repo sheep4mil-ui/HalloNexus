@@ -2,7 +2,7 @@ let selectedSourceSocket = null;
 const establishedWires = [];
 
 function initWireCanvas() {
-  // Omitted SVG initialization loop - We use pure HTML div boxes instead!
+  // Pure HTML div box tracer layout engine
 }
 
 function handleSocketClick(clickedSocket) {
@@ -14,13 +14,13 @@ function handleSocketClick(clickedSocket) {
     if (!isOutPort) return;
     
     selectedSourceSocket = clickedSocket;
-    selectedSourceSocket.style.backgroundColor = "#22c55e"; // Turn green to confirm active lock status
+    selectedSourceSocket.style.backgroundColor = "#22c55e"; 
     return;
   }
 
   // Swap targets if clicking a different block's output port
   if (isOutPort) {
-    selectedSourceSocket.style.backgroundColor = "#4f46e5"; // Restore standard purple layout
+    selectedSourceSocket.style.backgroundColor = "#4f46e5"; 
     selectedSourceSocket = clickedSocket;
     selectedSourceSocket.style.backgroundColor = "#22c55e";
     return;
@@ -59,13 +59,11 @@ function handleSocketClick(clickedSocket) {
   const finalX = parseInt(targetCard.style.left) || 0; 
   const finalY = (parseInt(targetCard.style.top) || 0) + 18;
 
-  // 2D Vector Geometry Math: Calculate distance and rotation angle between card ports
   const dx = finalX - ox;
   const dy = finalY - oy;
   const distance = Math.sqrt(dx * dx + dy * dy);
   const angle = Math.atan2(dy, dx) * (180 / Math.PI);
 
-  // Generate a physical HTML element box styled as a solid connection bar line
   const wireDiv = document.createElement('div');
   wireDiv.className = 'canvas-nexus-wire';
   wireDiv.style.position = 'absolute';
@@ -73,13 +71,12 @@ function handleSocketClick(clickedSocket) {
   wireDiv.style.top = `${oy}px`;
   wireDiv.style.width = `${distance}px`;
   wireDiv.style.height = '3px';
-  wireDiv.style.backgroundColor = '#22c55e'; // Vibrant green link connection line
+  wireDiv.style.backgroundColor = '#22c55e'; 
   wireDiv.style.transformOrigin = 'top left';
   wireDiv.style.transform = `rotate(${angle}deg)`;
-  wireDiv.style.zIndex = '5'; // Layered safely right underneath card headers but above the grid
+  wireDiv.style.zIndex = '5'; 
   wireDiv.style.pointerEvents = 'none';
 
-  // Append data coordinates to handle card dragging synchronization loops later
   wireDiv.dataset.sourceId = sourceCard.id;
   wireDiv.dataset.targetId = targetCard.id;
 
@@ -91,7 +88,6 @@ function handleSocketClick(clickedSocket) {
     targetId: targetCard.id
   });
 
-  // Clear tracking variable reference for the next link building run
   selectedSourceSocket = null;
 }
 
