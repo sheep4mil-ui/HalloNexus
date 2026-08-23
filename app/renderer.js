@@ -132,7 +132,6 @@ async function bootloadExtensions() {
 
 bootloadExtensions();
 
-// Initialize the static vector wire canvas matrix layout layer
 if (window.HallowNexusWires) {
   window.HallowNexusWires.initWireCanvas();
 }
