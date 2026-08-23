@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>HallowNexus IDE</title>
+  <style>
+    body {
+      margin: 0; padding: 0;
+      background-color: #111216; color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+    }
+    .top-bar {
+      height: 40px; background-color: #1a1c23; border-bottom: 1px solid #2d3139;
+      display: flex; align-items: center; padding: 0 15px; gap: 10px;
+    }
+    .btn {
+      background-color: #2d3139; color: #e2e8f0; border: none;
+      padding: 5px 12px; font-size: 12px; border-radius: 4px; cursor: pointer;
+    }
+    .btn:hover { background-color: #3e4450; }
+    .btn-primary { background-color: #4f46e5; }
+    .btn-primary:hover { background-color: #6366f1; }
+    .workspace-container { display: flex; flex: 1; height: calc(100vh - 40px); position: relative; }
+    .panel-toolbox {
+      width: 260px; background-color: #16181f; border-right: 1px solid #2d3139;
+      display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; z-index: 10;
+    }
+    .panel-canvas { flex: 1; background-color: #0b0c10; position: relative; overflow: hidden; }
+    .canvas-grid {
+      position: absolute; width: 5000px; height: 5000px;
+      background-image: 
+        linear-gradient(to right, #1b1d24 1px, transparent 1px),
+        linear-gradient(to bottom, #1b1d24 1px, transparent 1px);
+      background-size: 25px 25px;
+    }
+    .panel-desk { width: 320px; background-color: #16181f; border-left: 1px solid #2d3139; display: flex; flex-direction: column; box-sizing: border-box; z-index: 10; }
+    .desk-section { padding: 15px; border-bottom: 1px solid #2d3139; }
+    .desk-section:last-child { border-bottom: none; flex: 1; }
+    .ai-terminal {
+      background-color: #0b0c10; border: 1px solid #2d3139; border-radius: 4px;
+      height: 180px; padding: 10px; font-family: monospace; font-size: 12px; color: #38bdf8; overflow-y: auto; margin-bottom: 10px;
+    }
+    body.squish-active .panel-toolbox { display: none; }
+    body.squish-active .panel-emulator { width: 320px; border-right: 1px solid #2d3139; }
+    .panel-emulator { width: 0; background-color: #111216; overflow: hidden; display: flex; align-items: center; justify-content: center; font-family: monospace; color: #a78bfa; }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <button class="btn btn-primary" id="btn-squish">Switch Emulator</button>
+    <button class="btn" id="btn-clean">Clean Variables</button>
+    <button class="btn" id="btn-wire">Ghost Wire</button>
+    <button class="btn" id="btn-physics">Physics Schematic</button>
+  </div>
+  <div class="workspace-container">
+    <div class="panel-emulator" id="emulator-window">[CE_EMULATOR_SCREEN]</div>
+    <div class="panel-toolbox" id="toolbox">
+      <h3>Toolbox</h3>
+      <p style="font-size: 12px; color: #64748b;">Drag code blocks with infinite connector ports.</p>
+    </div>
+    <div class="panel-canvas" id="canvas-viewport">
+      <div class="canvas-grid" id="canvas-grid-layer"></div>
+    </div>
+    <div class="panel-desk">
+      <div class="desk-section">
+        <h3>Telemetry</h3>
+        <div style="font-size: 13px; font-family: monospace; line-height: 1.6;">
+          CPU Overhead: <span style="color: #4ade80;">11%</span><br>
+          Unallocated RAM: <span style="color: #4ade80;">4.2KB</span><br>
+          VRAM Execution: <span style="color: #4ade80;">60 FPS</span>
+        </div>
+      </div>
+      <div class="desk-section" style="display: flex; flex-direction: column;">
+        <h3>Ollama Core</h3>
+        <div class="ai-terminal" id="ai-logs">HallowNexus Engine online.<br>Ollama link ready.</div>
+        <input type="text" placeholder="Ask Ollama to clean wire graph..." style="background-color: #0b0c10; border: 1px solid #2d3139; color: #e2e8f0; padding: 8px; border-radius: 4px; font-size: 13px;">
+      </div>
+    </div>
+  </div>
+  <script src="renderer.js"></script>
+</body>
+</html>
