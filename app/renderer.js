@@ -73,17 +73,13 @@ function logToTerminal(sender, message) {
   aiLogs.scrollTop = aiLogs.scrollHeight;
 }
 
-// REAL ACTIVE OLLAMA DATA CHANNEL TRIGGER LINK
 if (ollamaInput) {
   ollamaInput.addEventListener('keydown', async (e) => {
     if (e.key === 'Enter' && ollamaInput.value.trim() !== '') {
       const userMessage = ollamaInput.value;
       logToTerminal('You', userMessage);
       ollamaInput.value = ''; 
-      
       logToTerminal('Ollama', 'Streaming pipeline request... querying background model registers...');
-      
-      // Fire real data message down backend channels to local server port
       const aiResponse = await ipcRenderer.invoke('ollama-chat', userMessage);
       logToTerminal('Ollama', aiResponse.response);
     }
@@ -136,15 +132,7 @@ async function bootloadExtensions() {
 
 bootloadExtensions();
 
+// Initialize the static vector wire canvas matrix layout layer
 if (window.HallowNexusWires) {
   window.HallowNexusWires.initWireCanvas();
 }
-
-// FIX: Target wire mouse trackers directly to canvas viewport layers
-canvasViewport.addEventListener('mousemove', (e) => {
-  if (window.HallowNexusWires) window.HallowNexusWires.updateWireDrag(e);
-});
-
-canvasViewport.addEventListener('mouseup', () => {
-  if (window.HallowNexusWires) window.HallowNexusWires.dropWire(null);
-});
