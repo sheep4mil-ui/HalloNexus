@@ -21,12 +21,16 @@
     .btn:hover { background-color: #3e4450; }
     .btn-primary { background-color: #4f46e5; }
     .btn-primary:hover { background-color: #6366f1; }
+    
     .workspace-container { display: flex; flex: 1; height: calc(100vh - 40px); position: relative; }
+    
     .panel-toolbox {
       width: 260px; background-color: #16181f; border-right: 1px solid #2d3139;
       display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; z-index: 10;
     }
+    
     .panel-canvas { flex: 1; background-color: #0b0c10; position: relative; overflow: hidden; }
+    
     .canvas-grid {
       position: absolute; width: 5000px; height: 5000px;
       background-image: 
@@ -34,13 +38,16 @@
         linear-gradient(to bottom, #1b1d24 1px, transparent 1px);
       background-size: 25px 25px;
     }
+    
     .panel-desk { width: 320px; background-color: #16181f; border-left: 1px solid #2d3139; display: flex; flex-direction: column; box-sizing: border-box; z-index: 10; }
     .desk-section { padding: 15px; border-bottom: 1px solid #2d3139; }
     .desk-section:last-child { border-bottom: none; flex: 1; }
+    
     .ai-terminal {
       background-color: #0b0c10; border: 1px solid #2d3139; border-radius: 4px;
       height: 180px; padding: 10px; font-family: monospace; font-size: 12px; color: #38bdf8; overflow-y: auto; margin-bottom: 10px;
     }
+    
     body.squish-active .panel-toolbox { display: none; }
     body.squish-active .panel-emulator { width: 320px; border-right: 1px solid #2d3139; }
     .panel-emulator { width: 0; background-color: #111216; overflow: hidden; display: flex; align-items: center; justify-content: center; font-family: monospace; color: #a78bfa; }
@@ -49,7 +56,7 @@
 <body>
   <div class="top-bar">
     <button class="btn btn-primary" id="btn-squish">Switch Emulator</button>
-    <button class="btn" id="btn-clean">Clean Variables</button>
+    <button class="btn" id="btn-clean">⚙️ Compile Project</button>
     <button class="btn" id="btn-wire">Ghost Wire</button>
     <button class="btn" id="btn-physics">Physics Schematic</button>
   </div>
@@ -79,7 +86,6 @@
     </div>
   </div>
   
-  <!-- The Order of Script Initializations is Crucial -->
   <script src="wire-linker.js"></script>
   <script src="canvas-nodes.js"></script>
   <script src="renderer.js"></script>
