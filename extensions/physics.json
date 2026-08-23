@@ -1,136 +1,56 @@
 {
-  "extensionName": "Universal Logic, Mathematics & Conditionals Scaffolder",
+  "extensionName": "Universal Logic and Variable Math Pack",
   "category": "LOGIC",
   "newBlocks": [
     {
-      "blockName": "ALLOCATE STORAGE BAG",
-      "tooltip": "Carves out a fixed contiguous item memory storage block in safe user RAM to track weapons or inventory data.",
+      "blockName": "CREATE ITEMS INVENTORY",
+      "tooltip": "Allocates slot limits to manage custom items or weapons systems.",
       "sideMenuFields": [
-        { "label": "Max Item Capacity", "type": "number", "default": 10 },
-        { "label": "Stride Slot Bytes", "type": "number", "default": 2 }
+        { "label": "Total Slots", "type": "number", "default": 10 }
       ],
-      "ez80AssemblyTemplate": "ld a, {MaxItemCapacity}\nld b, {StrideSlotBytes}\ncall _AllocateItemPointerGrid"
+      "ez80AssemblyTemplate": "ld a, {TotalSlots}\ncall _AllocateItemPointerGrid"
     },
     {
-      "blockName": "TOGGLE INVENTORY ATTRIBUTE",
-      "tooltip": "Executes an assembly bit operation to toggle item properties like equipped, consumable, or collected variables fields.",
+      "blockName": "ADD ITEM TO INVENTORY",
+      "tooltip": "Flips an attribute bit inside your item data variables list to collect an item.",
       "sideMenuFields": [
-        { "label": "Item Array Index", "type": "number", "default": 0 },
-        { "label": "Attribute Bit", "type": "number", "default": 1 }
+        { "label": "Item Slot ID", "type": "number", "default": 0 }
       ],
-      "ez80AssemblyTemplate": "ld a, {ItemArrayIndex}\nld b, {AttributeBit}\ncall _SetInventoryAttributeMatrixFlag"
+      "ez80AssemblyTemplate": "ld a, {ItemSlotID}\ncall _SetInventoryAttributeMatrixFlag"
     },
     {
-      "blockName": "COMPARE HARDWARE VALUE REGISTERS",
-      "tooltip": "Evaluates two data variables or positions against a mathematical operator condition to trigger logical switches.",
+      "blockName": "IF VARIABLE COMPARES",
+      "tooltip": "Compares a global register tracking value against a target number constraint boundary.",
       "sideMenuFields": [
-        { "label": "Register Alpha", "type": "text", "default": "Player_X" },
-        { "label": "Comparison Operator", "type": "text", "default": "GREATER_THAN" },
-        { "label": "Value Beta", "type": "number", "default": 300 }
+        { "label": "Variable Name", "type": "text", "default": "Player_X" },
+        { "label": "Greater Than", "type": "number", "default": 300 }
       ],
-      "ez80AssemblyTemplate": "ld hl, ({RegisterAlpha})\nld de, {ValueBeta}\nor a\nsbc hl, de\njr z, _CompareConditionFailed\njr nc, _CompareConditionFailed"
+      "ez80AssemblyTemplate": "ld hl, ({VariableName})\nld de, {GreaterThan}\nor a\nsbc hl, de\njr z, _ConditionFailed\njr nc, _ConditionFailed"
     },
     {
-      "blockName": "COMPUTE MATH OPERATION",
-      "tooltip": "Performs low-level mathematical operations directly across system variables matrices.",
+      "blockName": "MATH CALCULATE VALUE",
+      "tooltip": "Computes quick math addition or subtraction directly on variables scores records.",
       "sideMenuFields": [
-        { "label": "Target Variable", "type": "text", "default": "Player_Y" },
-        { "label": "Operator Code", "type": "text", "default": "ADD" },
-        { "label": "Value Delta", "type": "number", "default": 1 }
+        { "label": "Target Tracker", "type": "text", "default": "Player_Score" },
+        { "label": "Add Amount", "type": "number", "default": 10 }
       ],
-      "ez80AssemblyTemplate": "ld hl, ({TargetVariable})\nld de, {ValueDelta}\nadd hl, de\nld ({TargetVariable}), hl"
+      "ez80AssemblyTemplate": "ld hl, ({TargetTracker})\nld de, {AddAmount}\nadd hl, de\nld ({TargetTracker}), hl"
     },
     {
-      "blockName": "CLAMP VALUE REGISTERS",
-      "tooltip": "Evaluates the contents of a memory address; forces hard limits to prevent data variables overflow.",
+      "blockName": "CLAMP INSIDE BOUNDS",
+      "tooltip": "Locks a variable number so it can never fall below or exceed absolute screen boundaries.",
       "sideMenuFields": [
-        { "label": "Memory Pointer", "type": "text", "default": "Player_Y" },
-        { "label": "Absolute Floor", "type": "number", "default": 0 },
-        { "label": "Absolute Ceiling", "type": "number", "default": 240 }
+        { "label": "Variable Pointer", "type": "text", "default": "Player_Y" },
+        { "label": "Minimum Floor", "type": "number", "default": 0 },
+        { "label": "Maximum Ceiling", "type": "number", "default": 240 }
       ],
-      "ez80AssemblyTemplate": "ld hl, ({MemoryPointer})\nld de, {AbsoluteFloor}\nor a\nsbc hl, de\njr nc, _CheckCeiling\nld hl, {AbsoluteFloor}\n_CheckCeiling:\nld de, {AbsoluteCeiling}\nor a\nsbc hl, de\njr c, _ClampDone\nld hl, {AbsoluteCeiling}\n_ClampDone:\nld ({MemoryPointer}), hl"
+      "ez80AssemblyTemplate": "ld hl, ({VariablePointer})\nld de, {MinimumFloor}\nor a\nsbc hl, de\njr nc, _CeilCheck\nld hl, {MinimumFloor}\n_CeilCheck:\nld de, {MaximumCeiling}\nor a\nsbc hl, de\njr c, _ClampDone\nld hl, {MaximumCeiling}\n_ClampDone:\nld ({VariablePointer}), hl"
     },
     {
-      "blockName": "BITWISE AND CHECK MASK",
-      "tooltip": "Runs an assembly and instruction against a selected memory address to gate downstream logic chunks.",
-      "sideMenuFields": [
-        { "label": "RAM Address Target", "type": "text", "default": "CachedHardwareInputBits" },
-        { "label": "Mask Hex Byte", "type": "text", "default": "0x0F" }
-      ],
-      "ez80AssemblyTemplate": "ld a, ({RAMAddressTarget})\nand {MaskHexByte}\nld ({RAMAddressTarget}), a"
-    },
-    {
-      "blockName": "SCAN WIRE LOOP DEADLOCKS",
-      "tooltip": "Scans active wire connection charts to trace circular logical dependency deadlocks before compilation steps execute.",
-      "sideMenuFields": [],
-      "ez80AssemblyTemplate": "call _ScanLogicWireDeadlocks"
-    },
-    {
-      "blockName": "ENCRYPT STATE SECTOR",
-      "tooltip": "Runs a symmetric XOR bitwise calculation loop across saved data tables to protect parameters from memory cheat injectors.",
-      "sideMenuFields": [
-        { "label": "Sector Start Address", "type": "text", "default": "SaveSectorBase" },
-        { "label": "Cipher Value Key", "type": "number", "default": 165 }
-      ],
-      "ez80AssemblyTemplate": "ld hl, {SectorStartAddress}\nld a, {CipherValueKey}\ncall _EncryptStateBinaryBlock"
-    },
-    {
-      "blockName": "COMPUTE VISIBILITY COVER SCAN",
-      "tooltip": "Casts look-ahead testing rays away from player positions to locate tiles marked as solid environmental covers for enemy AI masking.",
-      "sideMenuFields": [
-        { "label": "Ray Stride Length", "type": "number", "default": 16 },
-        { "label": "Obstacle Tile ID", "type": "number", "default": 5 }
-      ],
-      "ez80AssemblyTemplate": "ld a, {RayStrideLength}\nld b, {ObstacleTileID}\ncall _ComputeVisibilityCoverScan"
-    },
-    {
-      "blockName": "RESET PROJECT PROGRESS DATA",
-      "tooltip": "Flushes active progress values, scores counters, and flag tables back to default parameters for a clean New Game reset.",
+      "blockName": "RESET GAME STATE",
+      "tooltip": "Wipes variable logs and scores back to starting points for a fresh reset.",
       "sideMenuFields": [],
       "ez80AssemblyTemplate": "call _ResetGlobalVariableMatrix"
-    },
-    {
-      "blockName": "PIPELINE GENERATE EDGE TILES",
-      "tooltip": "Triggers local asset automation filters to automatically generate pixel-matched shoreline/edge transitions inside the drawer.",
-      "sideMenuFields": [
-        { "label": "Primary Asset Pointer", "type": "text", "default": "GrassTile" },
-        { "label": "Secondary Asset Pointer", "type": "text", "default": "WaterTile" }
-      ],
-      "ez80AssemblyTemplate": "call _ProcessAIPixelMatchedTileTransitions"
-    },
-    {
-      "blockName": "ALLOCATE PROGRESSION VARIABLE",
-      "tooltip": "Registers an open-ended variable tracker index inside persistence tables to keep unlocked metrics stable across sequels.",
-      "sideMenuFields": [
-        { "label": "Save Matrix ID Offset Key", "type": "text", "default": "LevelUnlockedFlag" },
-        { "label": "Default Value Byte", "type": "number", "default": 0 }
-      ],
-      "ez80AssemblyTemplate": "ld hl, {SaveMatrixIDOffsetKey}\nld a, {DefaultValueByte}\ncall _AllocateProgressionVariable"
-    },
-    {
-      "blockName": "COMPACT DATA MEMORY HEAP SECTORS",
-      "tooltip": "Gathers disjointed RAM variables pointers closer together to maximize unallocated contiguous memory blocks.",
-      "sideMenuFields": [
-        { "label": "Defragmentation Base RAM Sector Address", "type": "text", "default": "HeapStart" }
-      ],
-      "ez80AssemblyTemplate": "ld hl, {DefragmentationBaseRAMSectorAddress}\ncall _CompactDataMemoryHeapSectors"
-    },
-    {
-      "blockName": "EVALUATE ACCUMULATOR GREATER THAN EQUAL",
-      "tooltip": "Fast hardware instruction match that shoots execution flow down alternate pins if values intersect constraints.",
-      "sideMenuFields": [
-        { "label": "Target Register Mapping Address", "type": "text", "default": "Player_Score" },
-        { "label": "Comparison Register Mapping DE", "type": "number", "default": 100 }
-      ],
-      "ez80AssemblyTemplate": "ld hl, ({TargetRegisterMappingAddress})\nld de, {ComparisonRegisterMappingDE}\nor a\nsbc hl, de\njr z, _GteMatchTriggered\njr nc, _GteMatchTriggered"
-    },
-    {
-      "blockName": "RESET GLOBAL VARIABLE MATRIX",
-      "tooltip": "Flushes active progress values, scores counters, and flag tables back to default parameters for a clean New Game reset.",
-      "sideMenuFields": [
-        { "label": "Contiguous Variable Address Range Pointer", "type": "text", "default": "GlobalVarMatrix" }
-      ],
-      "ez80AssemblyTemplate": "ld hl, {ContiguousVariableAddressRangePointer}\ncall _ResetGlobalVariableMatrix"
     }
   ]
 }
