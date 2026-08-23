@@ -1,0 +1,23 @@
+{
+  "extensionName": "Beeper Sound Pack",
+  "category": "AUDIO",
+  "newBlocks": [
+    {
+      "blockName": "PLAY TONE",
+      "tooltip": "Generates a direct square-wave sound frequency pulse through the 2.5mm link port jack pins.",
+      "sideMenuFields": [
+        { "label": "Frequency Hz", "type": "number", "default": 440 },
+        { "label": "Duration Ms", "type": "number", "default": 250 }
+      ],
+      "ez80AssemblyTemplate": "ld hl, {FrequencyHz}\nld de, {DurationMs}\ncall _GenerateSquareWavePulse"
+    },
+    {
+      "blockName": "BOOM SOUND",
+      "tooltip": "Triggers a rapid procedural white-noise frequency explosion sound layout effect sequence.",
+      "sideMenuFields": [
+        { "label": "Explosion Scale", "type": "number", "default": 8 }
+      ],
+      "ez80AssemblyTemplate": "ld a, {ExplosionScale}\ncall _TriggerProceduralNoiseExplosion"
+    }
+  ]
+}
