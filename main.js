@@ -43,7 +43,7 @@ app.on('window-all-closed', () => {
 ipcMain.handle('ollama-chat', async (event, userPrompt) => {
   return new Promise((resolve) => {
     const postData = JSON.stringify({
-      model: 'llama3', // Default local model check profile loop
+      model: 'llama3.2', // FIXED: Pointing directly to your active 3.2 local model engine profile
       prompt: userPrompt,
       stream: false
     });
@@ -75,7 +75,7 @@ ipcMain.handle('ollama-chat', async (event, userPrompt) => {
     req.on('error', () => {
       resolve({ 
         success: false, 
-        response: 'Could not connect to local Ollama server. Ensure the app is running locally on your computer!' 
+        response: 'Could not connect to local Ollama server. Ensure the Ollama app tray icon is active on your PC!' 
       });
     });
 
