@@ -6,13 +6,13 @@ const canvasGridLayer = document.getElementById('canvas-grid-layer');
 const aiLogs = document.getElementById('ai-logs');
 const toolboxPanel = document.getElementById('toolbox');
 
-// 1. Handle the Absolute-Left Emulator Animation
+// 1. Handle Playtest Emulator Animation Switch
 btnSquish.addEventListener('click', () => {
   document.body.classList.toggle('squish-active');
   logToTerminal('System', 'Layout updated. Playtest emulator swapped.');
 });
 
-// 2. Infinite Pan Movement Math logic for Panel 2 Canvas
+// 2. Canvas Background Drag/Panning Math
 let isPanning = false;
 let startX = 0, startY = 0;
 let transformX = 0, transformY = 0;
@@ -46,14 +46,13 @@ function logToTerminal(sender, message) {
   aiLogs.scrollTop = aiLogs.scrollHeight;
 }
 
-// 3. Dynamic JSON Extension Bootloader Handshake
+// 3. Dynamic Extensions Parsing Bootloader
 async function bootloadExtensions() {
   try {
     const result = await ipcRenderer.invoke('load-extensions');
     if (result.success && result.data.length > 0) {
       logToTerminal('Ollama', `Successfully loaded ${result.data.length} custom block extension packages.`);
       
-      // Render the loaded blocks inside the far-left sidebar toolbox
       result.data.forEach(ext => {
         const categoryHeader = document.createElement('h4');
         categoryHeader.style.color = '#a78bfa';
@@ -75,7 +74,6 @@ async function bootloadExtensions() {
           blockElement.title = block.tooltip;
           blockElement.innerText = block.blockName;
 
-          // INTERACTIVE TRIGGER LINK: Click sidebar item to spawn the visual node card
           blockElement.addEventListener('click', () => {
             if (window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) {
               window.HallowNexusCanvas.spawnNodeOnCanvas(block);
@@ -94,5 +92,17 @@ async function bootloadExtensions() {
   }
 }
 
-// Run layout initialization pass
 bootloadExtensions();
+
+// 4. Wire Linker Drag Orchestration Hooks
+if (window.HallowNexusWires) {
+  window.HallowNexusWires.initWireCanvas();
+}
+
+window.addEventListener('mousemove', (e) => {
+  if (window.HallowNexusWires) window.HallowNexusWires.updateWireDrag(e);
+});
+
+window.addEventListener('mouseup', () => {
+  if (window.HallowNexusWires) window.HallowNexusWires.dropWire(null);
+});
