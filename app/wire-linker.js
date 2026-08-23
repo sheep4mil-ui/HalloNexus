@@ -2,9 +2,9 @@ let selectedSourceSocket = null;
 const establishedWires = [];
 
 function initWireCanvas() {
-  // Target the top-level viewport shell container to prevent grid background burying bugs
-  const canvasViewport = document.getElementById('canvas-viewport');
-  if (!canvasViewport || document.getElementById('nexus-wire-svg')) return;
+  // FIXED: Appends the SVG directly INSIDE the grid layer so it moves natively with your cards
+  const canvasGrid = document.getElementById('canvas-grid-layer');
+  if (!canvasGrid || document.getElementById('nexus-wire-svg')) return;
 
   const svgNS = "http://w3.org";
   const svgCanvas = document.createElementNS(svgNS, "svg");
@@ -12,41 +12,38 @@ function initWireCanvas() {
   svgCanvas.style.position = "absolute";
   svgCanvas.style.top = "0";
   svgCanvas.style.left = "0";
-  
-  // FIXED: Expand canvas container bounding box size variables to prevent clipping lines off-screen
   svgCanvas.setAttribute("width", "5000");
   svgCanvas.setAttribute("height", "5000");
   svgCanvas.style.width = "5000px";
   svgCanvas.style.height = "5000px";
-  
-  svgCanvas.style.pointerEvents = "none"; // Lets you drag card nodes directly underneath wire lanes
-  svgCanvas.style.zIndex = "5"; // Layered safely right between the grid mesh background and card blocks
+  svgCanvas.style.pointerEvents = "none"; 
+  svgCanvas.style.zIndex = "1"; // Sandwiched cleanly right below the text layers of your card blocks
 
-  canvasViewport.appendChild(svgCanvas);
+  canvasGrid.appendChild(svgCanvas);
 }
 
 function handleSocketClick(clickedSocket) {
   const isOutPort = clickedSocket.classList.contains('socket-port-out');
   const parentCardId = clickedSocket.parentElement.id;
 
-  // Phase 1: First Click - Select output source logic origin pin
+  // Phase 1: First Click - Select output source origin pin
   if (!selectedSourceSocket) {
     if (!isOutPort) return;
     
     selectedSourceSocket = clickedSocket;
-    selectedSourceSocket.style.backgroundColor = "#22c55e"; // Turn green to track active draft selection
+    selectedSourceSocket.style.backgroundColor = "#22c55e"; // Turn green to confirm active lock status
     return;
   }
 
   // Swap targets if clicking a different block's output port
   if (isOutPort) {
-    selectedSourceSocket.style.backgroundColor = "#4f46e5"; // Restore deep purple layout palette
+    selectedSourceSocket.style.backgroundColor = "#4f46e5"; // Restore standard purple layout
     selectedSourceSocket = clickedSocket;
     selectedSourceSocket.style.backgroundColor = "#22c55e";
     return;
   }
 
-  // Self-linking protection boundaries filter loop
+  // Strict self-linking protection boundaries filter
   if (parentCardId === selectedSourceSocket.parentElement.id) {
     selectedSourceSocket.style.backgroundColor = "#4f46e5";
     selectedSourceSocket = null;
@@ -65,7 +62,7 @@ function handleSocketClick(clickedSocket) {
     targetSocket.classList.remove('socket-flash-confirm');
     sourceSocket.style.backgroundColor = "#4f46e5"; // Reset output back to standard Purple
     targetSocket.style.backgroundColor = "#38bdf8"; // Reset input back to standard Light Blue
-  }, 900); // 900ms matches the precise duration of 3 clean, crisp flashes
+  }, 900); // 900ms matches the precise duration of 3 flashes
 
   // Phase 3: Draw the green curved wire connection path vector
   const svgCanvas = document.getElementById('nexus-wire-svg');
@@ -78,24 +75,14 @@ function handleSocketClick(clickedSocket) {
   path.setAttribute("fill", "none");
   svgCanvas.appendChild(path);
 
-  // FIXED: Track relative grid coordinates and map coordinates straight to the expanded SVG map
-  const canvasGrid = document.getElementById('canvas-grid-layer');
-  const style = window.getComputedStyle(canvasGrid);
-  const matrix = new WebKitCSSMatrix(style.transform);
-  const panX = matrix.m41;
-  const panY = matrix.m42;
-
+  // FIXED: Simple, absolute direct coordinate matching (Bypasses complex viewport/transform math entirely)
   const sourceCard = sourceSocket.parentElement;
-  const sX = (parseInt(sourceCard.style.left) || 0) + panX;
-  const sY = (parseInt(sourceCard.style.top) || 0) + panY;
-  const ox = sX + 240;
-  const oy = sY + 18;
+  const ox = (parseInt(sourceCard.style.left) || 0) + 240; // Pin precisely to the right edge of Card 1
+  const oy = (parseInt(sourceCard.style.top) || 0) + 18;
 
   const targetCard = targetSocket.parentElement;
-  const tX = (parseInt(targetCard.style.left) || 0) + panX;
-  const tY = (parseInt(targetCard.style.top) || 0) + panY;
-  const finalX = tX;
-  const finalY = tY + 18;
+  const finalX = parseInt(targetCard.style.left) || 0; // Pin precisely to the left edge of Card 2
+  const finalY = (parseInt(targetCard.style.top) || 0) + 18;
 
   const controlOffset = Math.abs(finalX - ox) * 0.5;
   const dStr = `M ${ox} ${oy} C ${ox + controlOffset} ${oy}, ${finalX - controlOffset} ${finalY}, ${finalX} ${finalY}`;
@@ -107,7 +94,7 @@ function handleSocketClick(clickedSocket) {
     targetId: targetCard.id
   });
 
-  // Clear tracking variable reference to open the slot for building the next wire chain link
+  // Clear tracking variable reference for the next link building run
   selectedSourceSocket = null;
 }
 
