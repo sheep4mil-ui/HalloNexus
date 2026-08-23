@@ -193,55 +193,55 @@ async function bootloadExtensions() {
       const activeFoldersDOMMap = {};
 
       result.data.forEach(ext => {
+        // FIXED STRICTOR ROUTER ROUTINE
+        // Reads category header values natively to isolate blocks inside their original files definitions
+        let folderCodeTitle = (ext.category || 'CUSTOM').trim().toUpperCase();
+        
+        // Dynamic one-word override pass to sanitize folder naming tags cleanly
+        if (folderCodeTitle.includes('SPRITE')) {
+          folderCodeTitle = 'SPRITES';
+        } else if (folderCodeTitle.includes('CONTROL') || folderCodeTitle.includes('HARDWARE')) {
+          folderCodeTitle = 'CONTROLS';
+        } else if (folderCodeTitle.includes('LOGIC') || folderCodeTitle.includes('AUTOMATION')) {
+          folderCodeTitle = 'LOGIC';
+        }
+
+        let drawerBody = activeFoldersDOMMap[folderCodeTitle];
+
+        if (!drawerBody) {
+          const headingBox = document.createElement('div');
+          headingBox.style.color = '#a78bfa';
+          headingBox.style.backgroundColor = '#1c1e27';
+          headingBox.style.padding = '10px';
+          headingBox.style.marginTop = '10px';
+          headingBox.style.borderRadius = '4px';
+          headingBox.style.cursor = 'pointer';
+          headingBox.style.fontSize = '13px';
+          headingBox.style.fontWeight = 'bold';
+          headingBox.style.border = '1px solid #2d3139';
+          headingBox.innerText = '📁 ' + folderCodeTitle;
+          toolboxPanel.appendChild(headingBox);
+
+          drawerBody = document.createElement('div');
+          drawerBody.className = 'nexus-toolbox-drawer';
+          drawerBody.style.display = 'none'; 
+          drawerBody.style.flexDirection = 'column';
+          drawerBody.style.gap = '6px';
+          drawerBody.style.padding = '8px 5px 4px 5px';
+          toolboxPanel.appendChild(drawerBody);
+
+          headingBox.addEventListener('click', () => {
+            const allDrawersList = document.querySelectorAll('.nexus-toolbox-drawer');
+            const isTargetCurrentlyClosed = (drawerBody.style.display === 'none');
+            allDrawersList.forEach(d => d.style.display = 'none'); 
+            drawerBody.style.display = isTargetCurrentlyClosed ? 'flex' : 'none'; 
+          });
+
+          activeFoldersDOMMap[folderCodeTitle] = drawerBody;
+        }
+
         ext.newBlocks.forEach(block => {
           libraryBlocksRegistry.push(block);
-
-          // 💎 DYNAMIC SCENE FILTER ROUTER
-          let folderCodeTitle = ext.category || 'CUSTOM';
-          
-          if (block.blockName.includes('MAP') || block.blockName.includes('FADE') || block.blockName.includes('FLASH')) {
-            folderCodeTitle = 'SCENE';
-          } else if (folderCodeTitle.includes('SPRITES') || folderCodeTitle.includes('LAYER')) {
-            folderCodeTitle = 'SPRITES';
-          } else if (folderCodeTitle.includes('CONTROLS') || folderCodeTitle.includes('HARDWARE')) {
-            folderCodeTitle = 'CONTROLS';
-          } else if (folderCodeTitle.includes('LOGIC') || folderCodeTitle.includes('AUTOMATION')) {
-            folderCodeTitle = 'LOGIC';
-          }
-
-          let drawerBody = activeFoldersDOMMap[folderCodeTitle];
-
-          if (!drawerBody) {
-            const headingBox = document.createElement('div');
-            headingBox.style.color = '#a78bfa';
-            headingBox.style.backgroundColor = '#1c1e27';
-            headingBox.style.padding = '10px';
-            headingBox.style.marginTop = '10px';
-            headingBox.style.borderRadius = '4px';
-            headingBox.style.cursor = 'pointer';
-            headingBox.style.fontSize = '13px';
-            headingBox.style.fontWeight = 'bold';
-            headingBox.style.border = '1px solid #2d3139';
-            headingBox.innerText = '📁 ' + folderCodeTitle;
-            toolboxPanel.appendChild(headingBox);
-
-            drawerBody = document.createElement('div');
-            drawerBody.className = 'nexus-toolbox-drawer';
-            drawerBody.style.display = 'none'; 
-            drawerBody.style.flexDirection = 'column';
-            drawerBody.style.gap = '6px';
-            drawerBody.style.padding = '8px 5px 4px 5px';
-            toolboxPanel.appendChild(drawerBody);
-
-            headingBox.addEventListener('click', () => {
-              const allDrawersList = document.querySelectorAll('.nexus-toolbox-drawer');
-              const isTargetCurrentlyClosed = (drawerBody.style.display === 'none');
-              allDrawersList.forEach(d => d.style.display = 'none'); 
-              drawerBody.style.display = isTargetCurrentlyClosed ? 'flex' : 'none'; 
-            });
-
-            activeFoldersDOMMap[folderCodeTitle] = drawerBody;
-          }
 
           const blockElement = document.createElement('div');
           blockElement.style.backgroundColor = '#2d3139';
