@@ -40,7 +40,6 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
-// REAL PERSISTENT LOCAL STORAGE ENGINE CHANNELS
 ipcMain.handle('save-project-state', async (event, stateData) => {
   try {
     fs.writeFileSync(saveFilePath, JSON.stringify(stateData, null, 2), 'utf8');
@@ -62,26 +61,26 @@ ipcMain.handle('load-project-state', async () => {
   }
 });
 
-// INTELLIGENT AGENT CONTEXT ROUTER INTERFACE WITH AUTOMATED WIRING ENGINE PERMISSIONS
+// UPGRADED LOW-LEVEL HARDWARE COMPLETION CONTEXT CORE FOR OLLAMA
 ipcMain.handle('ollama-chat', async (event, { userPrompt, currentWorkspaceContext }) => {
   return new Promise((resolve) => {
     
     const systemInstruction = `You are the HallowNexus IDE Automation Engine. You have access to the user's current visual code workspace.
 Current Workspace JSON: ${JSON.stringify(currentWorkspaceContext)}
 
-You can modify the canvas by outputting a strict JSON action configuration layout.
-If the user asks to create or spawn a block, respond exactly in this format:
-{"action": "spawn", "blockName": "Initialize Player Sprite", "message": "I have spawned that block for you."}
+You can modify the canvas layout by outputting strict JSON actions.
+If the user asks to create, spawn, summon, or add a block, match their intent to our command library and respond exactly in this format:
+{"action": "spawn", "blockName": "SUMMON SPRITE", "message": "Spawning active sprite block."}
 
-If the user asks to connect or wire two blocks together (or implies execution flow), look at the blockNames currently on the canvas inside the current workspace JSON, and respond exactly in this format:
-{"action": "link", "sourceName": "Initialize Player Sprite", "targetName": "Trigger High-Juice Screen Shake", "message": "I have connected those two blocks for you."}
+If the user asks to connect or link two blocks, look at what is sitting on the canvas inside the current workspace JSON, and respond exactly in this format:
+{"action": "link", "sourceName": "SUMMON SPRITE", "targetName": "SCREEN SHAKE", "message": "Linking flow paths."}
 
-Available block names you can spawn or link: "Initialize Player Sprite", "Trigger High-Juice Screen Shake", "Emit Object-Pooled Projectile", "Set Day-Night Cycle Timer", "Spawn Dithered Lantern", "Cast Lighthouse Beam".
+Available precise block names: "SUMMON SPRITE", "SCREEN SHAKE", "DRAW PIXELS".
 
-If they are just asking a general question, explaining logic, or chatting, respond with your actual answer inside the JSON structure like this:
-{"action": "none", "message": "Write your actual detailed development response or answer here based on the user's request."}
+If they are asking questions, explain simply and respond naturally inside the JSON:
+{"action": "none", "message": "Write your direct answer or development advice here based on the user's request."}
 
-Respond ONLY with valid, raw, un-escaped JSON string blocks. No conversational preambles or markdown wrappers outside the JSON block structure.`;
+Do not use overly bubbly language, emoticons, or wordy placeholders. Output ONLY valid, raw, un-wrapped JSON strings. No conversational markdown outside the JSON brackets.`;
 
     const postData = JSON.stringify({
       model: 'llama3.2',
@@ -108,7 +107,7 @@ Respond ONLY with valid, raw, un-escaped JSON string blocks. No conversational p
           const parsed = JSON.parse(data);
           resolve({ success: true, rawPayload: parsed.response });
         } catch (e) {
-          resolve({ success: false, rawPayload: '{"action":"none","message":"Ollama returned bad token packets."}' });
+          resolve({ success: false, rawPayload: '{"action":"none","message":"Ollama engine stream parse mismatch."}' });
         }
       });
     });
@@ -116,7 +115,7 @@ Respond ONLY with valid, raw, un-escaped JSON string blocks. No conversational p
     req.on('error', () => {
       resolve({ 
         success: false, 
-        rawPayload: '{"action":"none","message":"Could not connect to local Ollama server. Check background taskbar app execution tray!"}' 
+        rawPayload: '{"action":"none","message":"Ollama offline. Verify background local server port 11434 status."}' 
       });
     });
 
