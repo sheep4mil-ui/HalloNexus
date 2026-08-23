@@ -7,8 +7,10 @@ const canvasGridLayer = document.getElementById('canvas-grid-layer');
 const aiLogs = document.getElementById('ai-logs');
 const toolboxPanel = document.getElementById('toolbox');
 const ollamaInput = document.getElementById('ollama-input');
+const btnOpenSpriteDrawer = document.getElementById('btn-open-sprite-drawer');
 
 let libraryBlocksRegistry = [];
+const hotbarRegistryArray = new Array(8).fill(null); 
 
 if (btnClean) btnClean.innerText = '⚙️ Compile Project';
 
@@ -26,6 +28,39 @@ btnSquish.addEventListener('click', () => {
     }
   }
 });
+
+if (btnOpenSpriteDrawer) {
+  btnOpenSpriteDrawer.addEventListener('click', () => {
+    if (window.HallowNexusSpriteEditor) {
+      window.HallowNexusSpriteEditor.initSpriteEditorModal();
+      window.HallowNexusSpriteEditor.toggleSpriteEditorModal();
+    }
+  });
+}
+
+function initHotbarQuickKeys() {
+  document.querySelectorAll('.hotbar-slot').forEach((slotElement, index) => {
+    slotElement.addEventListener('click', () => {
+      const boundBlock = hotbarRegistryArray[index];
+      if (boundBlock && window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) {
+        window.HallowNexusCanvas.spawnNodeOnCanvas(boundBlock);
+        logToTerminal('Hotbar', 'Instantly spawned ' + boundBlock.blockName + ' from slot ' + (index + 1));
+      }
+    });
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (document.activeElement.tagName === 'INPUT') return;
+    const keyNum = parseInt(e.key);
+    if (keyNum >= 1 && keyNum <= 8) {
+      const boundBlock = hotbarRegistryArray[keyNum - 1];
+      if (boundBlock && window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) {
+        window.HallowNexusCanvas.spawnNodeOnCanvas(boundBlock);
+        logToTerminal('Hotbar', 'Key shortcut spawned ' + boundBlock.blockName + ' from slot ' + keyNum);
+      }
+    }
+  });
+}
 
 async function triggerAutoSavePass() {
   const stateSnapshot = {
@@ -51,18 +86,16 @@ btnClean.addEventListener('click', async () => {
     const HallowNexusCompiler = require('../compiler.js');
     const projectCompiler = new HallowNexusCompiler(__dirname);
     projectCompiler.transpileGraph(nodesToCompile);
-    logToTerminal('Compiler', 'Executing SPASM assembler compilation pass...');
-    
-    const fakeCompiledBytes = new Uint8Array([0x3E, 0x01, 0x32, 0x00, 0xC0, 0xC3, 0x00, 0x00]);
-    
-    if (window.HallowNexusEmulator && document.body.classList.contains('squish-active')) {
-      window.HallowNexusEmulator.loadBinaryPayload(fakeCompiledBytes);
-      logToTerminal('Success', 'Build complete! Machine data successfully flashed to local emulator memory banks.');
-    } else {
-      logToTerminal('Success', 'Build complete! Open the Switch Emulator viewport to run payload.');
+    logToTerminal('Compiler', 'Successfully generated "build_output.asm" layout text blocks to disk.');
+    const compileResult = await projectCompiler.compileToBinary('HALLOW');
+    if (compileResult.success && window.HallowNexusEmulator && document.body.classList.contains('squish-active')) {
+      window.HallowNexusEmulator.loadBinaryPayload(compileResult.bytecodePayload);
+      logToTerminal('Success', 'Build complete! Machine bytecode data successfully flashed.');
+    } else if (compileResult.success) {
+      logToTerminal('Success', 'Build complete! Binary program exported successfully.');
     }
   } catch (err) {
-    logToTerminal('Compiler Pipeline Verified', 'Wire-link path tracked successfully! Passed text to disk records.');
+    logToTerminal('Compiler Error', 'Hardware compilation pipeline interrupted: ' + err);
   }
 });
 
@@ -105,50 +138,40 @@ if (ollamaInput) {
       const userMessage = ollamaInput.value;
       logToTerminal('You', userMessage);
       ollamaInput.value = ''; 
-      
       logToTerminal('Ollama', 'Packaging workspace memory registers... analyzing wire graph matrix...');
-      
       const workspaceContext = {
         nodes: (window.HallowNexusCanvas && window.HallowNexusCanvas.activeGraphNodes) || [],
         wires: (window.HallowNexusWires && window.HallowNexusWires.establishedWires) || []
       };
-
       const serverResult = await ipcRenderer.invoke('ollama-chat', { 
         userPrompt: userMessage, 
         currentWorkspaceContext: workspaceContext 
       });
-
       try {
         const rawText = serverResult.rawPayload.trim();
         const jsonBlocks = rawText.match(/{[\s\S]*?}/g);
-
         if (jsonBlocks && jsonBlocks.length > 0) {
           jsonBlocks.forEach(jsonStr => {
             try {
               const actionData = JSON.parse(jsonStr);
               logToTerminal('Ollama Agent', actionData.message || 'Processing command matrix block...');
-
               if (actionData.action === 'spawn' && actionData.blockName) {
                 const targetTemplate = libraryBlocksRegistry.find(b => b.blockName === actionData.blockName);
                 if (targetTemplate && window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) {
                   window.HallowNexusCanvas.spawnNodeOnCanvas(targetTemplate);
                 }
               }
-              
               if (actionData.action === 'link' && actionData.sourceName && actionData.targetName) {
                 setTimeout(() => {
                   if (window.HallowNexusCanvas && window.HallowNexusCanvas.activeGraphNodes && window.HallowNexusWires) {
                     const sourceNodeRecord = window.HallowNexusCanvas.activeGraphNodes.find(n => n.blockName === actionData.sourceName);
                     const targetNodeRecord = window.HallowNexusCanvas.activeGraphNodes.find(n => n.blockName === actionData.targetName);
-
                     if (sourceNodeRecord && targetNodeRecord) {
                       const physicalSourceElement = document.getElementById(sourceNodeRecord.id);
                       const physicalTargetElement = document.getElementById(targetNodeRecord.id);
-
                       if (physicalSourceElement && physicalTargetElement) {
                         const outSocketPin = physicalSourceElement.querySelector('.socket-port-out');
                         const inSocketPin = physicalTargetElement.querySelector('.socket-port-in');
-
                         if (outSocketPin && inSocketPin) {
                           window.HallowNexusWires.handleSocketClick(outSocketPin);
                           window.HallowNexusWires.handleSocketClick(inSocketPin);
@@ -158,9 +181,7 @@ if (ollamaInput) {
                   }
                 }, 150);
               }
-            } catch (innerErr) {
-              // Safe fallback bypass
-            }
+            } catch (innerErr) {}
           });
         } else {
           logToTerminal('Ollama', rawText);
@@ -196,36 +217,56 @@ async function bootloadExtensions() {
     if (result.success && result.data.length > 0) {
       logToTerminal('Ollama', 'Successfully loaded custom block extension packages.');
       
+      // Track existing created folders to enforce strict one-word singleton grouping patterns
+      const activeFoldersDOMMap = {};
+
       result.data.forEach(ext => {
-        // 💎 MAKECODE STYLE COLLAPSIBLE DRAWER INTERFACE ASSEMBLY
-        const headingBox = document.createElement('div');
-        headingBox.style.color = '#a78bfa';
-        headingBox.style.backgroundColor = '#1c1e27';
-        headingBox.style.padding = '10px';
-        headingBox.style.marginTop = '10px';
-        headingBox.style.borderRadius = '4px';
-        headingBox.style.cursor = 'pointer';
-        headingBox.style.fontSize = '13px';
-        headingBox.style.fontWeight = 'bold';
-        headingBox.style.border = '1px solid #2d3139';
-        headingBox.innerText = '📁 ' + (ext.category || 'CUSTOM');
-        toolboxPanel.appendChild(headingBox);
+        // Enforce strict one-word classification maps (e.g. "SPRITES & LAYER HANDLING" becomes "SPRITES")
+        let folderCodeTitle = ext.category || 'CUSTOM';
+        if (folderCodeTitle.includes('SPRITES') || folderCodeTitle.includes('LAYER')) {
+          folderCodeTitle = 'SPRITES';
+        } else if (folderCodeTitle.includes('CONTROLS') || folderCodeTitle.includes('HARDWARE')) {
+          folderCodeTitle = 'CONTROLS';
+        } else if (folderCodeTitle.includes('LOGIC') || folderCodeTitle.includes('AUTOMATION')) {
+          folderCodeTitle = 'LOGIC';
+        } else {
+          folderCodeTitle = folderCodeTitle.split(' ')[0].toUpperCase();
+        }
 
-        const drawerBody = document.createElement('div');
-        drawerBody.className = 'nexus-toolbox-drawer';
-        drawerBody.style.display = 'none'; 
-        drawerBody.style.flexDirection = 'column';
-        drawerBody.style.gap = '6px';
-        drawerBody.style.padding = '8px 5px 4px 5px';
-        toolboxPanel.appendChild(drawerBody);
+        let drawerBody = activeFoldersDOMMap[folderCodeTitle];
 
-        headingBox.addEventListener('click', () => {
-          const allDrawersList = document.querySelectorAll('.nexus-toolbox-drawer');
-          const isTargetCurrentlyClosed = (drawerBody.style.display === 'none');
+        // If folder doesn't exist yet, build the accordion singleton once
+        if (!drawerBody) {
+          const headingBox = document.createElement('div');
+          headingBox.style.color = '#a78bfa';
+          headingBox.style.backgroundColor = '#1c1e27';
+          headingBox.style.padding = '10px';
+          headingBox.style.marginTop = '10px';
+          headingBox.style.borderRadius = '4px';
+          headingBox.style.cursor = 'pointer';
+          headingBox.style.fontSize = '13px';
+          headingBox.style.fontWeight = 'bold';
+          headingBox.style.border = '1px solid #2d3139';
+          headingBox.innerText = '📁 ' + folderCodeTitle;
+          toolboxPanel.appendChild(headingBox);
 
-          allDrawersList.forEach(d => d.style.display = 'none'); 
-          drawerBody.style.display = isTargetCurrentlyClosed ? 'flex' : 'none'; 
-        });
+          drawerBody = document.createElement('div');
+          drawerBody.className = 'nexus-toolbox-drawer';
+          drawerBody.style.display = 'none'; 
+          drawerBody.style.flexDirection = 'column';
+          drawerBody.style.gap = '6px';
+          drawerBody.style.padding = '8px 5px 4px 5px';
+          toolboxPanel.appendChild(drawerBody);
+
+          headingBox.addEventListener('click', () => {
+            const allDrawersList = document.querySelectorAll('.nexus-toolbox-drawer');
+            const isTargetCurrentlyClosed = (drawerBody.style.display === 'none');
+            allDrawersList.forEach(d => d.style.display = 'none'); 
+            drawerBody.style.display = isTargetCurrentlyClosed ? 'flex' : 'none'; 
+          });
+
+          activeFoldersDOMMap[folderCodeTitle] = drawerBody;
+        }
 
         ext.newBlocks.forEach(block => {
           libraryBlocksRegistry.push(block);
@@ -238,23 +279,32 @@ async function bootloadExtensions() {
           blockElement.style.cursor = 'pointer';
           blockElement.style.borderLeft = '4px solid #4f46e5';
           blockElement.style.userSelect = 'none';
-          blockElement.innerText = block.blockName;
+          blockElement.innerText = block.blockName.length > 22 ? block.blockName.substring(0, 20) + '..' : block.blockName;
+
+          if (libraryBlocksRegistry.length <= 8) {
+            const slotIndex = libraryBlocksRegistry.length - 1;
+            hotbarRegistryArray[slotIndex] = block;
+            setTimeout(() => {
+              const targetSlot = document.querySelector('.hotbar-slot[data-slot="' + (slotIndex + 1) + '"]');
+              if (targetSlot) {
+                targetSlot.classList.add('slot-occupied');
+                targetSlot.innerHTML = '<span class="hotbar-key-index">' + (slotIndex + 1) + '</span>' + block.blockName.substring(0, 3);
+                targetSlot.title = block.blockName;
+              }
+            }, 100);
+          }
 
           blockElement.addEventListener('click', () => {
             if (window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) {
               window.HallowNexusCanvas.spawnNodeOnCanvas(block);
               logToTerminal('Canvas', 'Spawned node: "' + block.blockName + '" onto workspace grid.');
-            } else {
-              logToTerminal('Error', 'Canvas handler layer buffering. Click again.');
             }
           });
           drawerBody.appendChild(blockElement);
         });
       });
-      
       loadSavedProjectData();
-    } else if (!result.success) {
-      logToTerminal('System Error', 'Failed to read extensions.');
+      initHotbarQuickKeys();
     }
   } catch (err) {
     logToTerminal('Runtime Error', err.message);
