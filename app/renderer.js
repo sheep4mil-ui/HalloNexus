@@ -195,13 +195,37 @@ async function bootloadExtensions() {
     const result = await ipcRenderer.invoke('load-extensions');
     if (result.success && result.data.length > 0) {
       logToTerminal('Ollama', 'Successfully loaded custom block extension packages.');
+      
       result.data.forEach(ext => {
-        const categoryHeader = document.createElement('h4');
-        categoryHeader.style.color = '#a78bfa';
-        categoryHeader.style.marginTop = '15px';
-        categoryHeader.style.marginBottom = '5px';
-        categoryHeader.innerText = ext.category || 'Custom Blocks';
-        toolboxPanel.appendChild(categoryHeader);
+        // 💎 MAKECODE STYLE COLLAPSIBLE DRAWER INTERFACE ASSEMBLY
+        const headingBox = document.createElement('div');
+        headingBox.style.color = '#a78bfa';
+        headingBox.style.backgroundColor = '#1c1e27';
+        headingBox.style.padding = '10px';
+        headingBox.style.marginTop = '10px';
+        headingBox.style.borderRadius = '4px';
+        headingBox.style.cursor = 'pointer';
+        headingBox.style.fontSize = '13px';
+        headingBox.style.fontWeight = 'bold';
+        headingBox.style.border = '1px solid #2d3139';
+        headingBox.innerText = '📁 ' + (ext.category || 'CUSTOM');
+        toolboxPanel.appendChild(headingBox);
+
+        const drawerBody = document.createElement('div');
+        drawerBody.className = 'nexus-toolbox-drawer';
+        drawerBody.style.display = 'none'; 
+        drawerBody.style.flexDirection = 'column';
+        drawerBody.style.gap = '6px';
+        drawerBody.style.padding = '8px 5px 4px 5px';
+        toolboxPanel.appendChild(drawerBody);
+
+        headingBox.addEventListener('click', () => {
+          const allDrawersList = document.querySelectorAll('.nexus-toolbox-drawer');
+          const isTargetCurrentlyClosed = (drawerBody.style.display === 'none');
+
+          allDrawersList.forEach(d => d.style.display = 'none'); 
+          drawerBody.style.display = isTargetCurrentlyClosed ? 'flex' : 'none'; 
+        });
 
         ext.newBlocks.forEach(block => {
           libraryBlocksRegistry.push(block);
@@ -209,7 +233,6 @@ async function bootloadExtensions() {
           const blockElement = document.createElement('div');
           blockElement.style.backgroundColor = '#2d3139';
           blockElement.style.padding = '8px';
-          blockElement.style.marginBottom = '6px';
           blockElement.style.borderRadius = '4px';
           blockElement.style.fontSize = '12px';
           blockElement.style.cursor = 'pointer';
@@ -225,7 +248,7 @@ async function bootloadExtensions() {
               logToTerminal('Error', 'Canvas handler layer buffering. Click again.');
             }
           });
-          toolboxPanel.appendChild(blockElement);
+          drawerBody.appendChild(blockElement);
         });
       });
       
