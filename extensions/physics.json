@@ -1,0 +1,22 @@
+{
+  "extensionName": "Physics Schematic Pack",
+  "category": "PHYSICS",
+  "newBlocks": [
+    {
+      "blockName": "APPLY GRAVITY",
+      "tooltip": "Injects downward continuous acceleration calculations straight into y-axis vectors registers.",
+      "sideMenuFields": [
+        { "label": "Gravity Scale", "type": "number", "default": 1 }
+      ],
+      "ez80AssemblyTemplate": "ld a, {GravityScale}\ncall _ApplyContinuousDownwardAcceleration"
+    },
+    {
+      "blockName": "BOUNCE ON WALL",
+      "tooltip": "Checks pixel viewport boundary intersections and flips directional velocity tracking variables.",
+      "sideMenuFields": [
+        { "label": "Friction Loss", "type": "number", "default": 2 }
+      ],
+      "ez80AssemblyTemplate": "ld a, {FrictionLoss}\ncall _ProcessViewportBoundaryCollisionReflections"
+    }
+  ]
+}
