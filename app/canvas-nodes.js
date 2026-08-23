@@ -23,8 +23,6 @@ function spawnNodeOnCanvas(blockData) {
   nodeCard.style.padding = '10px';
   nodeCard.style.boxSizing = 'border-box';
   nodeCard.style.zIndex = '20';
-  
-  // Strict double-down layer on disabling text selections inside the element
   nodeCard.style.userSelect = 'none';
   nodeCard.style.webkitUserSelect = 'none';
 
@@ -63,10 +61,9 @@ function spawnNodeOnCanvas(blockData) {
   outputSocket.style.cursor = 'pointer';
   outputSocket.title = 'Click to start data wire link';
 
-  // FIX: Isolated pointer click execution handler
   outputSocket.addEventListener('click', (e) => {
     e.preventDefault();
-    e.stopPropagation(); // Blocks the background grid from overriding your pointer selection
+    e.stopPropagation(); 
     if (window.HallowNexusWires) window.HallowNexusWires.handleSocketClick(outputSocket);
   });
   nodeCard.appendChild(outputSocket);
@@ -84,10 +81,9 @@ function spawnNodeOnCanvas(blockData) {
   inputSocket.style.cursor = 'pointer';
   inputSocket.title = 'Click to finish data wire link';
 
-  // FIX: Isolated pointer click execution handler
   inputSocket.addEventListener('click', (e) => {
     e.preventDefault();
-    e.stopPropagation(); // Keeps background view panning system from swallowing the click
+    e.stopPropagation(); 
     if (window.HallowNexusWires) window.HallowNexusWires.handleSocketClick(inputSocket);
   });
   nodeCard.appendChild(inputSocket);
@@ -149,6 +145,11 @@ function spawnNodeOnCanvas(blockData) {
     const targetY = e.clientY - parentRect.top - offsetY;
     nodeCard.style.left = `${targetX}px`;
     nodeCard.style.top = `${targetY}px`;
+
+    // FIX: Redraw all connected lines dynamically while moving the card box
+    if (window.HallowNexusWires && window.HallowNexusWires.updateWiredConnectionsPositions) {
+      window.HallowNexusWires.updateWiredConnectionsPositions();
+    }
   });
 
   window.addEventListener('mouseup', () => {
