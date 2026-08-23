@@ -170,38 +170,29 @@ async function bootloadExtensions() {
     if (result.success && result.data.length > 0) {
       logToTerminal('Ollama', 'Successfully loaded custom block extension packages.');
       
-      // 💎 100% STRICTOR EXPLICIT MANUAL ROUTER DICTIONARY MATRIX
+      // 💎 UPDATED DICTIONARY MATRIX: Maps to your clean, new English block names perfectly
       const manualFolderSchema = {
         'SPRITES': [
-          'SUMMON SPRITE OF KIND', 'SET POSITION', 'SET VELOCITY', 'DESTROY SPRITE WITH EFFECT', 
-          'MOVE SPRITE WITH CONTROLLERS', 'IF OVERLAPPING KIND', 'SET AUTO DESTROY ON WALL', 
-          'SET BOUNDARY HITBOX', 'RENDER SCREEN FRAME', 'SET ANIMATION DELAY', 'FLIP HORIZONTAL', 
-          'FLIP VERTICAL', 'SCALE DOUBLE SIZE', 'SET TRANSPARENT PALETTE ALPHA'
+          'CREATE PLAYER', 'CREATE ENEMY', 'MOVE WITH BUTTONS', 'SET SPEED VECTOR', 
+          'IF TOUCHING KIND', 'DESTROY CHAR', 'CAMERA FOLLOW CHAR', 'ANIMATE FRAME RATE', 
+          'FLIP IMAGES', 'RESIZE IMAGE DOUBLE'
         ],
         'CONTROLS': [
-          'POLL KEYBOARD MATRIX', 'ALLOCATE QUICK HOTBAR', 'IF SHORTCUT PRESSED', 
-          'IF BUTTON COMBINATION HELD', 'SET CLOCK INTERRUPT SPEED', 'PLAY SOUND TONE', 
-          'PLAY PROCEDURAL CRASH SOUND', 'SET TRACKER TEMPO', 'SUSPEND THREAD TIMED TICK', 
-          'INITIALIZE MULTI GAME LAUNCHER'
+          'WHEN BUTTON PRESSED', 'WHEN BOTH BUTTONS HELD', 'PLAY MUSIC NOTE', 
+          'PLAY EXPLOSION SOUND', 'WAIT TIMER TICK', 'LOAD NEXT SEQUEL'
         ],
         'LOGIC': [
-          'ALLOCATE STORAGE BAG', 'TOGGLE INVENTORY ATTRIBUTE', 'COMPARE HARDWARE VALUE REGISTERS', 
-          'COMPUTE MATH OPERATION', 'CLAMP VALUE REGISTERS', 'BITWISE AND CHECK MASK', 
-          'SCAN WIRE LOOP DEADLOCKS', 'ENCRYPT STATE SECTOR', 'COMPUTE VISIBILITY COVER SCAN', 
-          'RESET PROJECT PROGRESS DATA', 'EVALUATE ACCUMULATOR GREATER THAN EQUAL',
-          'PIPELINE GENERATE EDGE TILES', 'SCAN LOGIC WIRE DEADLOCKS', 'ALLOCATE PROGRESSION VARIABLE',
-          'ENCRYPT STATE BINARY BLOCK', 'FORCE HARDWARE FLASH SAVE PASS', 'COMPACT DATA MEMORY HEAP SECTORS',
-          'RESET GLOBAL VARIABLE MATRIX'
+          'CREATE ITEMS INVENTORY', 'ADD ITEM TO INVENTORY', 'IF VARIABLE COMPARES', 
+          'MATH CALCULATE VALUE', 'CLAMP INSIDE BOUNDS', 'RESET GAME STATE'
         ],
         'SCENE': [
-          'SET MAP MATRIX', 'APPLY LIGHTING MASK'
+          'GO TO STAGE MAP', 'TURN ON TORCH MASK'
         ]
       };
 
       const activeFoldersDOMMap = {};
       const targetCategories = ['SPRITES', 'CONTROLS', 'LOGIC', 'SCENE', 'CUSTOM'];
 
-      // pre-render one-word folders in a locked execution layout stack
       targetCategories.forEach(categoryName => {
         const headingBox = document.createElement('div');
         headingBox.style.color = '#a78bfa';
@@ -238,7 +229,6 @@ async function bootloadExtensions() {
         ext.newBlocks.forEach(block => {
           libraryBlocksRegistry.push(block);
 
-          // Track down exactly which manual schema array holds the active block name pointer
           let matchedFolder = 'CUSTOM';
           for (const folderName in manualFolderSchema) {
             if (manualFolderSchema[folderName].includes(block.blockName)) {
@@ -258,7 +248,7 @@ async function bootloadExtensions() {
           blockElement.style.cursor = 'pointer';
           blockElement.style.borderLeft = '4px solid #4f46e5';
           blockElement.style.userSelect = 'none';
-          blockElement.innerText = block.blockName.length > 22 ? block.blockName.substring(0, 20) + '..' : block.blockName;
+          blockElement.innerText = block.blockName;
 
           blockElement.addEventListener('click', () => {
             if (window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) {
