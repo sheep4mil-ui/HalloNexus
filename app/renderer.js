@@ -134,26 +134,6 @@ if (ollamaInput) {
                   window.HallowNexusCanvas.spawnNodeOnCanvas(targetTemplate);
                 }
               }
-              if (actionData.action === 'link' && actionData.sourceName && actionData.targetName) {
-                setTimeout(() => {
-                  if (window.HallowNexusCanvas && window.HallowNexusCanvas.activeGraphNodes && window.HallowNexusWires) {
-                    const sourceNodeRecord = window.HallowNexusCanvas.activeGraphNodes.find(n => n.blockName === actionData.sourceName);
-                    const targetNodeRecord = window.HallowNexusCanvas.activeGraphNodes.find(n => n.blockName === actionData.targetName);
-                    if (sourceNodeRecord && targetNodeRecord) {
-                      const physicalSourceElement = document.getElementById(sourceNodeRecord.id);
-                      const physicalTargetElement = document.getElementById(targetNodeRecord.id);
-                      if (physicalSourceElement && physicalTargetElement) {
-                        const outSocketPin = physicalSourceElement.querySelector('.socket-port-out');
-                        const inSocketPin = physicalTargetElement.querySelector('.socket-port-in');
-                        if (outSocketPin && inSocketPin) {
-                          window.HallowNexusWires.handleSocketClick(outSocketPin);
-                          window.HallowNexusWires.handleSocketClick(inSocketPin);
-                        }
-                      }
-                    }
-                  }
-                }, 150);
-              }
             } catch (innerErr) {}
           });
         } else {
@@ -190,58 +170,85 @@ async function bootloadExtensions() {
     if (result.success && result.data.length > 0) {
       logToTerminal('Ollama', 'Successfully loaded custom block extension packages.');
       
+      // 💎 100% STRICTOR EXPLICIT MANUAL ROUTER DICTIONARY MATRIX
+      const manualFolderSchema = {
+        'SPRITES': [
+          'SUMMON SPRITE OF KIND', 'SET POSITION', 'SET VELOCITY', 'DESTROY SPRITE WITH EFFECT', 
+          'MOVE SPRITE WITH CONTROLLERS', 'IF OVERLAPPING KIND', 'SET AUTO DESTROY ON WALL', 
+          'SET BOUNDARY HITBOX', 'RENDER SCREEN FRAME', 'SET ANIMATION DELAY', 'FLIP HORIZONTAL', 
+          'FLIP VERTICAL', 'SCALE DOUBLE SIZE', 'SET TRANSPARENT PALETTE ALPHA'
+        ],
+        'CONTROLS': [
+          'POLL KEYBOARD MATRIX', 'ALLOCATE QUICK HOTBAR', 'IF SHORTCUT PRESSED', 
+          'IF BUTTON COMBINATION HELD', 'SET CLOCK INTERRUPT SPEED', 'PLAY SOUND TONE', 
+          'PLAY PROCEDURAL CRASH SOUND', 'SET TRACKER TEMPO', 'SUSPEND THREAD TIMED TICK', 
+          'INITIALIZE MULTI GAME LAUNCHER'
+        ],
+        'LOGIC': [
+          'ALLOCATE STORAGE BAG', 'TOGGLE INVENTORY ATTRIBUTE', 'COMPARE HARDWARE VALUE REGISTERS', 
+          'COMPUTE MATH OPERATION', 'CLAMP VALUE REGISTERS', 'BITWISE AND CHECK MASK', 
+          'SCAN WIRE LOOP DEADLOCKS', 'ENCRYPT STATE SECTOR', 'COMPUTE VISIBILITY COVER SCAN', 
+          'RESET PROJECT PROGRESS DATA', 'EVALUATE ACCUMULATOR GREATER THAN EQUAL',
+          'PIPELINE GENERATE EDGE TILES', 'SCAN LOGIC WIRE DEADLOCKS', 'ALLOCATE PROGRESSION VARIABLE',
+          'ENCRYPT STATE BINARY BLOCK', 'FORCE HARDWARE FLASH SAVE PASS', 'COMPACT DATA MEMORY HEAP SECTORS',
+          'RESET GLOBAL VARIABLE MATRIX'
+        ],
+        'SCENE': [
+          'SET MAP MATRIX', 'APPLY LIGHTING MASK'
+        ]
+      };
+
       const activeFoldersDOMMap = {};
+      const targetCategories = ['SPRITES', 'CONTROLS', 'LOGIC', 'SCENE', 'CUSTOM'];
+
+      // pre-render one-word folders in a locked execution layout stack
+      targetCategories.forEach(categoryName => {
+        const headingBox = document.createElement('div');
+        headingBox.style.color = '#a78bfa';
+        headingBox.style.backgroundColor = '#1c1e27';
+        headingBox.style.padding = '10px';
+        headingBox.style.marginTop = '10px';
+        headingBox.style.borderRadius = '4px';
+        headingBox.style.cursor = 'pointer';
+        headingBox.style.fontSize = '13px';
+        headingBox.style.fontWeight = 'bold';
+        headingBox.style.border = '1px solid #2d3139';
+        headingBox.innerText = '📁 ' + categoryName;
+        toolboxPanel.appendChild(headingBox);
+
+        const drawerBody = document.createElement('div');
+        drawerBody.className = 'nexus-toolbox-drawer';
+        drawerBody.style.display = 'none'; 
+        drawerBody.style.flexDirection = 'column';
+        drawerBody.style.gap = '6px';
+        drawerBody.style.padding = '8px 5px 4px 5px';
+        toolboxPanel.appendChild(drawerBody);
+
+        headingBox.addEventListener('click', () => {
+          const allDrawersList = document.querySelectorAll('.nexus-toolbox-drawer');
+          const isTargetCurrentlyClosed = (drawerBody.style.display === 'none');
+          allDrawersList.forEach(d => d.style.display = 'none'); 
+          drawerBody.style.display = isTargetCurrentlyClosed ? 'flex' : 'none'; 
+        });
+
+        activeFoldersDOMMap[categoryName] = drawerBody;
+      });
 
       result.data.forEach(ext => {
-        // FIXED STRICTOR ROUTER ROUTINE
-        // Reads category header values natively to isolate blocks inside their original files definitions
-        let folderCodeTitle = (ext.category || 'CUSTOM').trim().toUpperCase();
-        
-        // Dynamic one-word override pass to sanitize folder naming tags cleanly
-        if (folderCodeTitle.includes('SPRITE')) {
-          folderCodeTitle = 'SPRITES';
-        } else if (folderCodeTitle.includes('CONTROL') || folderCodeTitle.includes('HARDWARE')) {
-          folderCodeTitle = 'CONTROLS';
-        } else if (folderCodeTitle.includes('LOGIC') || folderCodeTitle.includes('AUTOMATION')) {
-          folderCodeTitle = 'LOGIC';
-        }
-
-        let drawerBody = activeFoldersDOMMap[folderCodeTitle];
-
-        if (!drawerBody) {
-          const headingBox = document.createElement('div');
-          headingBox.style.color = '#a78bfa';
-          headingBox.style.backgroundColor = '#1c1e27';
-          headingBox.style.padding = '10px';
-          headingBox.style.marginTop = '10px';
-          headingBox.style.borderRadius = '4px';
-          headingBox.style.cursor = 'pointer';
-          headingBox.style.fontSize = '13px';
-          headingBox.style.fontWeight = 'bold';
-          headingBox.style.border = '1px solid #2d3139';
-          headingBox.innerText = '📁 ' + folderCodeTitle;
-          toolboxPanel.appendChild(headingBox);
-
-          drawerBody = document.createElement('div');
-          drawerBody.className = 'nexus-toolbox-drawer';
-          drawerBody.style.display = 'none'; 
-          drawerBody.style.flexDirection = 'column';
-          drawerBody.style.gap = '6px';
-          drawerBody.style.padding = '8px 5px 4px 5px';
-          toolboxPanel.appendChild(drawerBody);
-
-          headingBox.addEventListener('click', () => {
-            const allDrawersList = document.querySelectorAll('.nexus-toolbox-drawer');
-            const isTargetCurrentlyClosed = (drawerBody.style.display === 'none');
-            allDrawersList.forEach(d => d.style.display = 'none'); 
-            drawerBody.style.display = isTargetCurrentlyClosed ? 'flex' : 'none'; 
-          });
-
-          activeFoldersDOMMap[folderCodeTitle] = drawerBody;
-        }
-
         ext.newBlocks.forEach(block => {
           libraryBlocksRegistry.push(block);
+
+          // Track down exactly which manual schema array holds the active block name pointer
+          let matchedFolder = 'CUSTOM';
+          for (const folderName in manualFolderSchema) {
+            if (manualFolderSchema[folderName].includes(block.blockName)) {
+              matchedFolder = folderName;
+              break;
+            }
+          }
+
+          const drawerBody = activeFoldersDOMMap[matchedFolder];
+          if (!drawerBody) return;
 
           const blockElement = document.createElement('div');
           blockElement.style.backgroundColor = '#2d3139';
