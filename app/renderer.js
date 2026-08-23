@@ -17,7 +17,6 @@ btnSquish.addEventListener('click', () => {
   logToTerminal('System', 'Layout updated. Playtest emulator swapped.');
 });
 
-// PERSISTENT DATA SAVE HANDSHAKE LOOP
 async function triggerAutoSavePass() {
   const stateSnapshot = {
     nodes: (window.HallowNexusCanvas && window.HallowNexusCanvas.activeGraphNodes) || [],
@@ -86,7 +85,6 @@ function logToTerminal(sender, message) {
   triggerAutoSavePass();
 }
 
-// TWO-WAY AGENT WORKSPACE INTEGRATION LOGIC TERMINAL HANDSHAKE
 if (ollamaInput) {
   ollamaInput.addEventListener('keydown', async (e) => {
     if (e.key === 'Enter' && ollamaInput.value.trim() !== '') {
@@ -110,11 +108,42 @@ if (ollamaInput) {
         const actionData = JSON.parse(serverResult.rawPayload.trim());
         logToTerminal('Ollama', actionData.message);
 
+        // SYSTEM ACTION INTERCEPTOR 1: Auto-Spawning Cards
         if (actionData.action === 'spawn' && actionData.blockName) {
           const targetTemplate = libraryBlocksRegistry.find(b => b.blockName === actionData.blockName);
           if (targetTemplate && window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) {
             window.HallowNexusCanvas.spawnNodeOnCanvas(targetTemplate);
             logToTerminal('Automation', `Successfully executed agent operation: Spawned block "${actionData.blockName}" onto workspace canvas grid.`);
+          }
+        }
+        
+        // SYSTEM ACTION INTERCEPTOR 2: AUTOMATED NODE DATA WIRING LINKER
+        if (actionData.action === 'link' && actionData.sourceName && actionData.targetName) {
+          if (window.HallowNexusCanvas && window.HallowNexusCanvas.activeGraphNodes && window.HallowNexusWires) {
+            
+            // Map our memory array objects to match the requested card names sitting on your screen
+            const sourceNodeRecord = window.HallowNexusCanvas.activeGraphNodes.find(n => n.blockName === actionData.sourceName);
+            const targetNodeRecord = window.HallowNexusCanvas.activeGraphNodes.find(n => n.blockName === actionData.targetName);
+
+            if (sourceNodeRecord && targetNodeRecord) {
+              // Extract the physical HTML sockets floating on your monitor screen layer
+              const physicalSourceElement = document.getElementById(sourceNodeRecord.id);
+              const physicalTargetElement = document.getElementById(targetNodeRecord.id);
+
+              if (physicalSourceElement && physicalTargetElement) {
+                const outSocketPin = physicalSourceElement.querySelector('.socket-port-out');
+                const inSocketPin = physicalTargetElement.querySelector('.socket-port-in');
+
+                if (outSocketPin && inSocketPin) {
+                  // Execute the two-click pointer logic loop completely on autopilot
+                  window.HallowNexusWires.handleSocketClick(outSocketPin);
+                  window.HallowNexusWires.handleSocketClick(inSocketPin);
+                  logToTerminal('Automation', `Agent connected pipeline execution flow line: [${actionData.sourceName}] ➔ [${actionData.targetName}]`);
+                }
+              }
+            } else {
+              logToTerminal('Automation Warning', 'Could not locate those matching card block configurations sitting live on the grid.');
+            }
           }
         }
       } catch (err) {
@@ -181,7 +210,6 @@ async function bootloadExtensions() {
         });
       });
       
-      // Load disk cache files on script bootup
       loadSavedProjectData();
     } else if (!result.success) {
       logToTerminal('System Error', `Failed to read extensions: ${result.error}`);
