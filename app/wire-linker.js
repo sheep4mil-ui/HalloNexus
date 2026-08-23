@@ -1,18 +1,9 @@
-/**
- * HallowNexus Visual Wire Linker Engine
- * Handles dragging and rendering vector connection paths between node cards.
- */
-
 let activeDrawingWire = null;
 const establishedWires = [];
 
-// Initialize an absolute vector canvas to handle our lines overlay
 function initWireCanvas() {
-  const canvasViewport = document.getElementById('canvas-viewport');
   const canvasGrid = document.getElementById('canvas-grid-layer');
-
-  // Check if SVG overlay already exists to prevent duplicate generation
-  if (document.getElementById('nexus-wire-svg')) return;
+  if (!canvasGrid || document.getElementById('nexus-wire-svg')) return;
 
   const svgNS = "http://w3.org";
   const svgCanvas = document.createElementNS(svgNS, "svg");
@@ -20,75 +11,86 @@ function initWireCanvas() {
   svgCanvas.style.position = "absolute";
   svgCanvas.style.top = "0";
   svgCanvas.style.left = "0";
-  svgCanvas.style.width = "5000px";  // Stretch perfectly over our deep canvas grid
+  svgCanvas.style.width = "5000px"; 
   svgCanvas.style.height = "5000px";
-  svgCanvas.style.pointerEvents = "none"; // Let clicks pass straight through to cards
-  svgCanvas.style.zIndex = "15"; // Sandwiched perfectly beneath header text layers
+  svgCanvas.style.pointerEvents = "none"; 
+  svgCanvas.style.zIndex = "1"; 
 
   canvasGrid.appendChild(svgCanvas);
 }
 
-/**
- * Commences drawing an interactive execution line straight out of a socket node
- * @param {HTMLElement} originSocket - Source circular button node
- */
 function startWireDrag(originSocket) {
   const svgCanvas = document.getElementById('nexus-wire-svg');
   if (!svgCanvas) return;
 
   const svgNS = "http://w3.org";
   const path = document.createElementNS(svgNS, "path");
-  
-  path.setAttribute("stroke", "#4f46e5"); // Signature deep indigo trace light
+  path.setAttribute("stroke", "#4f46e5"); 
   path.setAttribute("stroke-width", "3");
   path.setAttribute("fill", "none");
-  path.setAttribute("stroke-dasharray", "5,5"); // Dash lines denote active drafting state
-  
+  path.setAttribute("stroke-dasharray", "5,5");
   svgCanvas.appendChild(path);
 
-  const rect = originSocket.getBoundingClientRect();
-  const parentRect = document.getElementById('canvas-grid-layer').getBoundingClientRect();
+  // FIX: Track the relative card offset layout instead of client bounds
+  const nodeCard = originSocket.parentElement;
+  const cardX = parseInt(nodeCard.style.left) || 0;
+  const cardY = parseInt(nodeCard.style.top) || 0;
+
+  // Pin coordinates to the socket's exact placement on the card frame
+  const isOutSocket = originSocket.classList.contains('socket-port-out');
+  const ox = cardX + (isOutSocket ? 240 : 0);
+  const oy = cardY + 18; 
 
   activeDrawingWire = {
     pathElement: path,
-    originX: rect.left + rect.width / 2 - parentRect.left,
-    originY: rect.top + rect.height / 2 - parentRect.top,
-    sourceNodeId: originSocket.parentElement.id
+    originX: ox,
+    originY: oy,
+    sourceNodeId: nodeCard.id
   };
 }
 
-/**
- * Continuously draws a curved bezier line following the mouse cursor across the grid
- * @param {MouseEvent} e 
- */
 function updateWireDrag(e) {
   if (!activeDrawingWire) return;
 
-  const parentRect = document.getElementById('canvas-grid-layer').getBoundingClientRect();
-  const mouseX = e.clientX - parentRect.left;
-  const mouseY = e.clientY - parentRect.top;
+  const canvasGridLayer = document.getElementById('canvas-grid-layer');
+  const viewportRect = document.getElementById('canvas-viewport').getBoundingClientRect();
+
+  // FIX: Extract grid transforms to align wires directly with mouse cursor placements
+  const style = window.getComputedStyle(canvasGridLayer);
+  const matrix = new WebKitCSSMatrix(style.transform);
+  
+  const mouseX = e.clientX - viewportRect.left - matrix.m41;
+  const mouseY = e.clientY - viewportRect.top - matrix.m42;
 
   const ox = activeDrawingWire.originX;
   const oy = activeDrawingWire.originY;
-
-  // Compute horizontal curvature tension for premium visual flow
   const controlOffset = Math.abs(mouseX - ox) * 0.5;
   const dStr = `M ${ox} ${oy} C ${ox + controlOffset} ${oy}, ${mouseX - controlOffset} ${mouseY}, ${mouseX} ${mouseY}`;
 
   activeDrawingWire.pathElement.setAttribute("d", dStr);
 }
 
-/**
- * Finalizes wire connections or destroys fragments if dropped into open space
- * @param {HTMLElement} targetSocket - Target circle node socket intersected on drop
- */
 function dropWire(targetSocket) {
   if (!activeDrawingWire) return;
 
   if (targetSocket && targetSocket.parentElement.id !== activeDrawingWire.sourceNodeId) {
-    // Solidify tracing lines on successful logic linkage handshake
-    activeDrawingWire.pathElement.setAttribute("stroke", "#22c55e"); // Green denotes active live connection
+    activeDrawingWire.pathElement.setAttribute("stroke", "#22c55e"); 
     activeDrawingWire.pathElement.removeAttribute("stroke-dasharray");
+
+    // Correct line anchor coordinates permanently on link completion
+    const targetCard = targetSocket.parentElement;
+    const tcX = parseInt(targetCard.style.left) || 0;
+    const tcY = parseInt(targetCard.style.top) || 0;
+    const isInSocket = targetSocket.classList.contains('socket-port-in');
+    
+    const finalX = tcX + (isInSocket ? 0 : 240);
+    const finalY = tcY + 18;
+
+    const ox = activeDrawingWire.originX;
+    const oy = activeDrawingWire.originY;
+    const controlOffset = Math.abs(finalX - ox) * 0.5;
+    const dStr = `M ${ox} ${oy} C ${ox + controlOffset} ${oy}, ${finalX - controlOffset} ${finalY}, ${finalX} ${finalY}`;
+    activeDrawingWire.pathElement.setAttribute("d", dStr);
 
     establishedWires.push({
       path: activeDrawingWire.pathElement,
@@ -96,14 +98,11 @@ function dropWire(targetSocket) {
       targetId: targetSocket.parentElement.id
     });
   } else {
-    // Trash dangling wires if drop fails
     activeDrawingWire.pathElement.remove();
   }
-
   activeDrawingWire = null;
 }
 
-// Global exposure layer for UI orchestration integration
 window.HallowNexusWires = {
   initWireCanvas,
   startWireDrag,
