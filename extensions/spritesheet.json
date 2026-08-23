@@ -1,0 +1,22 @@
+{
+  "extensionName": "Asset Slicer Engine",
+  "category": "SPRITES",
+  "newBlocks": [
+    {
+      "blockName": "LOAD SPRITE SHEET",
+      "tooltip": "Imports a graphic layout matrix sheet into custom memory address slots.",
+      "sideMenuFields": [
+        { "label": "Memory Address", "type": "text", "default": "0xD00000" }
+      ],
+      "ez80AssemblyTemplate": "ld hl, {MemoryAddress}\ncall _BindSpriteSheetRegister"
+    },
+    {
+      "blockName": "SLICE TILE",
+      "tooltip": "Extracts a clean 16x16 visual tile frame from the active lookup sheet matrix index.",
+      "sideMenuFields": [
+        { "label": "Tile Index", "type": "number", "default": 1 }
+      ],
+      "ez80AssemblyTemplate": "ld a, {TileIndex}\ncall _ExtractTileFrameData"
+    }
+  ]
+}
