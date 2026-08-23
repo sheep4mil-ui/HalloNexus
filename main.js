@@ -62,11 +62,10 @@ ipcMain.handle('load-project-state', async () => {
   }
 });
 
-// UPGRADED INTELLIGENT AGENT CONTEXT ROUTER INTERFACE
+// INTELLIGENT AGENT CONTEXT ROUTER INTERFACE WITH AUTOMATED WIRING ENGINE PERMISSIONS
 ipcMain.handle('ollama-chat', async (event, { userPrompt, currentWorkspaceContext }) => {
   return new Promise((resolve) => {
     
-    // REFINED PROMPT: Tells llama3.2 to write a REAL message instead of using boilerplate placeholders
     const systemInstruction = `You are the HallowNexus IDE Automation Engine. You have access to the user's current visual code workspace.
 Current Workspace JSON: ${JSON.stringify(currentWorkspaceContext)}
 
@@ -74,7 +73,10 @@ You can modify the canvas by outputting a strict JSON action configuration layou
 If the user asks to create or spawn a block, respond exactly in this format:
 {"action": "spawn", "blockName": "Initialize Player Sprite", "message": "I have spawned that block for you."}
 
-Available block names you can spawn: "Initialize Player Sprite", "Trigger High-Juice Screen Shake", "Emit Object-Pooled Projectile", "Set Day-Night Cycle Timer", "Spawn Dithered Lantern", "Cast Lighthouse Beam".
+If the user asks to connect or wire two blocks together (or implies execution flow), look at the blockNames currently on the canvas inside the current workspace JSON, and respond exactly in this format:
+{"action": "link", "sourceName": "Initialize Player Sprite", "targetName": "Trigger High-Juice Screen Shake", "message": "I have connected those two blocks for you."}
+
+Available block names you can spawn or link: "Initialize Player Sprite", "Trigger High-Juice Screen Shake", "Emit Object-Pooled Projectile", "Set Day-Night Cycle Timer", "Spawn Dithered Lantern", "Cast Lighthouse Beam".
 
 If they are just asking a general question, explaining logic, or chatting, respond with your actual answer inside the JSON structure like this:
 {"action": "none", "message": "Write your actual detailed development response or answer here based on the user's request."}
