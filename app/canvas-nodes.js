@@ -23,6 +23,10 @@ function spawnNodeOnCanvas(blockData) {
   nodeCard.style.padding = '10px';
   nodeCard.style.boxSizing = 'border-box';
   nodeCard.style.zIndex = '20';
+  
+  // Strict double-down layer on disabling text selections inside the element
+  nodeCard.style.userSelect = 'none';
+  nodeCard.style.webkitUserSelect = 'none';
 
   const nodeRecord = {
     id: nodeCard.id,
@@ -59,10 +63,11 @@ function spawnNodeOnCanvas(blockData) {
   outputSocket.style.cursor = 'pointer';
   outputSocket.title = 'Click to start data wire link';
 
-  // Attach two-click management trigger logic
+  // FIX: Isolated pointer click execution handler
   outputSocket.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation(); // Blocks the background grid from overriding your pointer selection
     if (window.HallowNexusWires) window.HallowNexusWires.handleSocketClick(outputSocket);
-    e.stopPropagation();
   });
   nodeCard.appendChild(outputSocket);
 
@@ -79,9 +84,11 @@ function spawnNodeOnCanvas(blockData) {
   inputSocket.style.cursor = 'pointer';
   inputSocket.title = 'Click to finish data wire link';
 
+  // FIX: Isolated pointer click execution handler
   inputSocket.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation(); // Keeps background view panning system from swallowing the click
     if (window.HallowNexusWires) window.HallowNexusWires.handleSocketClick(inputSocket);
-    e.stopPropagation();
   });
   nodeCard.appendChild(inputSocket);
 
@@ -155,9 +162,6 @@ function spawnNodeOnCanvas(blockData) {
   activeGraphNodes.push(nodeRecord);
 }
 
-/**
- * Sweeps through our active vector wiring path and structures nodes in order of execution
- */
 function getWiredExecutionOrder() {
   if (activeGraphNodes.length === 0) return [];
   
@@ -176,7 +180,7 @@ function getWiredExecutionOrder() {
 
   const targetedNodeIds = wiresList.map(w => w.targetId);
   const rootNodes = activeGraphNodes.filter(n => !targetedNodeIds.includes(n.id));
-  const executionStarters = rootNodes.length > 0 ? rootNodes : [activeGraphNodes[0]];
+  const executionStarters = rootNodes.length > 0 ? rootNodes : [activeGraphNodes];
 
   function traceWirePath(node) {
     if (!node || visitedNodeIds.has(node.id)) return;
