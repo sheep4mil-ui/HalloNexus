@@ -1,5 +1,6 @@
 const activeGraphNodes = [];
 let nodeIdCounter = 0;
+let activeSelectedNodeCardId = null; // Tracks which card is currently clicked for deletion hooks
 
 /**
  * Dynamically spawns an interactive block node card onto the canvas grid layer
@@ -33,6 +34,14 @@ function spawnNodeOnCanvas(blockData) {
     values: {},
     connections: [] 
   };
+
+  // Click card to select it for deletion focus
+  nodeCard.addEventListener('click', (e) => {
+    document.querySelectorAll('.node-card').forEach(card => card.style.borderColor = '#2d3139');
+    activeSelectedNodeCardId = nodeCard.id;
+    nodeCard.style.borderColor = '#4f46e5';
+    e.stopPropagation(); 
+  });
 
   // 1. Header Layout Row
   const header = document.createElement('div');
@@ -88,7 +97,7 @@ function spawnNodeOnCanvas(blockData) {
   });
   nodeCard.appendChild(inputSocket);
 
-  // 3. Side-Drawer Settings Fields
+  // 3. Settings Fields
   if (blockData.sideMenuFields) {
     blockData.sideMenuFields.forEach(field => {
       const fieldWrapper = document.createElement('div');
@@ -201,6 +210,40 @@ function getWiredExecutionOrder() {
 
   return orderedNodes;
 }
+
+// Global window key watcher for the deletion tool
+window.addEventListener('keydown', (e) => {
+  if ((e.key === 'Delete' || e.key === 'Backspace') && activeSelectedNodeCardId) {
+    if (document.activeElement.tagName === 'INPUT') return;
+
+    const targetElement = document.getElementById(activeSelectedNodeCardId);
+    if (targetElement) {
+      targetElement.remove();
+
+      if (window.HallowNexusWires && window.HallowNexusWires.establishedWires) {
+        for (let i = window.HallowNexusWires.establishedWires.length - 1; i >= 0; i--) {
+          const wire = window.HallowNexusWires.establishedWires[i];
+          if (wire.sourceId === activeSelectedNodeCardId || wire.targetId === activeSelectedNodeCardId) {
+            wire.element.remove(); 
+            window.HallowNexusWires.establishedWires.splice(i, 1); 
+          }
+        }
+      }
+
+      const searchIndex = activeGraphNodes.findIndex(n => n.id === activeSelectedNodeCardId);
+      if (searchIndex !== -1) activeGraphNodes.splice(searchIndex, 1);
+
+      activeSelectedNodeCardId = null; 
+    }
+  }
+});
+
+window.addEventListener('click', (e) => {
+  if (e.target.id === 'canvas-viewport' || e.target.id === 'canvas-grid-layer') {
+    document.querySelectorAll('.node-card').forEach(card => card.style.borderColor = '#2d3139');
+    activeSelectedNodeCardId = null;
+  }
+});
 
 window.HallowNexusCanvas = {
   spawnNodeOnCanvas,
