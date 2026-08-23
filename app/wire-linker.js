@@ -2,7 +2,7 @@ let selectedSourceSocket = null;
 const establishedWires = [];
 
 function initWireCanvas() {
-  // FIXED: Targets the top-level viewport so lines stay perfectly visible above the background grid
+  // Target the top-level viewport shell container to prevent grid background burying bugs
   const canvasViewport = document.getElementById('canvas-viewport');
   if (!canvasViewport || document.getElementById('nexus-wire-svg')) return;
 
@@ -12,10 +12,15 @@ function initWireCanvas() {
   svgCanvas.style.position = "absolute";
   svgCanvas.style.top = "0";
   svgCanvas.style.left = "0";
-  svgCanvas.style.width = "100%"; 
-  svgCanvas.style.height = "100%";
-  svgCanvas.style.pointerEvents = "none"; 
-  svgCanvas.style.zIndex = "5"; // Layered safely between the grid background and card blocks
+  
+  // FIXED: Expand canvas container bounding box size variables to prevent clipping lines off-screen
+  svgCanvas.setAttribute("width", "5000");
+  svgCanvas.setAttribute("height", "5000");
+  svgCanvas.style.width = "5000px";
+  svgCanvas.style.height = "5000px";
+  
+  svgCanvas.style.pointerEvents = "none"; // Lets you drag card nodes directly underneath wire lanes
+  svgCanvas.style.zIndex = "5"; // Layered safely right between the grid mesh background and card blocks
 
   canvasViewport.appendChild(svgCanvas);
 }
@@ -24,24 +29,24 @@ function handleSocketClick(clickedSocket) {
   const isOutPort = clickedSocket.classList.contains('socket-port-out');
   const parentCardId = clickedSocket.parentElement.id;
 
-  // Phase 1: First Click - Select output source and turn it Green
+  // Phase 1: First Click - Select output source logic origin pin
   if (!selectedSourceSocket) {
     if (!isOutPort) return;
     
     selectedSourceSocket = clickedSocket;
-    selectedSourceSocket.style.backgroundColor = "#22c55e"; // Green signals active link draft mode
+    selectedSourceSocket.style.backgroundColor = "#22c55e"; // Turn green to track active draft selection
     return;
   }
 
   // Swap targets if clicking a different block's output port
   if (isOutPort) {
-    selectedSourceSocket.style.backgroundColor = "#4f46e5"; // Restore standard purple layout
+    selectedSourceSocket.style.backgroundColor = "#4f46e5"; // Restore deep purple layout palette
     selectedSourceSocket = clickedSocket;
     selectedSourceSocket.style.backgroundColor = "#22c55e";
     return;
   }
 
-  // Strict self-linking protection boundaries filter
+  // Self-linking protection boundaries filter loop
   if (parentCardId === selectedSourceSocket.parentElement.id) {
     selectedSourceSocket.style.backgroundColor = "#4f46e5";
     selectedSourceSocket = null;
@@ -52,17 +57,15 @@ function handleSocketClick(clickedSocket) {
   const sourceSocket = selectedSourceSocket;
   const targetSocket = clickedSocket;
 
-  // Apply the custom visual flashing animation classes to both physical pins
   sourceSocket.classList.add('socket-flash-confirm');
   targetSocket.classList.add('socket-flash-confirm');
 
-  // Once the flashing animation cycles complete, scrub the classes and restore normal baseline colors
   setTimeout(() => {
     sourceSocket.classList.remove('socket-flash-confirm');
     targetSocket.classList.remove('socket-flash-confirm');
     sourceSocket.style.backgroundColor = "#4f46e5"; // Reset output back to standard Purple
     targetSocket.style.backgroundColor = "#38bdf8"; // Reset input back to standard Light Blue
-  }, 900); // 900ms handles 3 clean, crisp flashes seamlessly
+  }, 900); // 900ms matches the precise duration of 3 clean, crisp flashes
 
   // Phase 3: Draw the green curved wire connection path vector
   const svgCanvas = document.getElementById('nexus-wire-svg');
@@ -75,7 +78,7 @@ function handleSocketClick(clickedSocket) {
   path.setAttribute("fill", "none");
   svgCanvas.appendChild(path);
 
-  // FIXED: Calculate coordinates relative to the viewport + grid offsets to handle infinite panning
+  // FIXED: Track relative grid coordinates and map coordinates straight to the expanded SVG map
   const canvasGrid = document.getElementById('canvas-grid-layer');
   const style = window.getComputedStyle(canvasGrid);
   const matrix = new WebKitCSSMatrix(style.transform);
