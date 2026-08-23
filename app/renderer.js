@@ -15,6 +15,16 @@ if (btnClean) btnClean.innerText = '⚙️ Compile Project';
 btnSquish.addEventListener('click', () => {
   document.body.classList.toggle('squish-active');
   logToTerminal('System', 'Layout updated. Playtest emulator swapped.');
+
+  if (document.body.classList.contains('squish-active')) {
+    if (window.HallowNexusEmulator && window.HallowNexusEmulator.mountEmulatorScreen) {
+      window.HallowNexusEmulator.mountEmulatorScreen();
+    }
+  } else {
+    if (window.HallowNexusEmulator && window.HallowNexusEmulator.stopHardwareClock) {
+      window.HallowNexusEmulator.stopHardwareClock();
+    }
+  }
 });
 
 async function triggerAutoSavePass() {
@@ -45,9 +55,11 @@ btnClean.addEventListener('click', async () => {
     
     const fakeCompiledBytes = new Uint8Array([0x3E, 0x01, 0x32, 0x00, 0xC0, 0xC3, 0x00, 0x00]);
     
-    if (window.HallowNexusEmulator) {
+    if (window.HallowNexusEmulator && document.body.classList.contains('squish-active')) {
       window.HallowNexusEmulator.loadBinaryPayload(fakeCompiledBytes);
       logToTerminal('Success', 'Build complete! Machine data successfully flashed to local emulator memory banks.');
+    } else {
+      logToTerminal('Success', 'Build complete! Open the Switch Emulator viewport to run payload.');
     }
   } catch (err) {
     logToTerminal('Compiler Pipeline Verified', 'Wire-link path tracked successfully! Passed text to disk records.');
@@ -87,7 +99,6 @@ function logToTerminal(sender, message) {
   aiLogs.scrollTop = aiLogs.scrollHeight;
   triggerAutoSavePass();
 }
-
 if (ollamaInput) {
   ollamaInput.addEventListener('keydown', async (e) => {
     if (e.key === 'Enter' && ollamaInput.value.trim() !== '') {
@@ -148,7 +159,7 @@ if (ollamaInput) {
                 }, 150);
               }
             } catch (innerErr) {
-              // Safe block skip
+              // Safe fallback bypass
             }
           });
         } else {
@@ -228,10 +239,6 @@ async function bootloadExtensions() {
 }
 
 bootloadExtensions();
-
-if (window.HallowNexusEmulator) {
-  window.HallowNexusEmulator.mountEmulatorScreen();
-}
 
 if (window.HallowNexusWires) {
   window.HallowNexusWires.initWireCanvas();
