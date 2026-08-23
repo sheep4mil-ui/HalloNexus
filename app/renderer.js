@@ -6,13 +6,13 @@ const canvasGridLayer = document.getElementById('canvas-grid-layer');
 const aiLogs = document.getElementById('ai-logs');
 const toolboxPanel = document.getElementById('toolbox');
 
-// 1. Handle Playtest Emulator Animation Switch
+// 1. Playtest Layout Switch Toggle Animation
 btnSquish.addEventListener('click', () => {
   document.body.classList.toggle('squish-active');
   logToTerminal('System', 'Layout updated. Playtest emulator swapped.');
 });
 
-// 2. Canvas Background Drag/Panning Math
+// 2. Center Background Canvas Pan Engine
 let isPanning = false;
 let startX = 0, startY = 0;
 let transformX = 0, transformY = 0;
@@ -46,7 +46,7 @@ function logToTerminal(sender, message) {
   aiLogs.scrollTop = aiLogs.scrollHeight;
 }
 
-// 3. Dynamic Extensions Parsing Bootloader
+// 3. Integrated Dynamic Extensions Interface Builder
 async function bootloadExtensions() {
   try {
     const result = await ipcRenderer.invoke('load-extensions');
@@ -71,13 +71,15 @@ async function bootloadExtensions() {
           blockElement.style.cursor = 'pointer';
           blockElement.style.borderLeft = '4px solid #4f46e5';
           blockElement.style.userSelect = 'none';
-          blockElement.title = block.tooltip;
           blockElement.innerText = block.blockName;
 
+          // DIRECT LOCAL LINK CALL (Bypasses window scope latency deadlocks)
           blockElement.addEventListener('click', () => {
             if (window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) {
               window.HallowNexusCanvas.spawnNodeOnCanvas(block);
               logToTerminal('Canvas', `Spawned node: "${block.blockName}" onto workspace grid.`);
+            } else {
+              logToTerminal('Error', 'Canvas handler layer buffering. Click again.');
             }
           });
 
@@ -92,9 +94,10 @@ async function bootloadExtensions() {
   }
 }
 
+// Fire bootloader routine pass
 bootloadExtensions();
 
-// 4. Wire Linker Drag Orchestration Hooks
+// 4. Wire Canvas Vector Synchronization Watchers
 if (window.HallowNexusWires) {
   window.HallowNexusWires.initWireCanvas();
 }
