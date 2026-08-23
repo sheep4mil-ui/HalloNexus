@@ -1,11 +1,11 @@
 /**
  * HallowNexus Virtual eZ80 Hardware Sandbox Loop Engine
- * Emulates memory-mapped VRAM buffer states and handles clock execution ticks.
+ * Emulates memory-mapped VRAM buffer states with dynamic resize rendering recovery trackers.
  */
 
 class NexusHardwareEmulator {
   constructor() {
-    this.virtualRAM = new Uint8Array(65536); // Core 64KB Safe Sandbox Memory Block
+    this.virtualRAM = new Uint8Array(65536); 
     this.isActiveRuntime = false;
     this.instructionPointer = 0x0000;
     this.animationFrameFrameId = null;
@@ -13,6 +13,7 @@ class NexusHardwareEmulator {
     // Hardware Screen Dimensions matching the TI-84 Plus CE
     this.screenWidth = 320;
     this.screenHeight = 240;
+    this.resizeObserver = null;
   }
 
   /**
@@ -38,7 +39,7 @@ class NexusHardwareEmulator {
     displayCanvas.height = this.screenHeight;
     displayCanvas.style.width = '100%';
     displayCanvas.style.height = 'calc(100% - 30px)';
-    displayCanvas.style.imageRendering = 'pixelated'; // Keep that retro crispness look clean
+    displayCanvas.style.imageRendering = 'pixelated'; 
     displayCanvas.style.backgroundColor = '#000000';
     screenWrapper.appendChild(displayCanvas);
 
@@ -60,6 +61,20 @@ class NexusHardwareEmulator {
     screenWrapper.appendChild(statusLine);
 
     this.clearVirtualScreen();
+
+    // 💎 RESIZE OBSERVER ENGINE: Forces canvas redraws the millisecond the panel expands open
+    if (this.resizeObserver) this.resizeObserver.disconnect();
+    
+    this.resizeObserver = new ResizeObserver(() => {
+      if (displayCanvas.clientWidth > 0 && displayCanvas.clientHeight > 0) {
+        this.clearVirtualScreen();
+        if (this.isActiveRuntime) {
+          this.renderVRAMBufferFrame();
+        }
+      }
+    });
+    
+    this.resizeObserver.observe(screenWrapper);
   }
 
   /**
@@ -75,7 +90,6 @@ class NexusHardwareEmulator {
 
   /**
    * Injects compiled machine code bytes straight into the execution memory buffer index addresses
-   * @param {Uint8Array} binaryArray - Raw machine instructions array passed from compiler
    */
   loadBinaryPayload(binaryArray) {
     this.stopHardwareClock();
@@ -100,7 +114,6 @@ class NexusHardwareEmulator {
     const updateStatusBar = document.getElementById('emulator-status-bar');
     if (updateStatusBar) updateStatusBar.innerText = 'STATUS: RUNNING | PC: 0x0000 | CLK: 15.00 MHz';
 
-    // Fire the core operational clock rendering trace thread pipeline
     const tickLoop = () => {
       if (!this.isActiveRuntime) return;
       
@@ -120,52 +133,37 @@ class NexusHardwareEmulator {
     const updateStatusBar = document.getElementById('emulator-status-bar');
     if (updateStatusBar) {
       const hexPC = this.instructionPointer.toString(16).toUpperCase().padStart(4, '0');
-      updateStatusBar.innerText = `STATUS: HALTED | PC: 0x${hexPC} | CLK: 0.00 MHz`;
+      updateStatusBar.innerText = 'STATUS: HALTED | PC: 0x' + hexPC + ' | CLK: 0.00 MHz';
     }
   }
 
-  /**
-   * High-Juice Micro-op parsing step emulation (Simulates hardware flag mutations)
-   */
   executeClockCycleStep() {
-    // Read operational code byte straight out of our pointer tracker index
     const opCode = this.virtualRAM[this.instructionPointer];
-    
-    // Procedural execution instruction increment pipeline loop
     this.instructionPointer = (this.instructionPointer + 1) % this.virtualRAM.length;
 
-    // Simulate simple hardware memory register manipulations to prevent loop deadlocks
-    // This draws randomized noise paths on the screen if the uploaded program hits open memory holes
     if (Math.random() < 0.05) {
       const randomVRAMAddress = Math.floor(Math.random() * 2000) + 0xC000;
       this.virtualRAM[randomVRAMAddress] = Math.floor(Math.random() * 256);
     }
   }
 
-  /**
-   * Flushes memory-mapped screen vectors straight out onto the active canvas pixel buffers
-   */
   renderVRAMBufferFrame() {
     const canvas = document.getElementById('nexus-virtual-lcd');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     
-    // Simulate reading a memory-mapped VRAM block layout area starting at index 0xC000
     const imgData = ctx.createImageData(this.screenWidth, this.screenHeight);
     
-    // Sweep the display pixel index lists and update color codes live
     for (let i = 0; i < imgData.data.length; i += 4) {
       const ramOffset = 0xC000 + (i / 4) % 4000;
       const pixelVal = this.virtualRAM[ramOffset];
 
-      // Convert our 8-bit index numbers into glowing visual retro screen colors matrix
       if (pixelVal > 0) {
-        imgData.data[i] = (pixelVal * 7) % 256;     // Red channel mapping
-        imgData.data[i + 1] = (pixelVal * 13) % 256; // Green channel mapping
-        imgData.data[i + 2] = (pixelVal * 23) % 256; // Blue channel mapping
-        imgData.data[i + 3] = 255;                   // Alpha density channel solid
+        imgData.data[i] = (pixelVal * 7) % 256;     
+        imgData.data[i + 1] = (pixelVal * 13) % 256; 
+        imgData.data[i + 2] = (pixelVal * 23) % 256; 
+        imgData.data[i + 3] = 255;                   
       } else {
-        // Fallback transparent default grid mesh screen layer paint
         imgData.data[i] = 30;
         imgData.data[i + 1] = 30;
         imgData.data[i + 2] = 36;
@@ -177,5 +175,4 @@ class NexusHardwareEmulator {
   }
 }
 
-// Global integration handshake namespaces layer mapping channels
 window.HallowNexusEmulator = new NexusHardwareEmulator();
