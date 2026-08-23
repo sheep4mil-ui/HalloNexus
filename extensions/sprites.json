@@ -1,32 +1,94 @@
 {
-  "extensionName": "Sprite Core Pack",
-  "category": "Sprites & Screen",
+  "extensionName": "Universal Object, Hitbox & Masking Engine",
+  "category": "SPRITES & LAYER HANDLING",
   "newBlocks": [
     {
-      "blockName": "SUMMON SPRITE",
-      "tooltip": "Allocates memory coordinates and summons a sprite object onto the project grid.",
+      "blockName": "ALLOCATE OBJECT REGISTERS",
+      "tooltip": "Carves out a structured byte-array block in safe RAM to track an entity's custom tracking states.",
       "sideMenuFields": [
-        { "label": "X Register", "type": "number", "default": 160 },
-        { "label": "Y Register", "type": "number", "default": 120 }
+        { "label": "Slot ID", "type": "number", "default": 1 },
+        { "label": "Initial X Byte", "type": "number", "default": 160 },
+        { "label": "Initial Y Byte", "type": "number", "default": 120 }
       ],
-      "ez80AssemblyTemplate": "ld hl, {XRegister}\nld (Player_X), hl\nld de, {YRegister}\nld (Player_Y), de\ncall _SummonActiveSprite"
+      "ez80AssemblyTemplate": "ld a, {SlotID}\ncall _GetEntityAddressPointer\nld (hl), {InitialXByte}\ninc hl\nld (hl), {InitialYByte}"
     },
     {
-      "blockName": "SCREEN SHAKE",
-      "tooltip": "Triggers a hardware offset shift pass to execute a viewport camera screen shake.",
+      "blockName": "SET MICRO-PIXEL HITBOX",
+      "tooltip": "Configures a 4-byte fine-grained environmental boundary offset matrix bypassing standard 16x16 grid constraints.",
       "sideMenuFields": [
-        { "label": "Intensity", "type": "number", "default": 4 },
-        { "label": "Frames", "type": "number", "default": 15 }
+        { "label": "Top Offset", "type": "number", "default": 2 },
+        { "label": "Bottom Offset", "type": "number", "default": 14 },
+        { "label": "Left Offset", "type": "number", "default": 3 },
+        { "label": "Right Offset", "type": "number", "default": 13 }
       ],
-      "ez80AssemblyTemplate": "ld a, {Intensity}\nld b, {Frames}\ncall _ExecuteScreenShakeMatrix"
+      "ez80AssemblyTemplate": "ld a, {TopOffset}\nld b, {BottomOffset}\nld c, {LeftOffset}\nld d, {RightOffset}\ncall _ConfigureSubFullBoundaryHitbox"
     },
     {
-      "blockName": "DRAW PIXELS",
-      "tooltip": "Draws raw color index map data bytes directly onto the active screen buffer frames.",
+      "blockName": "APPLY 1-BIT RASTER MASK",
+      "tooltip": "Injects a moving lighting cone, torch, or lighthouse beam using zero-math 1-bit hardware lookup tables.",
       "sideMenuFields": [
-        { "label": "Data Pointer", "type": "text", "default": "SpriteData" }
+        { "label": "Mask Vector Shape", "type": "text", "default": "Flashlight_Cone" },
+        { "label": "Source Slot ID", "type": "number", "default": 1 }
       ],
-      "ez80AssemblyTemplate": "ld hl, {DataPointer}\ncall _DrawTransparentPixelsMatrix"
+      "ez80AssemblyTemplate": "ld a, {SourceSlotID}\nld hl, {MaskVectorShape}\ncall _BlitHardwareLightingRasterMask"
+    },
+    {
+      "blockName": "RENDER ACTIVE FRAME MATRIX",
+      "tooltip": "Loops through all structured RAM object blocks and blits their sprite data matrices onto the screen VRAM buffer.",
+      "sideMenuFields": [
+        { "label": "VRAM Surface Layer", "type": "text", "default": "Gbuf" }
+      ],
+      "ez80AssemblyTemplate": "ld hl, {VRAMSurfaceLayer}\ncall _RenderAllActiveEntityPointers"
+    },
+    {
+      "blockName": "STREAM SHEET INDEX",
+      "tooltip": "Calculates the precise VRAM rendering jump offset for sprite textures mapping sequences.",
+      "sideMenuFields": [
+        { "label": "Texture Start Address", "type": "text", "default": "SpriteSheet" },
+        { "label": "Active Frame Index Offset", "type": "number", "default": 0 }
+      ],
+      "ez80AssemblyTemplate": "ld hl, {TextureStartAddress}\nld a, {ActiveFrameIndexOffset}\ncall _StreamSheetIndex"
+    },
+    {
+      "blockName": "CYCLE ANIMATION FRAME",
+      "tooltip": "Increments animation loop trackers automatically based on set frame hardware delay parameters.",
+      "sideMenuFields": [
+        { "label": "Frame Count Limit", "type": "number", "default": 4 },
+        { "label": "Interrupt Tick Delay", "type": "number", "default": 8 }
+      ],
+      "ez80AssemblyTemplate": "ld a, {FrameCountLimit}\nld b, {InterruptTickDelay}\ncall _CycleAnimationFrame"
+    },
+    {
+      "blockName": "FLIP TEXTURE HORIZONTAL",
+      "tooltip": "Reverses the horizontal rendering orientation of a texture map vector inside double buffers layout frames.",
+      "sideMenuFields": [
+        { "label": "Sprite Asset Target ID", "type": "number", "default": 1 }
+      ],
+      "ez80AssemblyTemplate": "ld a, {SpriteAssetTargetID}\ncall _FlipTextureHorizontal"
+    },
+    {
+      "blockName": "FLIP TEXTURE VERTICAL",
+      "tooltip": "Reverses the vertical drawing layout sequence pass to flip asset textures upside down.",
+      "sideMenuFields": [
+        { "label": "Sprite Asset Target ID", "type": "number", "default": 1 }
+      ],
+      "ez80AssemblyTemplate": "ld a, {SpriteAssetTargetID}\ncall _FlipTextureVertical"
+    },
+    {
+      "blockName": "SCALE SPRITE DOUBLE",
+      "tooltip": "Executes a pixel-doubling blit matrix pass to scale rendering sizes cleanly on screen.",
+      "sideMenuFields": [
+        { "label": "Sprite Target ID Reference", "type": "number", "default": 1 }
+      ],
+      "ez80AssemblyTemplate": "ld a, {SpriteTargetIDReference}\ncall _ScaleSpriteDouble"
+    },
+    {
+      "blockName": "SET TRANSPARENT PALETTE ALPHA",
+      "tooltip": "Designates an exact hardware color palette lookup index value as a clear skip parameter for un-boxed boundaries drawing.",
+      "sideMenuFields": [
+        { "label": "Color Index Number Tag", "type": "number", "default": 0 }
+      ],
+      "ez80AssemblyTemplate": "ld a, {ColorIndexNumberTag}\ncall _SetTransparentPaletteAlpha"
     }
   ]
 }
