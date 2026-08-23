@@ -41,7 +41,7 @@
       "sideMenuFields": [
         { "label": "Bus Logic Mode", "type": "text", "default": "Freeze_Physics_Only" }
       ],
-      "ez80AssemblyTemplate": "ld a, {BusLogicMode_INDEX}\ncall _RegisterHardwareClockInterruptBus"
+      "ez80AssemblyTemplate": "ld a, {BusLogicMode}\ncall _RegisterHardwareClockInterruptBus"
     },
     {
       "blockName": "PLAY SOUND TONE",
