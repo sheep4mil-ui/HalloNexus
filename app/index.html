@@ -39,16 +39,10 @@
       background-size: 25px 25px;
     }
     
-    .node-card {
-      user-select: none !important;
-      -webkit-user-select: none !important;
-    }
+    .node-card { user-select: none !important; -webkit-user-select: none !important; }
 
     /* 💎 ANIMATION ENGINE: 3x Confirmation Flash Timing Loops */
-    .socket-flash-confirm {
-      animation: socketFlashLoop 0.3s ease-in-out 3;
-    }
-
+    .socket-flash-confirm { animation: socketFlashLoop 0.3s ease-in-out 3; }
     @keyframes socketFlashLoop {
       0%, 100% { background-color: #22c55e; box-shadow: 0 0 8px #22c55e; }
       50% { background-color: #1a1c23; box-shadow: none; }
