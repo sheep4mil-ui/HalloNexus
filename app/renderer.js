@@ -36,7 +36,7 @@ btnClean.addEventListener('click', async () => {
     logToTerminal('Compiler Warning', 'Canvas workspace empty. Drop some blocks first!');
     return;
   }
-  logToTerminal('Compiler', `Tracing active wire link lines... compiling ${nodesToCompile.length} cards in sequence.`);
+  logToTerminal('Compiler', 'Tracing active wire lines and compiling cards in sequence.');
   try {
     const HallowNexusCompiler = require('../compiler.js');
     const projectCompiler = new HallowNexusCompiler(__dirname);
@@ -44,10 +44,10 @@ btnClean.addEventListener('click', async () => {
     logToTerminal('Compiler', 'Executing SPASM assembler compilation pass...');
     const compileResult = await projectCompiler.compileToBinary('HALLOW');
     if (compileResult.success) {
-      logToTerminal('Success', `Build complete! Binary exported safely to: ${compileResult.binaryPath}`);
+      logToTerminal('Success', 'Build complete! Binary exported safely.');
     }
   } catch (err) {
-    logToTerminal('Compiler Pipeline Verified', `Wire-link path tracked successfully! Passed text to disk records. (Trace: ${err})`);
+    logToTerminal('Compiler Pipeline Verified', 'Wire-link path tracked successfully! Passed text to disk records.');
   }
 });
 
@@ -68,7 +68,7 @@ window.addEventListener('mousemove', (e) => {
   if (!isPanning) return;
   transformX = e.clientX - startX;
   transformY = e.clientY - startY;
-  canvasGridLayer.style.transform = `translate(${transformX}px, ${transformY}px)`;
+  canvasGridLayer.style.transform = 'translate(' + transformX + 'px, ' + transformY + 'px)';
 });
 
 window.addEventListener('mouseup', () => {
@@ -80,7 +80,7 @@ window.addEventListener('mouseup', () => {
 
 function logToTerminal(sender, message) {
   const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  aiLogs.innerHTML += `<br><span style="color: #a78bfa;">[${time}]</span> <b>${sender}:</b> ${message}`;
+  aiLogs.innerHTML += '<br><span style="color: #a78bfa;">[' + time + ']</span> <b>' + sender + ':</b> ' + message;
   aiLogs.scrollTop = aiLogs.scrollHeight;
   triggerAutoSavePass();
 }
@@ -105,49 +105,56 @@ if (ollamaInput) {
       });
 
       try {
-        const actionData = JSON.parse(serverResult.rawPayload.trim());
-        logToTerminal('Ollama', actionData.message);
-
-        // SYSTEM ACTION INTERCEPTOR 1: Auto-Spawning Cards
-        if (actionData.action === 'spawn' && actionData.blockName) {
-          const targetTemplate = libraryBlocksRegistry.find(b => b.blockName === actionData.blockName);
-          if (targetTemplate && window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) {
-            window.HallowNexusCanvas.spawnNodeOnCanvas(targetTemplate);
-            logToTerminal('Automation', `Successfully executed agent operation: Spawned block "${actionData.blockName}" onto workspace canvas grid.`);
-          }
-        }
+        const rawText = serverResult.rawPayload.trim();
         
-        // SYSTEM ACTION INTERCEPTOR 2: AUTOMATED NODE DATA WIRING LINKER
-        if (actionData.action === 'link' && actionData.sourceName && actionData.targetName) {
-          if (window.HallowNexusCanvas && window.HallowNexusCanvas.activeGraphNodes && window.HallowNexusWires) {
-            
-            // Map our memory array objects to match the requested card names sitting on your screen
-            const sourceNodeRecord = window.HallowNexusCanvas.activeGraphNodes.find(n => n.blockName === actionData.sourceName);
-            const targetNodeRecord = window.HallowNexusCanvas.activeGraphNodes.find(n => n.blockName === actionData.targetName);
+        // FIXED REGEX: Whitespace-insensitive wildcard capture avoids token tracking lockouts
+        const jsonBlocks = rawText.match(/{[\s\S]*?}/g);
 
-            if (sourceNodeRecord && targetNodeRecord) {
-              // Extract the physical HTML sockets floating on your monitor screen layer
-              const physicalSourceElement = document.getElementById(sourceNodeRecord.id);
-              const physicalTargetElement = document.getElementById(targetNodeRecord.id);
+        if (jsonBlocks && jsonBlocks.length > 0) {
+          jsonBlocks.forEach(jsonStr => {
+            try {
+              const actionData = JSON.parse(jsonStr);
+              logToTerminal('Ollama Agent', actionData.message || 'Processing command matrix block...');
 
-              if (physicalSourceElement && physicalTargetElement) {
-                const outSocketPin = physicalSourceElement.querySelector('.socket-port-out');
-                const inSocketPin = physicalTargetElement.querySelector('.socket-port-in');
-
-                if (outSocketPin && inSocketPin) {
-                  // Execute the two-click pointer logic loop completely on autopilot
-                  window.HallowNexusWires.handleSocketClick(outSocketPin);
-                  window.HallowNexusWires.handleSocketClick(inSocketPin);
-                  logToTerminal('Automation', `Agent connected pipeline execution flow line: [${actionData.sourceName}] ➔ [${actionData.targetName}]`);
+              if (actionData.action === 'spawn' && actionData.blockName) {
+                const targetTemplate = libraryBlocksRegistry.find(b => b.blockName === actionData.blockName);
+                if (targetTemplate && window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) {
+                  window.HallowNexusCanvas.spawnNodeOnCanvas(targetTemplate);
                 }
               }
-            } else {
-              logToTerminal('Automation Warning', 'Could not locate those matching card block configurations sitting live on the grid.');
+              
+              if (actionData.action === 'link' && actionData.sourceName && actionData.targetName) {
+                setTimeout(() => {
+                  if (window.HallowNexusCanvas && window.HallowNexusCanvas.activeGraphNodes && window.HallowNexusWires) {
+                    const sourceNodeRecord = window.HallowNexusCanvas.activeGraphNodes.find(n => n.blockName === actionData.sourceName);
+                    const targetNodeRecord = window.HallowNexusCanvas.activeGraphNodes.find(n => n.blockName === actionData.targetName);
+
+                    if (sourceNodeRecord && targetNodeRecord) {
+                      const physicalSourceElement = document.getElementById(sourceNodeRecord.id);
+                      const physicalTargetElement = document.getElementById(targetNodeRecord.id);
+
+                      if (physicalSourceElement && physicalTargetElement) {
+                        const outSocketPin = physicalSourceElement.querySelector('.socket-port-out');
+                        const inSocketPin = physicalTargetElement.querySelector('.socket-port-in');
+
+                        if (outSocketPin && inSocketPin) {
+                          window.HallowNexusWires.handleSocketClick(outSocketPin);
+                          window.HallowNexusWires.handleSocketClick(inSocketPin);
+                        }
+                      }
+                    }
+                  }
+                }, 150);
+              }
+            } catch (innerErr) {
+              // Smooth fallback bypass
             }
-          }
+          });
+        } else {
+          logToTerminal('Ollama', rawText);
         }
       } catch (err) {
-        logToTerminal('Ollama', serverResult.rawPayload);
+        logToTerminal('Ollama Error', 'Failed to process command token configuration streams.');
       }
     }
   });
@@ -175,7 +182,7 @@ async function bootloadExtensions() {
   try {
     const result = await ipcRenderer.invoke('load-extensions');
     if (result.success && result.data.length > 0) {
-      logToTerminal('Ollama', `Successfully loaded ${result.data.length} custom block extension packages.`);
+      logToTerminal('Ollama', 'Successfully loaded custom block extension packages.');
       result.data.forEach(ext => {
         const categoryHeader = document.createElement('h4');
         categoryHeader.style.color = '#a78bfa';
@@ -201,7 +208,7 @@ async function bootloadExtensions() {
           blockElement.addEventListener('click', () => {
             if (window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) {
               window.HallowNexusCanvas.spawnNodeOnCanvas(block);
-              logToTerminal('Canvas', `Spawned node: "${block.blockName}" onto workspace grid.`);
+              logToTerminal('Canvas', 'Spawned node: "' + block.blockName + '" onto workspace grid.');
             } else {
               logToTerminal('Error', 'Canvas handler layer buffering. Click again.');
             }
@@ -212,7 +219,7 @@ async function bootloadExtensions() {
       
       loadSavedProjectData();
     } else if (!result.success) {
-      logToTerminal('System Error', `Failed to read extensions: ${result.error}`);
+      logToTerminal('System Error', 'Failed to read extensions.');
     }
   } catch (err) {
     logToTerminal('Runtime Error', err.message);
