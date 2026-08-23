@@ -2,6 +2,7 @@ let selectedSourceSocket = null;
 const establishedWires = [];
 
 function initWireCanvas() {
+  // FIXED: Targets the top-level viewport so lines stay perfectly visible above the background grid
   const canvasViewport = document.getElementById('canvas-viewport');
   if (!canvasViewport || document.getElementById('nexus-wire-svg')) return;
 
@@ -14,7 +15,7 @@ function initWireCanvas() {
   svgCanvas.style.width = "100%"; 
   svgCanvas.style.height = "100%";
   svgCanvas.style.pointerEvents = "none"; 
-  svgCanvas.style.zIndex = "5"; 
+  svgCanvas.style.zIndex = "5"; // Layered safely between the grid background and card blocks
 
   canvasViewport.appendChild(svgCanvas);
 }
@@ -28,19 +29,19 @@ function handleSocketClick(clickedSocket) {
     if (!isOutPort) return;
     
     selectedSourceSocket = clickedSocket;
-    selectedSourceSocket.style.backgroundColor = "#22c55e"; // Green shows active linking state
+    selectedSourceSocket.style.backgroundColor = "#22c55e"; // Green signals active link draft mode
     return;
   }
 
   // Swap targets if clicking a different block's output port
   if (isOutPort) {
-    selectedSourceSocket.style.backgroundColor = "#4f46e5"; // Reset old one back to normal purple
+    selectedSourceSocket.style.backgroundColor = "#4f46e5"; // Restore standard purple layout
     selectedSourceSocket = clickedSocket;
     selectedSourceSocket.style.backgroundColor = "#22c55e";
     return;
   }
 
-  // Self-linking protection boundaries filter
+  // Strict self-linking protection boundaries filter
   if (parentCardId === selectedSourceSocket.parentElement.id) {
     selectedSourceSocket.style.backgroundColor = "#4f46e5";
     selectedSourceSocket = null;
@@ -61,7 +62,7 @@ function handleSocketClick(clickedSocket) {
     targetSocket.classList.remove('socket-flash-confirm');
     sourceSocket.style.backgroundColor = "#4f46e5"; // Reset output back to standard Purple
     targetSocket.style.backgroundColor = "#38bdf8"; // Reset input back to standard Light Blue
-  }, 900); // 900ms matches the precise duration of 3 clean, crisp flashes
+  }, 900); // 900ms handles 3 clean, crisp flashes seamlessly
 
   // Phase 3: Draw the green curved wire connection path vector
   const svgCanvas = document.getElementById('nexus-wire-svg');
@@ -74,6 +75,7 @@ function handleSocketClick(clickedSocket) {
   path.setAttribute("fill", "none");
   svgCanvas.appendChild(path);
 
+  // FIXED: Calculate coordinates relative to the viewport + grid offsets to handle infinite panning
   const canvasGrid = document.getElementById('canvas-grid-layer');
   const style = window.getComputedStyle(canvasGrid);
   const matrix = new WebKitCSSMatrix(style.transform);
