@@ -1,153 +1,113 @@
-// Array to track every spawned card block instance floating on the infinite grid
-const activeGraphNodes = [];
-let nodeIdCounter = 0;
-
 /**
- * Dynamically spawns an interactive block node card onto Panel 2's canvas grid layer
- * @param {Object} blockData - The raw definition template parsed from our extensions JSON
+ * HallowNexus Visual Wire Linker Engine
+ * Handles dragging and rendering vector connection paths between node cards.
  */
-function spawnNodeOnCanvas(blockData) {
-  nodeIdCounter++;
+
+let activeDrawingWire = null;
+const establishedWires = [];
+
+// Initialize an absolute vector canvas to handle our lines overlay
+function initWireCanvas() {
+  const canvasViewport = document.getElementById('canvas-viewport');
   const canvasGrid = document.getElementById('canvas-grid-layer');
 
-  // Create the primary card frame structure
-  const nodeCard = document.createElement('div');
-  nodeCard.className = 'node-card';
-  nodeCard.id = `node-${nodeIdCounter}`;
-  nodeCard.style.position = 'absolute';
-  nodeCard.style.left = '150px'; // Set a default initial viewport layout position
-  nodeCard.style.top = '150px';
-  nodeCard.style.width = '240px';
-  nodeCard.style.backgroundColor = '#1a1c23';
-  nodeCard.style.border = '2px solid #2d3139';
-  nodeCard.style.borderRadius = '6px';
-  nodeCard.style.padding = '10px';
-  nodeCard.style.boxSizing = 'border-box';
-  nodeCard.style.zIndex = '20';
+  // Check if SVG overlay already exists to prevent duplicate generation
+  if (document.getElementById('nexus-wire-svg')) return;
 
-  // Inner structural record tracking values
-  const nodeRecord = {
-    id: nodeCard.id,
-    blockName: blockData.blockName,
-    ez80AssemblyTemplate: blockData.ez80AssemblyTemplate,
-    values: {}
-  };
+  const svgNS = "http://w3.org";
+  const svgCanvas = document.createElementNS(svgNS, "svg");
+  svgCanvas.setAttribute("id", "nexus-wire-svg");
+  svgCanvas.style.position = "absolute";
+  svgCanvas.style.top = "0";
+  svgCanvas.style.left = "0";
+  svgCanvas.style.width = "5000px";  // Stretch perfectly over our deep canvas grid
+  svgCanvas.style.height = "5000px";
+  svgCanvas.style.pointerEvents = "none"; // Let clicks pass straight through to cards
+  svgCanvas.style.zIndex = "15"; // Sandwiched perfectly beneath header text layers
 
-  // 1. Header Row (Block Title text layout)
-  const header = document.createElement('div');
-  header.style.color = '#e2e8f0';
-  header.style.fontSize = '13px';
-  header.style.fontWeight = 'bold';
-  header.style.borderBottom = '1px solid #2d3139';
-  header.style.paddingBottom = '5px';
-  header.style.marginBottom = '8px';
-  header.innerText = blockData.blockName;
-  nodeCard.appendChild(header);
-
-  // 2. Circular Wire Sockets (Universal Omni-Wire Ports layout)
-  // Left Input Node Port
-  const inputSocket = document.createElement('div');
-  inputSocket.style.position = 'absolute';
-  inputSocket.style.left = '-8px';
-  inputSocket.style.top = '12px';
-  inputSocket.style.width = '12px';
-  inputSocket.style.height = '12px';
-  inputSocket.style.borderRadius = '50%';
-  inputSocket.style.backgroundColor = '#38bdf8';
-  inputSocket.style.border = '2px solid #0b0c10';
-  inputSocket.title = 'Input Execution Socket';
-  nodeCard.appendChild(inputSocket);
-
-  // Right Output Node Port
-  const outputSocket = document.createElement('div');
-  outputSocket.style.position = 'absolute';
-  outputSocket.style.right = '-8px';
-  outputSocket.style.top = '12px';
-  outputSocket.style.width = '12px';
-  outputSocket.style.height = '12px';
-  outputSocket.style.borderRadius = '50%';
-  outputSocket.style.backgroundColor = '#4f46e5';
-  outputSocket.style.border = '2px solid #0b0c10';
-  outputSocket.title = 'Output Multi-Wire Socket';
-  nodeCard.appendChild(outputSocket);
-
-  // 3. Dynamic Side-Drawer Context Fields Generator
-  if (blockData.sideMenuFields) {
-    blockData.sideMenuFields.forEach(field => {
-      const fieldWrapper = document.createElement('div');
-      fieldWrapper.style.marginBottom = '6px';
-      fieldWrapper.style.display = 'flex';
-      fieldWrapper.style.flexDirection = 'column';
-      fieldWrapper.style.gap = '2px';
-
-      const label = document.createElement('label');
-      label.style.fontSize = '11px';
-      label.style.color = '#94a3b8';
-      label.innerText = field.label;
-
-      const input = document.createElement('input');
-      input.type = field.type === 'number' ? 'number' : 'text';
-      input.value = field.default;
-      input.style.backgroundColor = '#0b0c10';
-      input.style.border = '1px solid #2d3139';
-      input.style.color = '#e2e8f0';
-      input.style.padding = '4px';
-      input.style.borderRadius = '4px';
-      input.style.fontSize = '12px';
-
-      // Clean string parameter key formatting
-      const paramKey = field.label.replace(/\s+/g, '');
-      nodeRecord.values[paramKey] = input.value;
-
-      // Update parameters live in memory matrix whenever input text wiggles
-      input.addEventListener('input', () => {
-        nodeRecord.values[paramKey] = input.value;
-      });
-
-      fieldWrapper.appendChild(label);
-      fieldWrapper.appendChild(input);
-      nodeCard.appendChild(fieldWrapper);
-    });
-  }
-
-  // 4. Basic Desktop Mouse Drag-and-Drop Coordinates logic
-  let isDraggingNode = false;
-  let offsetX = 0, offsetY = 0;
-
-  header.addEventListener('mousedown', (e) => {
-    isDraggingNode = true;
-    // Calculate precise mouse bounding offsets inside panel
-    const rect = nodeCard.getBoundingClientRect();
-    const parentRect = canvasGrid.getBoundingClientRect();
-    offsetX = e.clientX - rect.left;
-    offsetY = e.clientY - rect.top;
-    nodeCard.style.cursor = 'grabbing';
-    e.stopPropagation(); // Stop grid panning matrix from firing simultaneously
-  });
-
-  window.addEventListener('mousemove', (e) => {
-    if (!isDraggingNode) return;
-    const parentRect = canvasGrid.getBoundingClientRect();
-    const targetX = e.clientX - parentRect.left - offsetX;
-    const targetY = e.clientY - parentRect.top - offsetY;
-    nodeCard.style.left = `${targetX}px`;
-    nodeCard.style.top = `${targetY}px`;
-  });
-
-  window.addEventListener('mouseup', () => {
-    if (isDraggingNode) {
-      isDraggingNode = false;
-      nodeCard.style.cursor = 'default';
-    }
-  });
-
-  // Load final elements onto grid viewport and push to tracking registers
-  canvasGrid.appendChild(nodeCard);
-  activeGraphNodes.push(nodeRecord);
+  canvasGrid.appendChild(svgCanvas);
 }
 
-// Hook canvas nodes management directly onto global namespace for panel communication
-window.HallowNexusCanvas = {
-  spawnNodeOnCanvas,
-  activeGraphNodes
+/**
+ * Commences drawing an interactive execution line straight out of a socket node
+ * @param {HTMLElement} originSocket - Source circular button node
+ */
+function startWireDrag(originSocket) {
+  const svgCanvas = document.getElementById('nexus-wire-svg');
+  if (!svgCanvas) return;
+
+  const svgNS = "http://w3.org";
+  const path = document.createElementNS(svgNS, "path");
+  
+  path.setAttribute("stroke", "#4f46e5"); // Signature deep indigo trace light
+  path.setAttribute("stroke-width", "3");
+  path.setAttribute("fill", "none");
+  path.setAttribute("stroke-dasharray", "5,5"); // Dash lines denote active drafting state
+  
+  svgCanvas.appendChild(path);
+
+  const rect = originSocket.getBoundingClientRect();
+  const parentRect = document.getElementById('canvas-grid-layer').getBoundingClientRect();
+
+  activeDrawingWire = {
+    pathElement: path,
+    originX: rect.left + rect.width / 2 - parentRect.left,
+    originY: rect.top + rect.height / 2 - parentRect.top,
+    sourceNodeId: originSocket.parentElement.id
+  };
+}
+
+/**
+ * Continuously draws a curved bezier line following the mouse cursor across the grid
+ * @param {MouseEvent} e 
+ */
+function updateWireDrag(e) {
+  if (!activeDrawingWire) return;
+
+  const parentRect = document.getElementById('canvas-grid-layer').getBoundingClientRect();
+  const mouseX = e.clientX - parentRect.left;
+  const mouseY = e.clientY - parentRect.top;
+
+  const ox = activeDrawingWire.originX;
+  const oy = activeDrawingWire.originY;
+
+  // Compute horizontal curvature tension for premium visual flow
+  const controlOffset = Math.abs(mouseX - ox) * 0.5;
+  const dStr = `M ${ox} ${oy} C ${ox + controlOffset} ${oy}, ${mouseX - controlOffset} ${mouseY}, ${mouseX} ${mouseY}`;
+
+  activeDrawingWire.pathElement.setAttribute("d", dStr);
+}
+
+/**
+ * Finalizes wire connections or destroys fragments if dropped into open space
+ * @param {HTMLElement} targetSocket - Target circle node socket intersected on drop
+ */
+function dropWire(targetSocket) {
+  if (!activeDrawingWire) return;
+
+  if (targetSocket && targetSocket.parentElement.id !== activeDrawingWire.sourceNodeId) {
+    // Solidify tracing lines on successful logic linkage handshake
+    activeDrawingWire.pathElement.setAttribute("stroke", "#22c55e"); // Green denotes active live connection
+    activeDrawingWire.pathElement.removeAttribute("stroke-dasharray");
+
+    establishedWires.push({
+      path: activeDrawingWire.pathElement,
+      sourceId: activeDrawingWire.sourceNodeId,
+      targetId: targetSocket.parentElement.id
+    });
+  } else {
+    // Trash dangling wires if drop fails
+    activeDrawingWire.pathElement.remove();
+  }
+
+  activeDrawingWire = null;
+}
+
+// Global exposure layer for UI orchestration integration
+window.HallowNexusWires = {
+  initWireCanvas,
+  startWireDrag,
+  updateWireDrag,
+  dropWire,
+  establishedWires
 };
