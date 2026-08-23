@@ -1,24 +1,24 @@
 {
-  "extensionName": "Logic, Mathematics & Pipeline Automation Core",
+  "extensionName": "Universal Logic, Mathematics & Conditionals Scaffolder",
   "category": "LOGIC",
   "newBlocks": [
     {
-      "blockName": "ALLOCATE ITEM POINTER GRID",
+      "blockName": "ALLOCATE STORAGE BAG",
       "tooltip": "Carves out a fixed contiguous item memory storage block in safe user RAM to track weapons or inventory data.",
       "sideMenuFields": [
-        { "label": "Max Capacity Slots Count", "type": "number", "default": 10 },
-        { "label": "Bytes Per Item Slot", "type": "number", "default": 2 }
+        { "label": "Max Item Capacity", "type": "number", "default": 10 },
+        { "label": "Stride Slot Bytes", "type": "number", "default": 2 }
       ],
-      "ez80AssemblyTemplate": "ld a, {MaxCapacitySlotsCount}\nld b, {BytesPerItemSlot}\ncall _AllocateItemPointerGrid"
+      "ez80AssemblyTemplate": "ld a, {MaxItemCapacity}\nld b, {StrideSlotBytes}\ncall _AllocateItemPointerGrid"
     },
     {
-      "blockName": "SET INVENTORY ATTRIBUTE MATRIX FLAG",
+      "blockName": "TOGGLE INVENTORY ATTRIBUTE",
       "tooltip": "Executes an assembly bit operation to toggle item properties like equipped, consumable, or collected variables fields.",
       "sideMenuFields": [
-        { "label": "Item Index Number", "type": "number", "default": 0 },
-        { "label": "Bit Position Offset", "type": "number", "default": 1 }
+        { "label": "Item Array Index", "type": "number", "default": 0 },
+        { "label": "Attribute Bit", "type": "number", "default": 1 }
       ],
-      "ez80AssemblyTemplate": "ld a, {ItemIndexNumber}\nld b, {BitPositionOffset}\ncall _SetInventoryAttributeMatrixFlag"
+      "ez80AssemblyTemplate": "ld a, {ItemArrayIndex}\nld b, {AttributeBit}\ncall _SetInventoryAttributeMatrixFlag"
     },
     {
       "blockName": "COMPARE HARDWARE VALUE REGISTERS",
@@ -34,11 +34,60 @@
       "blockName": "COMPUTE MATH OPERATION",
       "tooltip": "Performs low-level mathematical operations directly across system variables matrices.",
       "sideMenuFields": [
-        { "label": "Target Register", "type": "text", "default": "Player_Y" },
-        { "label": "Math Action", "type": "text", "default": "ADD" },
-        { "label": "Value Modifier", "type": "number", "default": 1 }
+        { "label": "Target Variable", "type": "text", "default": "Player_Y" },
+        { "label": "Operator Code", "type": "text", "default": "ADD" },
+        { "label": "Value Delta", "type": "number", "default": 1 }
       ],
-      "ez80AssemblyTemplate": "ld hl, ({TargetRegister})\nld de, {ValueModifier}\nadd hl, de\nld ({TargetRegister}), hl"
+      "ez80AssemblyTemplate": "ld hl, ({TargetVariable})\nld de, {ValueDelta}\nadd hl, de\nld ({TargetVariable}), hl"
+    },
+    {
+      "blockName": "CLAMP VALUE REGISTERS",
+      "tooltip": "Evaluates the contents of a memory address; forces hard limits to prevent data variables overflow.",
+      "sideMenuFields": [
+        { "label": "Memory Pointer", "type": "text", "default": "Player_Y" },
+        { "label": "Absolute Floor", "type": "number", "default": 0 },
+        { "label": "Absolute Ceiling", "type": "number", "default": 240 }
+      ],
+      "ez80AssemblyTemplate": "ld hl, ({MemoryPointer})\nld de, {AbsoluteFloor}\nor a\nsbc hl, de\njr nc, _CheckCeiling\nld hl, {AbsoluteFloor}\n_CheckCeiling:\nld de, {AbsoluteCeiling}\nor a\nsbc hl, de\njr c, _ClampDone\nld hl, {AbsoluteCeiling}\n_ClampDone:\nld ({MemoryPointer}), hl"
+    },
+    {
+      "blockName": "BITWISE AND CHECK MASK",
+      "tooltip": "Runs an assembly and instruction against a selected memory address to gate downstream logic chunks.",
+      "sideMenuFields": [
+        { "label": "RAM Address Target", "type": "text", "default": "CachedHardwareInputBits" },
+        { "label": "Mask Hex Byte", "type": "text", "default": "0x0F" }
+      ],
+      "ez80AssemblyTemplate": "ld a, ({RAMAddressTarget})\nand {MaskHexByte}\nld ({RAMAddressTarget}), a"
+    },
+    {
+      "blockName": "SCAN WIRE LOOP DEADLOCKS",
+      "tooltip": "Scans active wire connection charts to trace circular logical dependency deadlocks before compilation steps execute.",
+      "sideMenuFields": [],
+      "ez80AssemblyTemplate": "call _ScanLogicWireDeadlocks"
+    },
+    {
+      "blockName": "ENCRYPT STATE SECTOR",
+      "tooltip": "Runs a symmetric XOR bitwise calculation loop across saved data tables to protect parameters from memory cheat injectors.",
+      "sideMenuFields": [
+        { "label": "Sector Start Address", "type": "text", "default": "SaveSectorBase" },
+        { "label": "Cipher Value Key", "type": "number", "default": 165 }
+      ],
+      "ez80AssemblyTemplate": "ld hl, {SectorStartAddress}\nld a, {CipherValueKey}\ncall _EncryptStateBinaryBlock"
+    },
+    {
+      "blockName": "COMPUTE VISIBILITY COVER SCAN",
+      "tooltip": "Casts look-ahead testing rays away from player positions to locate tiles marked as solid environmental covers for enemy AI masking.",
+      "sideMenuFields": [
+        { "label": "Ray Stride Length", "type": "number", "default": 16 },
+        { "label": "Obstacle Tile ID", "type": "number", "default": 5 }
+      ],
+      "ez80AssemblyTemplate": "ld a, {RayStrideLength}\nld b, {ObstacleTileID}\ncall _ComputeVisibilityCoverScan"
+    },
+    {
+      "blockName": "RESET PROJECT PROGRESS DATA",
+      "tooltip": "Flushes active progress values, scores counters, and flag tables back to default parameters for a clean New Game reset.",
+      "sideMenuFields": [],
+      "ez80AssemblyTemplate": "call _ResetGlobalVariableMatrix"
     }
   ]
 }
