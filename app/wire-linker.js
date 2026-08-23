@@ -1,4 +1,4 @@
-let activeDrawingWire = null;
+let selectedSourceSocket = null;
 const establishedWires = [];
 
 function initWireCanvas() {
@@ -19,94 +19,89 @@ function initWireCanvas() {
   canvasGrid.appendChild(svgCanvas);
 }
 
-function startWireDrag(originSocket) {
+/**
+ * Handles the click selection handshake sequence for wire connection ports
+ * @param {HTMLElement} clickedSocket - The pin circle that was tapped
+ */
+function handleSocketClick(clickedSocket) {
+  const isOutPort = clickedSocket.classList.contains('socket-port-out');
+  const parentCardId = clickedSocket.parentElement.id;
+
+  // STEP 1: First click must be an Output Port to establish the logic source
+  if (!selectedSourceSocket) {
+    if (!isOutPort) {
+      // Clear or ignore if the developer clicks an input port first
+      return;
+    }
+    
+    // Lock in the source and visually highlight the pin to show it's active
+    selectedSourceSocket = clickedSocket;
+    selectedSourceSocket.style.border = "2px solid #22c55e"; // Glowing green selection outline
+    return;
+  }
+
+  // STEP 2: Second click processing
+  // CRITICAL RULE 1: Enforce Output-to-Input direction checks
+  if (isOutPort) {
+    // If they click a different block's output port, swap the active selection target instead
+    selectedSourceSocket.style.border = "2px solid #0b0c10"; // Reset old highlight
+    selectedSourceSocket = clickedSocket;
+    selectedSourceSocket.style.border = "2px solid #22c55e";
+    return;
+  }
+
+  // CRITICAL RULE 2: A block cannot connect to itself
+  if (parentCardId === selectedSourceSocket.parentElement.id) {
+    // Flash reset selection state safely to protect memory stack boundaries
+    selectedSourceSocket.style.border = "2px solid #0b0c10";
+    selectedSourceSocket = null;
+    return;
+  }
+
+  // STEP 3: Draw and lock the verified link line channel
   const svgCanvas = document.getElementById('nexus-wire-svg');
   if (!svgCanvas) return;
 
   const svgNS = "http://w3.org";
   const path = document.createElementNS(svgNS, "path");
-  path.setAttribute("stroke", "#4f46e5"); 
+  path.setAttribute("stroke", "#22c55e"); // Green denotes a fully active, locked data route
   path.setAttribute("stroke-width", "3");
   path.setAttribute("fill", "none");
-  path.setAttribute("stroke-dasharray", "5,5");
   svgCanvas.appendChild(path);
 
-  // FIX: Track the relative card offset layout instead of client bounds
-  const nodeCard = originSocket.parentElement;
-  const cardX = parseInt(nodeCard.style.left) || 0;
-  const cardY = parseInt(nodeCard.style.top) || 0;
+  // Calculate layout offset coordinates for the starting point card
+  const sourceCard = selectedSourceSocket.parentElement;
+  const sX = parseInt(sourceCard.style.left) || 0;
+  const sY = parseInt(sourceCard.style.top) || 0;
+  const ox = sX + 240;
+  const oy = sY + 18;
 
-  // Pin coordinates to the socket's exact placement on the card frame
-  const isOutSocket = originSocket.classList.contains('socket-port-out');
-  const ox = cardX + (isOutSocket ? 240 : 0);
-  const oy = cardY + 18; 
+  // Calculate layout offset coordinates for the targeted point card
+  const targetCard = clickedSocket.parentElement;
+  const tX = parseInt(targetCard.style.left) || 0;
+  const tY = parseInt(targetCard.style.top) || 0;
+  const finalX = tX;
+  const finalY = tY + 18;
 
-  activeDrawingWire = {
-    pathElement: path,
-    originX: ox,
-    originY: oy,
-    sourceNodeId: nodeCard.id
-  };
-}
+  // Format premium horizontal bezier math string
+  const controlOffset = Math.abs(finalX - ox) * 0.5;
+  const dStr = `M ${ox} ${oy} C ${ox + controlOffset} ${oy}, ${finalX - controlOffset} ${finalY}, ${finalX} ${finalY}`;
+  path.setAttribute("d", dStr);
 
-function updateWireDrag(e) {
-  if (!activeDrawingWire) return;
+  // Push connection metadata records straight into compilation registers
+  establishedWires.push({
+    path: path,
+    sourceId: sourceCard.id,
+    targetId: targetCard.id
+  });
 
-  const canvasGridLayer = document.getElementById('canvas-grid-layer');
-  const viewportRect = document.getElementById('canvas-viewport').getBoundingClientRect();
-
-  // FIX: Extract grid transforms to align wires directly with mouse cursor placements
-  const style = window.getComputedStyle(canvasGridLayer);
-  const matrix = new WebKitCSSMatrix(style.transform);
-  
-  const mouseX = e.clientX - viewportRect.left - matrix.m41;
-  const mouseY = e.clientY - viewportRect.top - matrix.m42;
-
-  const ox = activeDrawingWire.originX;
-  const oy = activeDrawingWire.originY;
-  const controlOffset = Math.abs(mouseX - ox) * 0.5;
-  const dStr = `M ${ox} ${oy} C ${ox + controlOffset} ${oy}, ${mouseX - controlOffset} ${mouseY}, ${mouseX} ${mouseY}`;
-
-  activeDrawingWire.pathElement.setAttribute("d", dStr);
-}
-
-function dropWire(targetSocket) {
-  if (!activeDrawingWire) return;
-
-  if (targetSocket && targetSocket.parentElement.id !== activeDrawingWire.sourceNodeId) {
-    activeDrawingWire.pathElement.setAttribute("stroke", "#22c55e"); 
-    activeDrawingWire.pathElement.removeAttribute("stroke-dasharray");
-
-    // Correct line anchor coordinates permanently on link completion
-    const targetCard = targetSocket.parentElement;
-    const tcX = parseInt(targetCard.style.left) || 0;
-    const tcY = parseInt(targetCard.style.top) || 0;
-    const isInSocket = targetSocket.classList.contains('socket-port-in');
-    
-    const finalX = tcX + (isInSocket ? 0 : 240);
-    const finalY = tcY + 18;
-
-    const ox = activeDrawingWire.originX;
-    const oy = activeDrawingWire.originY;
-    const controlOffset = Math.abs(finalX - ox) * 0.5;
-    const dStr = `M ${ox} ${oy} C ${ox + controlOffset} ${oy}, ${finalX - controlOffset} ${finalY}, ${finalX} ${finalY}`;
-    activeDrawingWire.pathElement.setAttribute("d", dStr);
-
-    establishedWires.push({
-      path: activeDrawingWire.pathElement,
-      sourceId: activeDrawingWire.sourceNodeId,
-      targetId: targetSocket.parentElement.id
-    });
-  } else {
-    activeDrawingWire.pathElement.remove();
-  }
-  activeDrawingWire = null;
+  // Clear tracking references to reset connection loop for the next line build
+  selectedSourceSocket.style.border = "2px solid #0b0c10";
+  selectedSourceSocket = null;
 }
 
 window.HallowNexusWires = {
   initWireCanvas,
-  startWireDrag,
-  updateWireDrag,
-  dropWire,
+  handleSocketClick,
   establishedWires
 };
