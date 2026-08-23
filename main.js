@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const http = require('http'); // Used to route raw local server streaming network lines
 
 let mainWindow;
 
@@ -14,13 +15,12 @@ function createMainWindow() {
     frame: true,
     backgroundColor: '#111216',
     webPreferences: {
-      nodeIntegration: true,     // Authorizes local click scripting execution
-      contextIsolation: false,   // Syncs window namespace channels
+      nodeIntegration: true,
+      contextIsolation: false,
       enableRemoteModule: true
     }
   });
 
-  // Direct, case-insensitive relative load track path
   mainWindow.loadFile('app/index.html');
 
   mainWindow.on('closed', () => {
@@ -37,6 +37,51 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
+});
+
+// REAL LOCAL OLLAMA CONNECTION BRIDGE PORT
+ipcMain.handle('ollama-chat', async (event, userPrompt) => {
+  return new Promise((resolve) => {
+    const postData = JSON.stringify({
+      model: 'llama3', // Default local model check profile loop
+      prompt: userPrompt,
+      stream: false
+    });
+
+    const options = {
+      hostname: '127.0.0.1',
+      port: 11434, // Standard global Ollama hardware port index
+      path: '/api/generate',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(postData)
+      }
+    };
+
+    const req = http.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(data);
+          resolve({ success: true, response: parsed.response });
+        } catch (e) {
+          resolve({ success: false, response: 'Ollama returned unparseable code chunks.' });
+        }
+      });
+    });
+
+    req.on('error', () => {
+      resolve({ 
+        success: false, 
+        response: 'Could not connect to local Ollama server. Ensure the app is running locally on your computer!' 
+      });
+    });
+
+    req.write(postData);
+    req.end();
+  });
 });
 
 ipcMain.handle('load-extensions', async () => {
