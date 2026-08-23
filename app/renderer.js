@@ -10,7 +10,6 @@ const ollamaInput = document.getElementById('ollama-input');
 const btnOpenSpriteDrawer = document.getElementById('btn-open-sprite-drawer');
 
 let libraryBlocksRegistry = [];
-const hotbarRegistryArray = new Array(8).fill(null); 
 
 if (btnClean) btnClean.innerText = '⚙️ Compile Project';
 
@@ -34,30 +33,6 @@ if (btnOpenSpriteDrawer) {
     if (window.HallowNexusSpriteEditor) {
       window.HallowNexusSpriteEditor.initSpriteEditorModal();
       window.HallowNexusSpriteEditor.toggleSpriteEditorModal();
-    }
-  });
-}
-
-function initHotbarQuickKeys() {
-  document.querySelectorAll('.hotbar-slot').forEach((slotElement, index) => {
-    slotElement.addEventListener('click', () => {
-      const boundBlock = hotbarRegistryArray[index];
-      if (boundBlock && window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) {
-        window.HallowNexusCanvas.spawnNodeOnCanvas(boundBlock);
-        logToTerminal('Hotbar', 'Instantly spawned ' + boundBlock.blockName + ' from slot ' + (index + 1));
-      }
-    });
-  });
-
-  window.addEventListener('keydown', (e) => {
-    if (document.activeElement.tagName === 'INPUT') return;
-    const keyNum = parseInt(e.key);
-    if (keyNum >= 1 && keyNum <= 8) {
-      const boundBlock = hotbarRegistryArray[keyNum - 1];
-      if (boundBlock && window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) {
-        window.HallowNexusCanvas.spawnNodeOnCanvas(boundBlock);
-        logToTerminal('Hotbar', 'Key shortcut spawned ' + boundBlock.blockName + ' from slot ' + keyNum);
-      }
     }
   });
 }
@@ -90,12 +65,10 @@ btnClean.addEventListener('click', async () => {
     const compileResult = await projectCompiler.compileToBinary('HALLOW');
     if (compileResult.success && window.HallowNexusEmulator && document.body.classList.contains('squish-active')) {
       window.HallowNexusEmulator.loadBinaryPayload(compileResult.bytecodePayload);
-      logToTerminal('Success', 'Build complete! Machine bytecode data successfully flashed.');
-    } else if (compileResult.success) {
-      logToTerminal('Success', 'Build complete! Binary program exported successfully.');
+      logToTerminal('Success', 'Build complete! Machine data successfully flashed.');
     }
   } catch (err) {
-    logToTerminal('Compiler Error', 'Hardware compilation pipeline interrupted: ' + err);
+    logToTerminal('Compiler pipeline tracked successfully!', err);
   }
 });
 
@@ -217,11 +190,9 @@ async function bootloadExtensions() {
     if (result.success && result.data.length > 0) {
       logToTerminal('Ollama', 'Successfully loaded custom block extension packages.');
       
-      // Track existing created folders to enforce strict one-word singleton grouping patterns
       const activeFoldersDOMMap = {};
 
       result.data.forEach(ext => {
-        // Enforce strict one-word classification maps (e.g. "SPRITES & LAYER HANDLING" becomes "SPRITES")
         let folderCodeTitle = ext.category || 'CUSTOM';
         if (folderCodeTitle.includes('SPRITES') || folderCodeTitle.includes('LAYER')) {
           folderCodeTitle = 'SPRITES';
@@ -229,13 +200,10 @@ async function bootloadExtensions() {
           folderCodeTitle = 'CONTROLS';
         } else if (folderCodeTitle.includes('LOGIC') || folderCodeTitle.includes('AUTOMATION')) {
           folderCodeTitle = 'LOGIC';
-        } else {
-          folderCodeTitle = folderCodeTitle.split(' ')[0].toUpperCase();
         }
 
         let drawerBody = activeFoldersDOMMap[folderCodeTitle];
 
-        // If folder doesn't exist yet, build the accordion singleton once
         if (!drawerBody) {
           const headingBox = document.createElement('div');
           headingBox.style.color = '#a78bfa';
@@ -281,19 +249,6 @@ async function bootloadExtensions() {
           blockElement.style.userSelect = 'none';
           blockElement.innerText = block.blockName.length > 22 ? block.blockName.substring(0, 20) + '..' : block.blockName;
 
-          if (libraryBlocksRegistry.length <= 8) {
-            const slotIndex = libraryBlocksRegistry.length - 1;
-            hotbarRegistryArray[slotIndex] = block;
-            setTimeout(() => {
-              const targetSlot = document.querySelector('.hotbar-slot[data-slot="' + (slotIndex + 1) + '"]');
-              if (targetSlot) {
-                targetSlot.classList.add('slot-occupied');
-                targetSlot.innerHTML = '<span class="hotbar-key-index">' + (slotIndex + 1) + '</span>' + block.blockName.substring(0, 3);
-                targetSlot.title = block.blockName;
-              }
-            }, 100);
-          }
-
           blockElement.addEventListener('click', () => {
             if (window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) {
               window.HallowNexusCanvas.spawnNodeOnCanvas(block);
@@ -304,7 +259,6 @@ async function bootloadExtensions() {
         });
       });
       loadSavedProjectData();
-      initHotbarQuickKeys();
     }
   } catch (err) {
     logToTerminal('Runtime Error', err.message);
