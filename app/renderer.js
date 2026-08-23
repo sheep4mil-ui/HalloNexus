@@ -10,25 +10,21 @@ const ollamaInput = document.getElementById('ollama-input');
 
 if (btnClean) btnClean.innerText = '⚙️ Compile Project';
 
-// 1. Playtest Layout Switch Toggle Animation
 btnSquish.addEventListener('click', () => {
   document.body.classList.toggle('squish-active');
   logToTerminal('System', 'Layout updated. Playtest emulator swapped.');
 });
 
-// 2. THE MASTER COMPILATION ROUTER TRIGGER
 btnClean.addEventListener('click', async () => {
   if (!window.HallowNexusCanvas || !window.HallowNexusCanvas.getWiredExecutionOrder) {
     logToTerminal('Compiler Error', 'Canvas architecture module buffering.');
     return;
   }
-
   const nodesToCompile = window.HallowNexusCanvas.getWiredExecutionOrder();
   if (nodesToCompile.length === 0) {
     logToTerminal('Compiler Warning', 'Canvas workspace empty. Drop some blocks first!');
     return;
   }
-
   logToTerminal('Compiler', `Tracing active wire link lines... compiling ${nodesToCompile.length} cards in sequence.`);
   try {
     const HallowNexusCompiler = require('../compiler.js');
@@ -44,7 +40,6 @@ btnClean.addEventListener('click', async () => {
   }
 });
 
-// 3. Center Background Canvas Pan Engine
 let isPanning = false;
 let startX = 0, startY = 0;
 let transformX = 0, transformY = 0;
@@ -78,23 +73,23 @@ function logToTerminal(sender, message) {
   aiLogs.scrollTop = aiLogs.scrollHeight;
 }
 
-// OLLAMA TERMINAL TRANSMISSION SEND TRIGGER LINK
+// REAL ACTIVE OLLAMA DATA CHANNEL TRIGGER LINK
 if (ollamaInput) {
-  ollamaInput.addEventListener('keydown', (e) => {
+  ollamaInput.addEventListener('keydown', async (e) => {
     if (e.key === 'Enter' && ollamaInput.value.trim() !== '') {
       const userMessage = ollamaInput.value;
       logToTerminal('You', userMessage);
-      ollamaInput.value = ''; // Flush input clean
+      ollamaInput.value = ''; 
       
-      // Simulated Ollama automated response hook pass
-      setTimeout(() => {
-        logToTerminal('Ollama', `Received logic directive: "${userMessage}". Scanning workspace node parameters...`);
-      }, 400);
+      logToTerminal('Ollama', 'Streaming pipeline request... querying background model registers...');
+      
+      // Fire real data message down backend channels to local server port
+      const aiResponse = await ipcRenderer.invoke('ollama-chat', userMessage);
+      logToTerminal('Ollama', aiResponse.response);
     }
   });
 }
 
-// 4. Integrated Dynamic Extensions Interface Builder
 async function bootloadExtensions() {
   try {
     const result = await ipcRenderer.invoke('load-extensions');
@@ -141,11 +136,11 @@ async function bootloadExtensions() {
 
 bootloadExtensions();
 
-// 5. Wire Canvas Vector Synchronization Watchers
 if (window.HallowNexusWires) {
   window.HallowNexusWires.initWireCanvas();
 }
 
+// FIX: Target wire mouse trackers directly to canvas viewport layers
 canvasViewport.addEventListener('mousemove', (e) => {
   if (window.HallowNexusWires) window.HallowNexusWires.updateWireDrag(e);
 });
