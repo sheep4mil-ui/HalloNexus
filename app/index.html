@@ -22,14 +22,11 @@
     .btn-primary { background-color: #4f46e5; }
     .btn-primary:hover { background-color: #6366f1; }
     .workspace-container { display: flex; flex: 1; height: calc(100vh - 40px); position: relative; }
-    
-    /* 🪐 DYNAMIC SCROLLABLE TOOLBOX DRAWER VIEWPORT styling */
     .panel-toolbox {
       width: 260px; background-color: #16181f; border-right: 1px solid #2d3139;
       display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; z-index: 10;
-      overflow-y: auto; /* Activates pure CSS scroll bar mechanics when tabs stack up */
+      overflow-y: auto;
     }
-    /* Sleek custom scrollbar profiles to match the dark HallowNexus theme */
     .panel-toolbox::-webkit-scrollbar { width: 6px; }
     .panel-toolbox::-webkit-scrollbar-track { background: #111216; }
     .panel-toolbox::-webkit-scrollbar-thumb { background: #2d3139; border-radius: 3px; }
@@ -59,20 +56,6 @@
     body.squish-active .panel-toolbox { display: none; }
     body.squish-active .panel-emulator { width: 320px; border-right: 1px solid #2d3139; }
     .panel-emulator { width: 0; background-color: #111216; overflow: hidden; display: flex; align-items: center; justify-content: center; font-family: monospace; color: #a78bfa; }
-
-    .canvas-hotbar-overlay {
-      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-      background-color: #16181f; border: 2px solid #2d3139; border-radius: 8px;
-      padding: 6px 12px; display: flex; gap: 8px; z-index: 50; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-    }
-    .hotbar-slot {
-      width: 44px; height: 44px; background-color: #0b0c10; border: 1px dashed #475569;
-      border-radius: 6px; display: flex; align-items: center; justify-content: center;
-      position: relative; font-size: 11px; font-weight: bold; color: #64748b; cursor: pointer; transition: all 0.15s ease;
-    }
-    .hotbar-slot:hover { border-color: #4f46e5; background-color: #12131a; color: #a78bfa; }
-    .hotbar-slot.slot-occupied { border-style: solid; border-color: #4f46e5; background-color: #212430; color: #e2e8f0; }
-    .hotbar-key-index { position: absolute; top: 2px; left: 4px; font-size: 9px; color: #475569; }
   </style>
 </head>
 <body>
@@ -83,8 +66,6 @@
   </div>
   <div class="workspace-container">
     <div class="panel-emulator" id="emulator-window">[CE_EMULATOR_SCREEN]</div>
-    
-    <!-- Left Category Panel Box Container Core -->
     <div class="panel-toolbox" id="toolbox">
       <h3>Toolbox</h3>
       <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Click accordion categories to open logic drawers.</p>
@@ -92,17 +73,6 @@
     
     <div class="panel-canvas" id="canvas-viewport">
       <div class="canvas-grid" id="canvas-grid-layer"></div>
-      
-      <div class="canvas-hotbar-overlay" id="nexus-canvas-hotbar">
-        <div class="hotbar-slot" data-slot="1"><span class="hotbar-key-index">1</span>-</div>
-        <div class="hotbar-slot" data-slot="2"><span class="hotbar-key-index">2</span>-</div>
-        <div class="hotbar-slot" data-slot="3"><span class="hotbar-key-index">3</span>-</div>
-        <div class="hotbar-slot" data-slot="4"><span class="hotbar-key-index">4</span>-</div>
-        <div class="hotbar-slot" data-slot="5"><span class="hotbar-key-index">5</span>-</div>
-        <div class="hotbar-slot" data-slot="6"><span class="hotbar-key-index">6</span>-</div>
-        <div class="hotbar-slot" data-slot="7"><span class="hotbar-key-index">7</span>-</div>
-        <div class="hotbar-slot" data-slot="8"><span class="hotbar-key-index">8</span>-</div>
-      </div>
     </div>
 
     <div class="panel-desk">
