@@ -1,4 +1,3 @@
-// Go straight to app/renderer.js on GitHub, select all, and replace with this complete master file
 const { ipcRenderer } = require('electron');
 
 const btnSquish = document.getElementById('btn-squish');
@@ -27,7 +26,6 @@ async function triggerAutoSavePass() {
   await ipcRenderer.invoke('save-project-state', stateSnapshot);
 }
 
-// UPGRADED LIVE BUILD INJECTOR LINK
 btnClean.addEventListener('click', async () => {
   if (!window.HallowNexusCanvas || !window.HallowNexusCanvas.getWiredExecutionOrder) {
     logToTerminal('Compiler Error', 'Canvas architecture module buffering.');
@@ -45,7 +43,6 @@ btnClean.addEventListener('click', async () => {
     projectCompiler.transpileGraph(nodesToCompile);
     logToTerminal('Compiler', 'Executing SPASM assembler compilation pass...');
     
-    // Simulate generation payload bytes stream mapping pass
     const fakeCompiledBytes = new Uint8Array([0x3E, 0x01, 0x32, 0x00, 0xC0, 0xC3, 0x00, 0x00]);
     
     if (window.HallowNexusEmulator) {
@@ -151,7 +148,7 @@ if (ollamaInput) {
                 }, 150);
               }
             } catch (innerErr) {
-              // Smooth fallback bypass
+              // Safe block skip
             }
           });
         } else {
@@ -232,7 +229,6 @@ async function bootloadExtensions() {
 
 bootloadExtensions();
 
-// INITIALIZE EMULATOR HARDWARE SCREEN MOUNT PASS
 if (window.HallowNexusEmulator) {
   window.HallowNexusEmulator.mountEmulatorScreen();
 }
@@ -242,3 +238,5 @@ if (window.HallowNexusWires) {
 }
 
 window.addEventListener('mouseup', () => {
+  triggerAutoSavePass();
+});
