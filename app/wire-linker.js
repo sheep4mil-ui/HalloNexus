@@ -2,24 +2,7 @@ let selectedSourceSocket = null;
 const establishedWires = [];
 
 function initWireCanvas() {
-  // FIXED: Appends the SVG directly INSIDE the grid layer so it moves natively with your cards
-  const canvasGrid = document.getElementById('canvas-grid-layer');
-  if (!canvasGrid || document.getElementById('nexus-wire-svg')) return;
-
-  const svgNS = "http://w3.org";
-  const svgCanvas = document.createElementNS(svgNS, "svg");
-  svgCanvas.setAttribute("id", "nexus-wire-svg");
-  svgCanvas.style.position = "absolute";
-  svgCanvas.style.top = "0";
-  svgCanvas.style.left = "0";
-  svgCanvas.setAttribute("width", "5000");
-  svgCanvas.setAttribute("height", "5000");
-  svgCanvas.style.width = "5000px";
-  svgCanvas.style.height = "5000px";
-  svgCanvas.style.pointerEvents = "none"; 
-  svgCanvas.style.zIndex = "1"; // Sandwiched cleanly right below the text layers of your card blocks
-
-  canvasGrid.appendChild(svgCanvas);
+  // Omitted SVG initialization loop - We use pure HTML div boxes instead!
 }
 
 function handleSocketClick(clickedSocket) {
@@ -60,36 +43,50 @@ function handleSocketClick(clickedSocket) {
   setTimeout(() => {
     sourceSocket.classList.remove('socket-flash-confirm');
     targetSocket.classList.remove('socket-flash-confirm');
-    sourceSocket.style.backgroundColor = "#4f46e5"; // Reset output back to standard Purple
-    targetSocket.style.backgroundColor = "#38bdf8"; // Reset input back to standard Light Blue
-  }, 900); // 900ms matches the precise duration of 3 flashes
+    sourceSocket.style.backgroundColor = "#4f46e5"; 
+    targetSocket.style.backgroundColor = "#38bdf8"; 
+  }, 900); 
 
-  // Phase 3: Draw the green curved wire connection path vector
-  const svgCanvas = document.getElementById('nexus-wire-svg');
-  if (!svgCanvas) return;
+  // Phase 3: Draw the green wire link channel using a 2D Transformed Div Element Block
+  const canvasGrid = document.getElementById('canvas-grid-layer');
+  if (!canvasGrid) return;
 
-  const svgNS = "http://w3.org";
-  const path = document.createElementNS(svgNS, "path");
-  path.setAttribute("stroke", "#22c55e"); // Green trace wire links the cards together
-  path.setAttribute("stroke-width", "3");
-  path.setAttribute("fill", "none");
-  svgCanvas.appendChild(path);
-
-  // FIXED: Simple, absolute direct coordinate matching (Bypasses complex viewport/transform math entirely)
   const sourceCard = sourceSocket.parentElement;
-  const ox = (parseInt(sourceCard.style.left) || 0) + 240; // Pin precisely to the right edge of Card 1
+  const ox = (parseInt(sourceCard.style.left) || 0) + 240; 
   const oy = (parseInt(sourceCard.style.top) || 0) + 18;
 
   const targetCard = targetSocket.parentElement;
-  const finalX = parseInt(targetCard.style.left) || 0; // Pin precisely to the left edge of Card 2
+  const finalX = parseInt(targetCard.style.left) || 0; 
   const finalY = (parseInt(targetCard.style.top) || 0) + 18;
 
-  const controlOffset = Math.abs(finalX - ox) * 0.5;
-  const dStr = `M ${ox} ${oy} C ${ox + controlOffset} ${oy}, ${finalX - controlOffset} ${finalY}, ${finalX} ${finalY}`;
-  path.setAttribute("d", dStr);
+  // 2D Vector Geometry Math: Calculate distance and rotation angle between card ports
+  const dx = finalX - ox;
+  const dy = finalY - oy;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+  // Generate a physical HTML element box styled as a solid connection bar line
+  const wireDiv = document.createElement('div');
+  wireDiv.className = 'canvas-nexus-wire';
+  wireDiv.style.position = 'absolute';
+  wireDiv.style.left = `${ox}px`;
+  wireDiv.style.top = `${oy}px`;
+  wireDiv.style.width = `${distance}px`;
+  wireDiv.style.height = '3px';
+  wireDiv.style.backgroundColor = '#22c55e'; // Vibrant green link connection line
+  wireDiv.style.transformOrigin = 'top left';
+  wireDiv.style.transform = `rotate(${angle}deg)`;
+  wireDiv.style.zIndex = '5'; // Layered safely right underneath card headers but above the grid
+  wireDiv.style.pointerEvents = 'none';
+
+  // Append data coordinates to handle card dragging synchronization loops later
+  wireDiv.dataset.sourceId = sourceCard.id;
+  wireDiv.dataset.targetId = targetCard.id;
+
+  canvasGrid.appendChild(wireDiv);
 
   establishedWires.push({
-    path: path,
+    element: wireDiv,
     sourceId: sourceCard.id,
     targetId: targetCard.id
   });
@@ -98,8 +95,36 @@ function handleSocketClick(clickedSocket) {
   selectedSourceSocket = null;
 }
 
+/**
+ * Triggers an alignment loop pass to stretch and rotate wires live whenever a card is dragged
+ */
+function updateWiredConnectionsPositions() {
+  const wires = document.querySelectorAll('.canvas-nexus-wire');
+  wires.forEach(wireDiv => {
+    const sourceCard = document.getElementById(wireDiv.dataset.sourceId);
+    const targetCard = document.getElementById(wireDiv.dataset.targetId);
+    if (!sourceCard || !targetCard) return;
+
+    const ox = (parseInt(sourceCard.style.left) || 0) + 240;
+    const oy = (parseInt(sourceCard.style.top) || 0) + 18;
+    const finalX = parseInt(targetCard.style.left) || 0;
+    const finalY = (parseInt(targetCard.style.top) || 0) + 18;
+
+    const dx = finalX - ox;
+    const dy = finalY - oy;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+    wireDiv.style.left = `${ox}px`;
+    wireDiv.style.top = `${oy}px`;
+    wireDiv.style.width = `${distance}px`;
+    wireDiv.style.transform = `rotate(${angle}deg)`;
+  });
+}
+
 window.HallowNexusWires = {
   initWireCanvas,
   handleSocketClick,
+  updateWiredConnectionsPositions,
   establishedWires
 };
