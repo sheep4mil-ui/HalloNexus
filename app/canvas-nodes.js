@@ -28,7 +28,8 @@ function spawnNodeOnCanvas(blockData) {
     id: nodeCard.id,
     blockName: blockData.blockName,
     ez80AssemblyTemplate: blockData.ez80AssemblyTemplate,
-    values: {}
+    values: {},
+    connections: [] 
   };
 
   // 1. Header Layout Row
@@ -44,7 +45,7 @@ function spawnNodeOnCanvas(blockData) {
   header.innerText = blockData.blockName;
   nodeCard.appendChild(header);
 
-  // 2. Circular Multi-Wire Sockets
+  // 2. Click-to-Link Circular Sockets Layout Setup
   const outputSocket = document.createElement('div');
   outputSocket.className = 'socket-port-out'; 
   outputSocket.style.position = 'absolute';
@@ -55,10 +56,12 @@ function spawnNodeOnCanvas(blockData) {
   outputSocket.style.borderRadius = '50%';
   outputSocket.style.backgroundColor = '#4f46e5';
   outputSocket.style.border = '2px solid #0b0c10';
-  outputSocket.style.cursor = 'crosshair';
+  outputSocket.style.cursor = 'pointer';
+  outputSocket.title = 'Click to start data wire link';
 
-  outputSocket.addEventListener('mousedown', (e) => {
-    if (window.HallowNexusWires) window.HallowNexusWires.startWireDrag(outputSocket);
+  // Attach two-click management trigger logic
+  outputSocket.addEventListener('click', (e) => {
+    if (window.HallowNexusWires) window.HallowNexusWires.handleSocketClick(outputSocket);
     e.stopPropagation();
   });
   nodeCard.appendChild(outputSocket);
@@ -74,9 +77,10 @@ function spawnNodeOnCanvas(blockData) {
   inputSocket.style.backgroundColor = '#38bdf8';
   inputSocket.style.border = '2px solid #0b0c10';
   inputSocket.style.cursor = 'pointer';
+  inputSocket.title = 'Click to finish data wire link';
 
-  inputSocket.addEventListener('mouseup', (e) => {
-    if (window.HallowNexusWires) window.HallowNexusWires.dropWire(inputSocket);
+  inputSocket.addEventListener('click', (e) => {
+    if (window.HallowNexusWires) window.HallowNexusWires.handleSocketClick(inputSocket);
     e.stopPropagation();
   });
   nodeCard.appendChild(inputSocket);
@@ -151,8 +155,51 @@ function spawnNodeOnCanvas(blockData) {
   activeGraphNodes.push(nodeRecord);
 }
 
-// Expose safely to global window scope mapping channels
+/**
+ * Sweeps through our active vector wiring path and structures nodes in order of execution
+ */
+function getWiredExecutionOrder() {
+  if (activeGraphNodes.length === 0) return [];
+  
+  const orderedNodes = [];
+  const visitedNodeIds = new Set();
+  const wiresList = (window.HallowNexusWires && window.HallowNexusWires.establishedWires) || [];
+  
+  activeGraphNodes.forEach(node => node.connections = []);
+
+  wiresList.forEach(wire => {
+    const parentNode = activeGraphNodes.find(n => n.id === wire.sourceId);
+    if (parentNode && !parentNode.connections.includes(wire.targetId)) {
+      parentNode.connections.push(wire.targetId);
+    }
+  });
+
+  const targetedNodeIds = wiresList.map(w => w.targetId);
+  const rootNodes = activeGraphNodes.filter(n => !targetedNodeIds.includes(n.id));
+  const executionStarters = rootNodes.length > 0 ? rootNodes : [activeGraphNodes[0]];
+
+  function traceWirePath(node) {
+    if (!node || visitedNodeIds.has(node.id)) return;
+    visitedNodeIds.add(node.id);
+    orderedNodes.push(node);
+
+    node.connections.forEach(childId => {
+      const nextNode = activeGraphNodes.find(n => n.id === childId);
+      traceWirePath(nextNode);
+    });
+  }
+
+  executionStarters.forEach(startCard => traceWirePath(startCard));
+
+  activeGraphNodes.forEach(node => {
+    if (!visitedNodeIds.has(node.id)) orderedNodes.push(node);
+  });
+
+  return orderedNodes;
+}
+
 window.HallowNexusCanvas = {
   spawnNodeOnCanvas,
-  activeGraphNodes
+  activeGraphNodes,
+  getWiredExecutionOrder
 };
