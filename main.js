@@ -40,7 +40,7 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
-// REAL PERSISTENT STORAGE ENGINE CHANNELS
+// REAL PERSISTENT LOCAL STORAGE ENGINE CHANNELS
 ipcMain.handle('save-project-state', async (event, stateData) => {
   try {
     fs.writeFileSync(saveFilePath, JSON.stringify(stateData, null, 2), 'utf8');
@@ -62,10 +62,11 @@ ipcMain.handle('load-project-state', async () => {
   }
 });
 
-// REAL LOCAL OLLAMA CONNECTION BRIDGE PORT (llama3.2 context aware)
+// UPGRADED INTELLIGENT AGENT CONTEXT ROUTER INTERFACE
 ipcMain.handle('ollama-chat', async (event, { userPrompt, currentWorkspaceContext }) => {
   return new Promise((resolve) => {
     
+    // REFINED PROMPT: Tells llama3.2 to write a REAL message instead of using boilerplate placeholders
     const systemInstruction = `You are the HallowNexus IDE Automation Engine. You have access to the user's current visual code workspace.
 Current Workspace JSON: ${JSON.stringify(currentWorkspaceContext)}
 
@@ -75,10 +76,10 @@ If the user asks to create or spawn a block, respond exactly in this format:
 
 Available block names you can spawn: "Initialize Player Sprite", "Trigger High-Juice Screen Shake", "Emit Object-Pooled Projectile", "Set Day-Night Cycle Timer", "Spawn Dithered Lantern", "Cast Lighthouse Beam".
 
-If they are just asking a general development question, return a clean message:
-{"action": "none", "message": "Your text response goes here."}
+If they are just asking a general question, explaining logic, or chatting, respond with your actual answer inside the JSON structure like this:
+{"action": "none", "message": "Write your actual detailed development response or answer here based on the user's request."}
 
-Respond ONLY with valid, raw, un-escaped JSON string blocks. No conversational preambles or markdown wrappers outside the JSON block layout structure.`;
+Respond ONLY with valid, raw, un-escaped JSON string blocks. No conversational preambles or markdown wrappers outside the JSON block structure.`;
 
     const postData = JSON.stringify({
       model: 'llama3.2',
