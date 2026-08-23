@@ -146,7 +146,6 @@ function spawnNodeOnCanvas(blockData) {
     nodeCard.style.left = `${targetX}px`;
     nodeCard.style.top = `${targetY}px`;
 
-    // FIX: Redraw all connected lines dynamically while moving the card box
     if (window.HallowNexusWires && window.HallowNexusWires.updateWiredConnectionsPositions) {
       window.HallowNexusWires.updateWiredConnectionsPositions();
     }
