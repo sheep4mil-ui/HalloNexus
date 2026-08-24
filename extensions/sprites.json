@@ -1,10 +1,10 @@
 {
-  "extensionName": "Universal Sprite and Character Pack",
+  "extensionName": "Universal Character Engine Pack",
   "category": "SPRITES",
   "newBlocks": [
     {
       "blockName": "CREATE PLAYER",
-      "tooltip": "Spawns the main player character onto the game screen at a set starting location.",
+      "tooltip": "Spawns player onto screen.",
       "sideMenuFields": [
         { "label": "X Coordinate", "type": "number", "default": 160 },
         { "label": "Y Coordinate", "type": "number", "default": 120 }
@@ -13,7 +13,7 @@
     },
     {
       "blockName": "CREATE ENEMY",
-      "tooltip": "Spawns an enemy character into an active slot on the map.",
+      "tooltip": "Spawns an enemy character.",
       "sideMenuFields": [
         { "label": "Slot ID", "type": "number", "default": 1 },
         { "label": "X Coordinate", "type": "number", "default": 80 },
@@ -23,7 +23,7 @@
     },
     {
       "blockName": "MOVE WITH BUTTONS",
-      "tooltip": "Allows the player to move this character dynamically using the arrow keys.",
+      "tooltip": "Enables keyboard input movement.",
       "sideMenuFields": [
         { "label": "Speed", "type": "number", "default": 4 }
       ],
@@ -31,7 +31,7 @@
     },
     {
       "blockName": "SET SPEED VECTOR",
-      "tooltip": "Gives a character a constant moving speed in a certain direction.",
+      "tooltip": "Gives a constant moving speed.",
       "sideMenuFields": [
         { "label": "X Speed", "type": "number", "default": 2 },
         { "label": "Y Speed", "type": "number", "default": 0 }
@@ -40,7 +40,7 @@
     },
     {
       "blockName": "IF TOUCHING KIND",
-      "tooltip": "Checks if a character is bumping into another type of character to trigger a script path.",
+      "tooltip": "Checks distance overlap conditions.",
       "sideMenuFields": [
         { "label": "Kind Alpha", "type": "text", "default": "Player" },
         { "label": "Kind Beta", "type": "text", "default": "Enemy" }
@@ -49,7 +49,7 @@
     },
     {
       "blockName": "DESTROY CHAR",
-      "tooltip": "Removes a character cleanly from the game screen map registers.",
+      "tooltip": "Removes entity out of tracking memory.",
       "sideMenuFields": [
         { "label": "Slot ID", "type": "number", "default": 1 }
       ],
@@ -57,13 +57,13 @@
     },
     {
       "blockName": "CAMERA FOLLOW CHAR",
-      "tooltip": "Forces the game screen viewport to scroll and lock focus on this character.",
+      "tooltip": "Locks focus on this character.",
       "sideMenuFields": [],
       "ez80AssemblyTemplate": "call _CameraFollowPlayerSprite"
     },
     {
       "blockName": "ANIMATE FRAME RATE",
-      "tooltip": "Sets up a flip-book sequence timing cycle to make sprites walk or run.",
+      "tooltip": "Sets up animation sequence loops.",
       "sideMenuFields": [
         { "label": "Total Frames", "type": "number", "default": 4 },
         { "label": "Delay Ticks", "type": "number", "default": 8 }
@@ -72,7 +72,7 @@
     },
     {
       "blockName": "FLIP IMAGES",
-      "tooltip": "Flips the sprite image horizontally or vertically to change direction maps.",
+      "tooltip": "Flips the texture horizontally or vertically.",
       "sideMenuFields": [
         { "label": "Flip Left Right", "type": "number", "default": 1 },
         { "label": "Flip Up Down", "type": "number", "default": 0 }
@@ -81,7 +81,7 @@
     },
     {
       "blockName": "RESIZE IMAGE DOUBLE",
-      "tooltip": "Stretches a sprite to render at double its pixel layout canvas size.",
+      "tooltip": "Scales sprite double layout size.",
       "sideMenuFields": [],
       "ez80AssemblyTemplate": "call _ScaleSpriteDouble"
     }
