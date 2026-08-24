@@ -211,38 +211,43 @@ async function bootloadExtensions() {
   const activeFoldersDOMMap = {};
   
   const masterStudioBlocks = [
-    { blockName: "CREATE PLAYER", category: "SPRITES", tooltip: "Spawns main player.", sideMenuFields: [{label:"X",type:"number",default:160},{label:"Y",type:"number",default:120}] },
-    { blockName: "CREATE ENEMY", category: "SPRITES", tooltip: "Spawns map enemy.", sideMenuFields: [{label:"Slot ID",type:"number",default:1},{label:"X",type:"number",default:80},{label:"Y",type:"number",default:60}] },
-    { blockName: "MOVE WITH BUTTONS", category: "SPRITES", tooltip: "Enables keyboard arrows movement.", sideMenuFields: [{label:"Speed",type:"number",default:4}] },
-    { blockName: "SET SPEED VECTOR", category: "SPRITES", tooltip: "Applies constant trajectory speeds.", sideMenuFields: [{label:"X Speed",type:"number",default:2},{label:"Y Speed",type:"number",default:0}] },
-    { blockName: "IF TOUCHING KIND", category: "SPRITES", tooltip: "Proximity hit boundary scanner.", sideMenuFields: [{label:"Kind Alpha",type:"text",default:"Player"},{label:"Kind Beta",type:"text",default:"Enemy"}] },
-    { blockName: "DESTROY CHAR", category: "SPRITES", tooltip: "De-allocates character entity from memory.", sideMenuFields: [{label:"Slot ID",type:"number",default:1}] },
-    { blockName: "CAMERA FOLLOW CHAR", category: "SPRITES", tooltip: "Centers screen camera offsets.", sideMenuFields: [] },
-    { blockName: "ANIMATE FRAME RATE", category: "SPRITES", tooltip: "Cycles dynamic layout frame arrays.", sideMenuFields: [{label:"Total Frames",type:"number",default:4}] },
-    { blockName: "FLIP IMAGES", category: "SPRITES", tooltip: "Reverses drawing layout vectors orientations.", sideMenuFields: [{label:"Flip Left Right",type:"number",default:1}] },
-    { blockName: "RESIZE IMAGE DOUBLE", category: "SPRITES", tooltip: "Pixel doubles the asset mapping context.", sideMenuFields: [] },
+    { blockName: "CREATE PLAYER", category: "SPRITES", tooltip: "Spawns main player character layout variables.", sideMenuFields: [{label:"X",type:"number",default:160},{label:"Y",type:"number",default:120}] },
+    { blockName: "CREATE ENEMY", category: "SPRITES", tooltip: "Spawns map enemy logic registers tracker.", sideMenuFields: [{label:"Slot ID",type:"number",default:1},{label:"X",type:"number",default:80},{label:"Y",type:"number",default:60}] },
+    { blockName: "MOVE WITH BUTTONS", category: "SPRITES", tooltip: "Enables keyboard arrows controller vector adjustments.", sideMenuFields: [{label:"Speed",type:"number",default:4}] },
+    { blockName: "SET SPEED VECTOR", category: "SPRITES", tooltip: "Applies constant kinetic motion delta settings.", sideMenuFields: [{label:"X Speed",type:"number",default:2},{label:"Y Speed",type:"number",default:0}] },
+    { blockName: "IF TOUCHING KIND", category: "SPRITES", tooltip: "Proximity hitbox overlap checker conditional boundary rule.", sideMenuFields: [{label:"Kind Alpha",type:"text",default:"Player"},{label:"Kind Beta",type:"text",default:"Enemy"}] },
+    { blockName: "DESTROY CHAR", category: "SPRITES", tooltip: "De-allocates character entity from dynamic stack tracking rows.", sideMenuFields: [{label:"Slot ID",type:"number",default:1}] },
+    { blockName: "CAMERA FOLLOW CHAR", category: "SPRITES", tooltip: "Locks hardware camera scroll offsets to center position.", sideMenuFields: [] },
+    { blockName: "ANIMATE FRAME RATE", category: "SPRITES", tooltip: "Cycles dynamic memory frame assets configurations maps.", sideMenuFields: [{label:"Total Frames",type:"number",default:4}] },
+    { blockName: "FLIP IMAGES", category: "SPRITES", tooltip: "Reverses pixel drawing orientation arrays across coordinates axis.", sideMenuFields: [{label:"Flip Left Right",type:"number",default:1}] },
+    { blockName: "RESIZE IMAGE DOUBLE", category: "SPRITES", tooltip: "Pixel doubles the layout context footprint boundaries.", sideMenuFields: [] },
     
-    { blockName: "WHEN BUTTON PRESSED", category: "CONTROLS", tooltip: "Hardware key bit scanner matrix switch.", sideMenuFields: [{label:"Target Key",type:"text",default:"sk_2nd"}] },
-    { blockName: "WHEN BOTH BUTTONS HELD", category: "CONTROLS", tooltip: "Simultaneous dual input validation check.", sideMenuFields: [] },
-    { blockName: "PLAY MUSIC NOTE", category: "CONTROLS", tooltip: "Generates link port audio square wave.", sideMenuFields: [{label:"Note Pitch Hz",type:"number",default:440}] },
-    { blockName: "PLAY EXPLOSION SOUND", category: "CONTROLS", tooltip: "Generates noise frequency signals blocks.", sideMenuFields: [] },
-    { blockName: "WAIT TIMER TICK", category: "CONTROLS", tooltip: "Halts current processing stream parameters.", sideMenuFields: [{label:"Ticks Delay",type:"number",default:30}] },
-    { blockName: "LOAD NEXT SEQUEL", category: "CONTROLS", tooltip: "Saves records and executes sequel launcher program.", sideMenuFields: [] }
+    { blockName: "WHEN BUTTON PRESSED", category: "CONTROLS", tooltip: "Hardware key scan pass controller flag detector lane.", sideMenuFields: [{label:"Target Key",type:"text",default:"sk_2nd"}] },
+    { blockName: "WHEN BOTH BUTTONS HELD", category: "CONTROLS", tooltip: "Simultaneous dual input combination matrix lock pass filter.", sideMenuFields: [] },
+    { blockName: "PLAY MUSIC NOTE", category: "CONTROLS", tooltip: "Generates active link port frequency square audio wave loops.", sideMenuFields: [{label:"Note Pitch Hz",type:"number",default:440},{label:"Length Ms",type:"number",default:250}] },
+    { blockName: "PLAY EXPLOSION SOUND", category: "CONTROLS", tooltip: "Triggers procedural audio logic noise signals block array.", sideMenuFields: [] },
+    { blockName: "WAIT TIMER TICK", category: "CONTROLS", tooltip: "Halts processing timeline flow stream tracking markers parameters.", sideMenuFields: [{label:"Ticks Delay",type:"number",default:30}] },
+    { blockName: "LOAD NEXT SEQUEL", category: "CONTROLS", tooltip: "Flushes project configurations sectors state variables to secondary binary file.", sideMenuFields: [{label:"Sequel App Name",type:"text",default:"GAME2"}] }
   ];
   const logicAndSceneBlueprints = [
-    { blockName: "START BLOCK", category: "LOGIC", tooltip: "Execution map initial root entry point.", sideMenuFields: [] },
-    { blockName: "LOOP BLOCK", category: "LOGIC", tooltip: "Continuous engine logic processing cycles loop.", sideMenuFields: [] },
-    { blockName: "CUSTOM CODE INJECTOR", category: "LOGIC", tooltip: "Universal multi-language open text code module field.", sideMenuFields: [{label:"Target Lang",type:"text",default:"python"},{label:"Raw Input Snippet",type:"text",default:"print('Hello')"}] },
-    { blockName: "ALLOCATE STORAGE BAG", category: "LOGIC", tooltip: "Carves out custom item database indices arrays.", sideMenuFields: [{label:"Max Capacity",type:"number",default:10}] },
-    { blockName: "TOGGLE INVENTORY ATTRIBUTE", category: "LOGIC", tooltip: "Flips slot parameters configurations bytes.", sideMenuFields: [] },
-    { blockName: "ALLOCATE QUICK HOTBAR", category: "LOGIC", tooltip: "Allocates selector menu shortcut variable address bounds.", sideMenuFields: [] },
-    { blockName: "COMPUTE MINIMAP MATRIX", category: "LOGIC", tooltip: "Down-samples background tiles onto map panels.", sideMenuFields: [] },
-    { blockName: "COMPARE HARDWARE VALUE REGISTERS", category: "LOGIC", tooltip: "Mathematical conditions validation check paths.", sideMenuFields: [] },
-    { blockName: "COMPUTE MATH OPERATION", category: "LOGIC", tooltip: "Runs low-level numerical calculations.", sideMenuFields: [] },
-    { blockName: "CLAMP VALUE REGISTERS", category: "LOGIC", tooltip: "Locks integers values floors limits fields.", sideMenuFields: [] },
+    { blockName: "START BLOCK", category: "LOGIC", tooltip: "Turing-complete program initial initialization execution root node link.", sideMenuFields: [] },
+    { blockName: "LOOP BLOCK", category: "LOGIC", tooltip: "Continuous engine logic processing infinite cycle tick driver frame rule.", sideMenuFields: [{label:"Target Frame FPS",type:"number",default:60}] },
+    { blockName: "CUSTOM CODE INJECTOR", category: "LOGIC", tooltip: "Universal open text syntax injection field container card.", sideMenuFields: [{label:"Target Lang",type:"text",default:"python"},{label:"Raw Input Snippet",type:"text",default:"print('Hello')"}] },
+    { blockName: "CREATE ITEMS INVENTORY", category: "LOGIC", tooltip: "Establishes a structured user dataset item footprint in safe storage heap.", sideMenuFields: [{label:"Total Slots",type:"number",default:10}] },
+    { blockName: "ADD ITEM TO INVENTORY", category: "LOGIC", tooltip: "Registers collected entities properties indices parameters flags.", sideMenuFields: [{label:"Item Slot ID",type:"number",default:0}] },
+    { blockName: "ALLOCATE STORAGE BAG", category: "LOGIC", tooltip: "Carves out low-level storage array limits fields indices bounds maps.", sideMenuFields: [{label:"Max Capacity",type:"number",default:10},{label:"Stride Slot Bytes",type:"number",default:2}] },
+    { blockName: "TOGGLE INVENTORY ATTRIBUTE", category: "LOGIC", tooltip: "Flips slot parameters configurations bytes.", sideMenuFields: [{label:"Item Array Index",type:"number",default:0},{label:"Attribute Bit",type:"number",default:1}] },
+    { blockName: "ALLOCATE QUICK HOTBAR", category: "LOGIC", tooltip: "Sets up fixed inventory active selector indexing maps.", sideMenuFields: [{label:"Max Slots",type:"number",default:8},{label:"Initial Slot",type:"number",default:1}] },
+    { blockName: "COMPUTE MINIMAP MATRIX", category: "LOGIC", tooltip: "Down-samples map tile grids arrays elements directly into dynamic screen overlay.", sideMenuFields: [{label:"Minimap Location X",type:"number",default:280},{label:"Minimap Location Y",type:"number",default:10},{label:"Scaling Multiplier",type:"number",default:2}] },
+    { blockName: "COMPARE HARDWARE VALUE REGISTERS", category: "LOGIC", tooltip: "Mathematical variables equations boundaries conditional validation tracker filter.", sideMenuFields: [{label:"Register Alpha",type:"text",default:"Player_X"},{label:"Comparison Operator",type:"text",default:"GREATER_THAN"},{label:"Value Beta",type:"number",default:300}] },
+    { blockName: "COMPUTE MATH OPERATION", category: "LOGIC", tooltip: "Runs calculations deltas modifiers actions across system parameters coordinates.", sideMenuFields: [{label:"Target Variable",type:"text",default:"Player_Y"},{label:"Operator Code",type:"text",default:"ADD"},{label:"Value Delta",type:"number",default:1}] },
+    { blockName: "CLAMP VALUE REGISTERS", category: "LOGIC", tooltip: "Locks integers trackers metrics floors ceilings boundaries counters safely.", sideMenuFields: [{label:"Memory Pointer",type:"text",default:"Player_Y"},{label:"Absolute Floor",type:"number",default:0},{label:"Absolute Ceiling",type:"number",default:240}] },
+    { blockName: "MATH CALCULATE VALUE", category: "LOGIC", tooltip: "Performs quick basic arithmetic modifications changes rules vectors logging scores.", sideMenuFields: [{label:"Target Tracker",type:"text",default:"Player_Score"},{label:"Add Amount",type:"number",default:10}] },
+    { blockName: "CLAMP INSIDE BOUNDS", category: "LOGIC", tooltip: "Forces static values boundaries constraints safety guidelines limits filters blocks.", sideMenuFields: [{label:"Variable Pointer",type:"text",default:"Player_Y"},{label:"Minimum Floor",type:"number",default:0},{label:"Maximum Ceiling",type:"number",default:240}] },
+    { blockName: "RESET GAME STATE", category: "LOGIC", tooltip: "Wipes volatile game logic tracking sectors parameters clocks.", sideMenuFields: [] },
     
-    { blockName: "GO TO STAGE MAP", category: "SCENE", tooltip: "Loads active background layout map array parameters.", sideMenuFields: [{label:"Map Pointer Data",type:"text",default:"Stage1Data"}] },
-    { blockName: "TURN ON TORCH MASK", category: "SCENE", tooltip: "Applies 1-bit hardware shadow masking cones layer.", sideMenuFields: [] }
+    { blockName: "GO TO STAGE MAP", category: "SCENE", tooltip: "Loads base 2D background tile map structure blueprint layer elements.", sideMenuFields: [{label:"Map Pointer Data",type:"text",default:"Stage1Data"}] },
+    { blockName: "TURN ON TORCH MASK", category: "SCENE", tooltip: "Overlays active coordinate shadow masking cone grid context vector channels.", sideMenuFields: [{label:"Follow Char Slot",type:"number",default:1}] }
   ];
 
   const fullBackupRegistry = masterStudioBlocks.concat(logicAndSceneBlueprints);
