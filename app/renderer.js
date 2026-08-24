@@ -210,30 +210,44 @@ async function loadSavedProjectData() {
 async function bootloadExtensions() {
   const activeFoldersDOMMap = {};
   
-  // Hardcoded blueprint schema to render elements instantly even if files fail to load
-  const backupBlockBlueprints = [
-    { blockName: "CREATE PLAYER", category: "SPRITES", tooltip: "Spawns player onto screen.", sideMenuFields: [{label:"X",type:"number",default:160},{label:"Y",type:"number",default:120}] },
-    { blockName: "CREATE ENEMY", category: "SPRITES", tooltip: "Spawns an enemy character.", sideMenuFields: [{label:"Slot",type:"number",default:1}] },
-    { blockName: "MOVE WITH BUTTONS", category: "SPRITES", tooltip: "Enables keyboard input movement.", sideMenuFields: [{label:"Speed",type:"number",default:4}] },
-    { blockName: "SET SPEED VECTOR", category: "SPRITES", tooltip: "Gives a constant moving speed.", sideMenuFields: [{label:"X Speed",type:"number",default:2}] },
-    { blockName: "IF TOUCHING KIND", category: "SPRITES", tooltip: "Checks distance overlap conditions.", sideMenuFields: [] },
-    { blockName: "DESTROY CHAR", category: "SPRITES", tooltip: "Removes entity out of tracking memory.", sideMenuFields: [] },
-    { blockName: "WHEN BUTTON PRESSED", category: "CONTROLS", tooltip: "Scans active hardware input lines.", sideMenuFields: [{label:"Key",type:"text",default:"sk_2nd"}] },
-    { blockName: "PLAY MUSIC NOTE", category: "CONTROLS", tooltip: "Outputs high frequency wave tones.", sideMenuFields: [{label:"Hz",type:"number",default:440}] },
-    { blockName: "PLAY EXPLOSION SOUND", category: "CONTROLS", tooltip: "Generates square noise data signals.", sideMenuFields: [] },
-    { blockName: "WAIT TIMER TICK", category: "CONTROLS", tooltip: "Delays active instruction threads loop.", sideMenuFields: [{label:"Ticks",type:"number",default:30}] },
-    { blockName: "START BLOCK", category: "LOGIC", tooltip: "The execution map initialization root entry.", sideMenuFields: [] },
-    { blockName: "LOOP BLOCK", category: "LOGIC", tooltip: "Continuous engine logic runtime step execution.", sideMenuFields: [] },
-    { blockName: "CUSTOM CODE INJECTOR", category: "LOGIC", tooltip: "Inject raw targeted script languages inputs.", sideMenuFields: [{label:"Lang",type:"text",default:"python"}] },
-    { blockName: "ALLOCATE STORAGE BAG", category: "LOGIC", tooltip: "Pre-allocates index tracker limits.", sideMenuFields: [] },
-    { blockName: "MATH CALCULATE VALUE", category: "LOGIC", tooltip: "Computes global numerical modifiers registers.", sideMenuFields: [] },
-    { blockName: "CLAMP INSIDE BOUNDS", category: "LOGIC", tooltip: "Restricts value overflow anomalies counters.", sideMenuFields: [] },
-    { blockName: "GO TO STAGE MAP", category: "SCENE", tooltip: "Draws base map layout metrics layers.", sideMenuFields: [] },
-    { blockName: "TURN ON TORCH MASK", category: "SCENE", tooltip: "Applies environmental lighting masks arrays.", sideMenuFields: [] }
+  const masterStudioBlocks = [
+    { blockName: "CREATE PLAYER", category: "SPRITES", tooltip: "Spawns main player.", sideMenuFields: [{label:"X",type:"number",default:160},{label:"Y",type:"number",default:120}] },
+    { blockName: "CREATE ENEMY", category: "SPRITES", tooltip: "Spawns map enemy.", sideMenuFields: [{label:"Slot ID",type:"number",default:1},{label:"X",type:"number",default:80},{label:"Y",type:"number",default:60}] },
+    { blockName: "MOVE WITH BUTTONS", category: "SPRITES", tooltip: "Enables keyboard arrows movement.", sideMenuFields: [{label:"Speed",type:"number",default:4}] },
+    { blockName: "SET SPEED VECTOR", category: "SPRITES", tooltip: "Applies constant trajectory speeds.", sideMenuFields: [{label:"X Speed",type:"number",default:2},{label:"Y Speed",type:"number",default:0}] },
+    { blockName: "IF TOUCHING KIND", category: "SPRITES", tooltip: "Proximity hit boundary scanner.", sideMenuFields: [{label:"Kind Alpha",type:"text",default:"Player"},{label:"Kind Beta",type:"text",default:"Enemy"}] },
+    { blockName: "DESTROY CHAR", category: "SPRITES", tooltip: "De-allocates character entity from memory.", sideMenuFields: [{label:"Slot ID",type:"number",default:1}] },
+    { blockName: "CAMERA FOLLOW CHAR", category: "SPRITES", tooltip: "Centers screen camera offsets.", sideMenuFields: [] },
+    { blockName: "ANIMATE FRAME RATE", category: "SPRITES", tooltip: "Cycles dynamic layout frame arrays.", sideMenuFields: [{label:"Total Frames",type:"number",default:4}] },
+    { blockName: "FLIP IMAGES", category: "SPRITES", tooltip: "Reverses drawing layout vectors orientations.", sideMenuFields: [{label:"Flip Left Right",type:"number",default:1}] },
+    { blockName: "RESIZE IMAGE DOUBLE", category: "SPRITES", tooltip: "Pixel doubles the asset mapping context.", sideMenuFields: [] },
+    
+    { blockName: "WHEN BUTTON PRESSED", category: "CONTROLS", tooltip: "Hardware key bit scanner matrix switch.", sideMenuFields: [{label:"Target Key",type:"text",default:"sk_2nd"}] },
+    { blockName: "WHEN BOTH BUTTONS HELD", category: "CONTROLS", tooltip: "Simultaneous dual input validation check.", sideMenuFields: [] },
+    { blockName: "PLAY MUSIC NOTE", category: "CONTROLS", tooltip: "Generates link port audio square wave.", sideMenuFields: [{label:"Note Pitch Hz",type:"number",default:440}] },
+    { blockName: "PLAY EXPLOSION SOUND", category: "CONTROLS", tooltip: "Generates noise frequency signals blocks.", sideMenuFields: [] },
+    { blockName: "WAIT TIMER TICK", category: "CONTROLS", tooltip: "Halts current processing stream parameters.", sideMenuFields: [{label:"Ticks Delay",type:"number",default:30}] },
+    { blockName: "LOAD NEXT SEQUEL", category: "CONTROLS", tooltip: "Saves records and executes sequel launcher program.", sideMenuFields: [] }
+  ];
+  const logicAndSceneBlueprints = [
+    { blockName: "START BLOCK", category: "LOGIC", tooltip: "Execution map initial root entry point.", sideMenuFields: [] },
+    { blockName: "LOOP BLOCK", category: "LOGIC", tooltip: "Continuous engine logic processing cycles loop.", sideMenuFields: [] },
+    { blockName: "CUSTOM CODE INJECTOR", category: "LOGIC", tooltip: "Universal multi-language open text code module field.", sideMenuFields: [{label:"Target Lang",type:"text",default:"python"},{label:"Raw Input Snippet",type:"text",default:"print('Hello')"}] },
+    { blockName: "ALLOCATE STORAGE BAG", category: "LOGIC", tooltip: "Carves out custom item database indices arrays.", sideMenuFields: [{label:"Max Capacity",type:"number",default:10}] },
+    { blockName: "TOGGLE INVENTORY ATTRIBUTE", category: "LOGIC", tooltip: "Flips slot parameters configurations bytes.", sideMenuFields: [] },
+    { blockName: "ALLOCATE QUICK HOTBAR", category: "LOGIC", tooltip: "Allocates selector menu shortcut variable address bounds.", sideMenuFields: [] },
+    { blockName: "COMPUTE MINIMAP MATRIX", category: "LOGIC", tooltip: "Down-samples background tiles onto map panels.", sideMenuFields: [] },
+    { blockName: "COMPARE HARDWARE VALUE REGISTERS", category: "LOGIC", tooltip: "Mathematical conditions validation check paths.", sideMenuFields: [] },
+    { blockName: "COMPUTE MATH OPERATION", category: "LOGIC", tooltip: "Runs low-level numerical calculations.", sideMenuFields: [] },
+    { blockName: "CLAMP VALUE REGISTERS", category: "LOGIC", tooltip: "Locks integers values floors limits fields.", sideMenuFields: [] },
+    
+    { blockName: "GO TO STAGE MAP", category: "SCENE", tooltip: "Loads active background layout map array parameters.", sideMenuFields: [{label:"Map Pointer Data",type:"text",default:"Stage1Data"}] },
+    { blockName: "TURN ON TORCH MASK", category: "SCENE", tooltip: "Applies 1-bit hardware shadow masking cones layer.", sideMenuFields: [] }
   ];
 
+  const fullBackupRegistry = masterStudioBlocks.concat(logicAndSceneBlueprints);
   const targetCategories = ['SPRITES', 'CONTROLS', 'LOGIC', 'SCENE', 'CUSTOM'];
-  
+
   targetCategories.forEach(categoryName => {
     const headingBox = document.createElement('div');
     headingBox.style.color = '#cbd5e1'; headingBox.style.backgroundColor = '#1c1e27'; headingBox.style.padding = '10px'; headingBox.style.marginTop = '10px'; headingBox.style.borderRadius = '4px'; headingBox.style.cursor = 'pointer'; headingBox.style.fontSize = '12px'; headingBox.style.fontWeight = '600'; headingBox.style.border = '1px solid #2d3139'; headingBox.style.letterSpacing = '0.5px';
@@ -251,19 +265,23 @@ async function bootloadExtensions() {
     activeFoldersDOMMap[categoryName] = drawerBody;
   });
 
+  fullBackupRegistry.forEach(block => {
+    libraryBlocksRegistry.push(block);
+    const drawerBody = activeFoldersDOMMap[block.category] || activeFoldersDOMMap['CUSTOM'];
+
+    const blockElement = document.createElement('div');
+    blockElement.style.backgroundColor = '#2d3139'; blockElement.style.padding = '8px'; blockElement.style.borderRadius = '4px'; blockElement.style.fontSize = '12px'; blockElement.style.cursor = 'pointer'; blockElement.style.borderLeft = '4px solid #4f46e5'; blockElement.style.userSelect = 'none';
+    blockElement.innerText = block.blockName;
+    blockElement.addEventListener('click', () => { if (window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) window.HallowNexusCanvas.spawnNodeOnCanvas(block); });
+    drawerBody.appendChild(blockElement);
+  });
+
   try {
     const result = await ipcRenderer.invoke('load-extensions');
-    let dynamicDataLoaded = false;
-
     if (result && result.success && result.data && result.data.length > 0) {
-      logToTerminal('Ollama', 'Successfully loaded extension packages.');
-      dynamicDataLoaded = true;
-      
       result.data.forEach(ext => {
         ext.newBlocks.forEach(block => {
-          // Prevent duplicates by checking if block name is already stored in registry
           if (libraryBlocksRegistry.some(b => b.blockName === block.blockName)) return;
-          
           libraryBlocksRegistry.push(block);
           let targetFolder = (ext.category || 'CUSTOM').trim().toUpperCase();
           if (targetFolder.includes('SPRITE')) targetFolder = 'SPRITES';
@@ -271,9 +289,7 @@ async function bootloadExtensions() {
           if (targetFolder.includes('LOGIC')) targetFolder = 'LOGIC';
           if (targetFolder.includes('SCENE')) targetFolder = 'SCENE';
 
-          let drawerBody = activeFoldersDOMMap[targetFolder];
-          if (!drawerBody) drawerBody = activeFoldersDOMMap['CUSTOM'];
-
+          const drawerBody = activeFoldersDOMMap[targetFolder] || activeFoldersDOMMap['CUSTOM'];
           const blockElement = document.createElement('div');
           blockElement.style.backgroundColor = '#2d3139'; blockElement.style.padding = '8px'; blockElement.style.borderRadius = '4px'; blockElement.style.fontSize = '12px'; blockElement.style.cursor = 'pointer'; blockElement.style.borderLeft = '4px solid #4f46e5'; blockElement.style.userSelect = 'none';
           blockElement.innerText = block.blockName;
@@ -282,25 +298,9 @@ async function bootloadExtensions() {
         });
       });
     }
-
-    // 💎 FAIL-SAFE INJECTION: If disk files are corrupt/empty, mount hardcoded fallbacks instantly
-    if (!dynamicDataLoaded) {
-      logToTerminal('System Warning', 'Data buffer empty. Activating standalone fail-safe block cache registry.');
-      backupBlockBlueprints.forEach(block => {
-        libraryBlocksRegistry.push(block);
-        const drawerBody = activeFoldersDOMMap[block.category];
-        const blockElement = document.createElement('div');
-        blockElement.style.backgroundColor = '#2d3139'; blockElement.style.padding = '8px'; blockElement.style.borderRadius = '4px'; blockElement.style.fontSize = '12px'; blockElement.style.cursor = 'pointer'; blockElement.style.borderLeft = '4px solid #4f46e5'; blockElement.style.userSelect = 'none';
-        blockElement.innerText = block.blockName;
-        blockElement.addEventListener('click', () => { if (window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) window.HallowNexusCanvas.spawnNodeOnCanvas(block); });
-        drawerBody.appendChild(blockElement);
-      });
-    }
-
-    ipcRenderer.invoke('load-project-state').then(res => { if(res && res.success && res.data && res.data.chatHistory) aiLogs.innerHTML = res.data.chatHistory; });
-  } catch (err) { 
-    logToTerminal('Runtime Error', 'Extension loader exception managed: ' + err.message); 
-  }
+  } catch (err) {}
+  
+  ipcRenderer.invoke('load-project-state').then(res => { if(res && res.success && res.data && res.data.chatHistory) aiLogs.innerHTML = res.data.chatHistory; });
 }
 
 bootloadExtensions();
