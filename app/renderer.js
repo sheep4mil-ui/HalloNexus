@@ -35,6 +35,7 @@ if (languageSelectorInput) {
     logToTerminal('System', 'Switched cross-compilation target pipeline to: ' + selectedExtension.toUpperCase());
   });
 }
+
 if (menuBtnNew) {
   menuBtnNew.addEventListener('click', () => {
     mainMenuShell.style.display = 'none'; 
@@ -73,7 +74,6 @@ if (btnToggleDocs) {
     e.stopPropagation();
   });
 }
-
 btnSquish.addEventListener('click', () => {
   document.body.classList.toggle('squish-active');
   logToTerminal('System', 'Layout updated. Playtest emulator swapped.');
@@ -101,6 +101,7 @@ async function triggerAutoSavePass() {
   };
   await ipcRenderer.invoke('save-project-state', stateSnapshot);
 }
+
 btnClean.addEventListener('click', async () => {
   if (!window.HallowNexusCanvas || !window.HallowNexusCanvas.getWiredExecutionOrder) {
     logToTerminal('Compiler Error', 'Canvas architecture module buffering.');
@@ -144,7 +145,6 @@ window.addEventListener('mousemove', (e) => {
   canvasGridLayer.style.transform = `translate(${transformX}px, ${transformY}px)`;
 });
 window.addEventListener('mouseup', () => { if (isPanning) { isPanning = false; canvasViewport.style.cursor = 'default'; } });
-
 if (ollamaInput) {
   ollamaInput.addEventListener('keydown', async (e) => {
     if (e.key === 'Enter' && ollamaInput.value.trim() !== '') {
@@ -167,6 +167,7 @@ if (ollamaInput) {
     }
   });
 }
+
 async function loadSavedProjectData() {
   try {
     const result = await ipcRenderer.invoke('load-project-state');
@@ -205,39 +206,39 @@ async function loadSavedProjectData() {
     }
   } catch (err) { logToTerminal('Workspace Error', 'Failed to synchronize sectors: ' + err.message); }
 }
-
 async function bootloadExtensions() {
+  const activeFoldersDOMMap = {};
+  const manualFolderSchema = {
+    'SPRITES': ['SUMMON SPRITE OF KIND', 'SET POSITION', 'SET VELOCITY', 'DESTROY SPRITE WITH EFFECT', 'MOVE SPRITE WITH CONTROLLERS', 'IF OVERLAPPING KIND', 'SET AUTO DESTROY ON WALL', 'SET BOUNDARY HITBOX', 'RENDER SCREEN FRAME', 'SET ANIMATION DELAY', 'FLIP HORIZONTAL', 'FLIP VERTICAL', 'SCALE DOUBLE SIZE', 'SET TRANSPARENT PALETTE ALPHA', 'CREATE PLAYER', 'CREATE ENEMY', 'MOVE WITH BUTTONS', 'SET SPEED VECTOR', 'IF TOUCHING KIND', 'DESTROY CHAR', 'CAMERA FOLLOW CHAR', 'ANIMATE FRAME RATE', 'FLIP IMAGES', 'RESIZE IMAGE DOUBLE'],
+    'CONTROLS': ['POLL KEYBOARD MATRIX', 'ALLOCATE QUICK HOTBAR', 'IF SHORTCUT PRESSED', 'IF BUTTON COMBINATION HELD', 'SET CLOCK INTERRUPT SPEED', 'PLAY SOUND TONE', 'PLAY PROCEDURAL CRASH SOUND', 'SET TRACKER TEMPO', 'SUSPEND THREAD TIMED TICK', 'INITIALIZE MULTI GAME LAUNCHER', 'WHEN BUTTON PRESSED', 'WHEN BOTH BUTTONS HELD', 'PLAY MUSIC NOTE', 'PLAY EXPLOSION SOUND', 'WAIT TIMER TICK', 'LOAD NEXT SEQUEL'],
+    'LOGIC': ['ALLOCATE STORAGE BAG', 'TOGGLE INVENTORY ATTRIBUTE', 'COMPARE HARDWARE VALUE REGISTERS', 'COMPUTE MATH OPERATION', 'CLAMP VALUE REGISTERS', 'BITWISE AND CHECK MASK', 'SCAN WIRE LOOP DEADLOCKS', 'ENCRYPT STATE SECTOR', 'COMPUTE VISIBILITY COVER SCAN', 'RESET PROJECT PROGRESS DATA', 'EVALUATE ACCUMULATOR GREATER THAN EQUAL', 'PIPELINE GENERATE EDGE TILES', 'SCAN LOGIC WIRE DEADLOCKS', 'ALLOCATE PROGRESSION VARIABLE', 'ENCRYPT STATE BINARY BLOCK', 'FORCE HARDWARE FLASH SAVE PASS', 'COMPACT DATA MEMORY HEAP SECTORS', 'RESET GLOBAL VARIABLE MATRIX', 'CREATE ITEMS INVENTORY', 'ADD ITEM TO INVENTORY', 'IF VARIABLE COMPARES', 'MATH CALCULATE VALUE', 'CLAMP INSIDE BOUNDS', 'RESET GAME STATE', 'START BLOCK', 'LOOP BLOCK', 'CUSTOM CODE INJECTOR', 'COMPUTE MINIMAP MATRIX'],
+    'SCENE': ['SET MAP MATRIX', 'APPLY LIGHTING MASK', 'GO TO STAGE MAP', 'TURN ON TORCH MASK']
+  };
+
+  const targetCategories = ['SPRITES', 'CONTROLS', 'LOGIC', 'SCENE', 'CUSTOM'];
+  
+  targetCategories.forEach(categoryName => {
+    const headingBox = document.createElement('div');
+    headingBox.style.color = '#cbd5e1'; headingBox.style.backgroundColor = '#1c1e27'; headingBox.style.padding = '10px'; headingBox.style.marginTop = '10px'; headingBox.style.borderRadius = '4px'; headingBox.style.cursor = 'pointer'; headingBox.style.fontSize = '12px'; headingBox.style.fontWeight = '600'; headingBox.style.border = '1px solid #2d3139'; headingBox.style.letterSpacing = '0.5px';
+    headingBox.innerText = categoryName; toolboxPanel.appendChild(headingBox);
+
+    const drawerBody = document.createElement('div');
+    drawerBody.className = 'nexus-toolbox-drawer'; drawerBody.style.display = 'none'; drawerBody.style.flexDirection = 'column'; drawerBody.style.gap = '6px'; drawerBody.style.padding = '8px 5px 4px 5px'; toolboxPanel.appendChild(drawerBody);
+
+    headingBox.addEventListener('click', () => {
+      const allDrawersList = document.querySelectorAll('.nexus-toolbox-drawer');
+      const isTargetCurrentlyClosed = (drawerBody.style.display === 'none');
+      allDrawersList.forEach(d => d.style.display = 'none'); 
+      drawerBody.style.display = isTargetCurrentlyClosed ? 'flex' : 'none'; 
+    });
+    activeFoldersDOMMap[categoryName] = drawerBody;
+  });
+
   try {
     const result = await ipcRenderer.invoke('load-extensions');
-    if (result.success && result.data.length > 0) {
+    if (result && result.success && result.data.length > 0) {
       logToTerminal('Ollama', 'Successfully loaded extension packages.');
       
-      const activeFoldersDOMMap = {};
-      const manualFolderSchema = {
-        'SPRITES': ['SUMMON SPRITE OF KIND', 'SET POSITION', 'SET VELOCITY', 'DESTROY SPRITE WITH EFFECT', 'MOVE SPRITE WITH CONTROLLERS', 'IF OVERLAPPING KIND', 'SET AUTO DESTROY ON WALL', 'SET BOUNDARY HITBOX', 'RENDER SCREEN FRAME', 'SET ANIMATION DELAY', 'FLIP HORIZONTAL', 'FLIP VERTICAL', 'SCALE DOUBLE SIZE', 'SET TRANSPARENT PALETTE ALPHA', 'CREATE PLAYER', 'CREATE ENEMY', 'MOVE WITH BUTTONS', 'SET SPEED VECTOR', 'IF TOUCHING KIND', 'DESTROY CHAR', 'CAMERA FOLLOW CHAR', 'ANIMATE FRAME RATE', 'FLIP IMAGES', 'RESIZE IMAGE DOUBLE'],
-        'CONTROLS': ['POLL KEYBOARD MATRIX', 'ALLOCATE QUICK HOTBAR', 'IF SHORTCUT PRESSED', 'IF BUTTON COMBINATION HELD', 'SET CLOCK INTERRUPT SPEED', 'PLAY SOUND TONE', 'PLAY PROCEDURAL CRASH SOUND', 'SET TRACKER TEMPO', 'SUSPEND THREAD TIMED TICK', 'INITIALIZE MULTI GAME LAUNCHER', 'WHEN BUTTON PRESSED', 'WHEN BOTH BUTTONS HELD', 'PLAY MUSIC NOTE', 'PLAY EXPLOSION SOUND', 'WAIT TIMER TICK', 'LOAD NEXT SEQUEL'],
-        'LOGIC': ['ALLOCATE STORAGE BAG', 'TOGGLE INVENTORY ATTRIBUTE', 'COMPARE HARDWARE VALUE REGISTERS', 'COMPUTE MATH OPERATION', 'CLAMP VALUE REGISTERS', 'BITWISE AND CHECK MASK', 'SCAN WIRE LOOP DEADLOCKS', 'ENCRYPT STATE SECTOR', 'COMPUTE VISIBILITY COVER SCAN', 'RESET PROJECT PROGRESS DATA', 'EVALUATE ACCUMULATOR GREATER THAN EQUAL', 'PIPELINE GENERATE EDGE TILES', 'SCAN LOGIC WIRE DEADLOCKS', 'ALLOCATE PROGRESSION VARIABLE', 'ENCRYPT STATE BINARY BLOCK', 'FORCE HARDWARE FLASH SAVE PASS', 'COMPACT DATA MEMORY HEAP SECTORS', 'RESET GLOBAL VARIABLE MATRIX', 'CREATE ITEMS INVENTORY', 'ADD ITEM TO INVENTORY', 'IF VARIABLE COMPARES', 'MATH CALCULATE VALUE', 'CLAMP INSIDE BOUNDS', 'RESET GAME STATE', 'START BLOCK', 'LOOP BLOCK', 'CUSTOM CODE INJECTOR', 'COMPUTE MINIMAP MATRIX'],
-        'SCENE': ['SET MAP MATRIX', 'APPLY LIGHTING MASK', 'GO TO STAGE MAP', 'TURN ON TORCH MASK']
-      };
-
-      const targetCategories = ['SPRITES', 'CONTROLS', 'LOGIC', 'SCENE', 'CUSTOM'];
-      targetCategories.forEach(categoryName => {
-        const headingBox = document.createElement('div');
-        headingBox.style.color = '#cbd5e1'; headingBox.style.backgroundColor = '#1c1e27'; headingBox.style.padding = '10px'; headingBox.style.marginTop = '10px'; headingBox.style.borderRadius = '4px'; headingBox.style.cursor = 'pointer'; headingBox.style.fontSize = '12px'; headingBox.style.fontWeight = '600'; headingBox.style.border = '1px solid #2d3139'; headingBox.style.letterSpacing = '0.5px';
-        headingBox.innerText = categoryName; toolboxPanel.appendChild(headingBox);
-
-        const drawerBody = document.createElement('div');
-        drawerBody.className = 'nexus-toolbox-drawer'; drawerBody.style.display = 'none'; drawerBody.style.flexDirection = 'column'; drawerBody.style.gap = '6px'; drawerBody.style.padding = '8px 5px 4px 5px'; toolboxPanel.appendChild(drawerBody);
-
-        headingBox.addEventListener('click', () => {
-          const allDrawersList = document.querySelectorAll('.nexus-toolbox-drawer');
-          const isTargetCurrentlyClosed = (drawerBody.style.display === 'none');
-          allDrawersList.forEach(d => d.style.display = 'none'); 
-          drawerBody.style.display = isTargetCurrentlyClosed ? 'flex' : 'none'; 
-        });
-        activeFoldersDOMMap[categoryName] = drawerBody;
-      });
-
       result.data.forEach(ext => {
         ext.newBlocks.forEach(block => {
           libraryBlocksRegistry.push(block);
@@ -253,8 +254,12 @@ async function bootloadExtensions() {
         });
       });
       ipcRenderer.invoke('load-project-state').then(res => { if(res && res.success && res.data && res.data.chatHistory) aiLogs.innerHTML = res.data.chatHistory; });
+    } else {
+      logToTerminal('System Error', 'Backend failed to read your JSON files. Check your extensions directory.');
     }
-  } catch (err) { logToTerminal('Runtime Error', err.message); }
+  } catch (err) { 
+    logToTerminal('Runtime Error', 'Extension loader crashed: ' + err.message); 
+  }
 }
 
 bootloadExtensions();
