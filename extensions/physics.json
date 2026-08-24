@@ -4,21 +4,21 @@
   "newBlocks": [
     {
       "blockName": "START BLOCK",
-      "tooltip": "The absolute execution entry point. Program initialization lines trigger sequentially out of this node's exit port.",
+      "tooltip": "The execution map initialization root entry.",
       "sideMenuFields": [],
-      "ez80AssemblyTemplate": "_Start_Program_Execution_Entry:\n    ; System Setup Core\n    call _ResetGlobalVariableMatrix"
+      "ez80AssemblyTemplate": "_Start_Program_Execution_Entry:\n    call _ResetGlobalVariableMatrix"
     },
     {
       "blockName": "LOOP BLOCK",
-      "tooltip": "An infinite repeating execution frame loop. Continuously drives downstream physics, graphics, and keys scanner pipelines.",
+      "tooltip": "Continuous engine logic runtime step execution.",
       "sideMenuFields": [
         { "label": "Target Frame FPS", "type": "number", "default": 60 }
       ],
-      "ez80AssemblyTemplate": "_Main_Game_Loop_Tick:\n    ; Target Rate: {TargetFrameFPS} Hz\n    call _SuspendThreadTimedTick"
+      "ez80AssemblyTemplate": "_Main_Game_Loop_Tick:\n    call _SuspendThreadTimedTick"
     },
     {
       "blockName": "CUSTOM CODE INJECTOR",
-      "tooltip": "Injects a raw text snippet directly into the compilation pipeline stream, formatted to match the selected target language.",
+      "tooltip": "Inject raw text data streams inputs.",
       "sideMenuFields": [
         { "label": "Target Lang", "type": "text", "default": "python" },
         { "label": "Raw Input Snippet", "type": "text", "default": "print('Hello HallowNexus')" }
@@ -27,7 +27,7 @@
     },
     {
       "blockName": "ALLOCATE STORAGE BAG",
-      "tooltip": "Carves out a fixed contiguous item memory storage block in safe user RAM to track weapons or inventory data.",
+      "tooltip": "Pre-allocates index tracker limits.",
       "sideMenuFields": [
         { "label": "Max Item Capacity", "type": "number", "default": 10 },
         { "label": "Stride Slot Bytes", "type": "number", "default": 2 }
@@ -36,7 +36,7 @@
     },
     {
       "blockName": "TOGGLE INVENTORY ATTRIBUTE",
-      "tooltip": "Executes an assembly bit operation to toggle item properties like equipped, consumable, or collected variables fields.",
+      "tooltip": "Modifies slots fields states items flags.",
       "sideMenuFields": [
         { "label": "Item Array Index", "type": "number", "default": 0 },
         { "label": "Attribute Bit", "type": "number", "default": 1 }
@@ -45,7 +45,7 @@
     },
     {
       "blockName": "ALLOCATE QUICK HOTBAR",
-      "tooltip": "Carves out an 8-slot selection pointer index layout in safe calculator RAM to track active player inventory slots.",
+      "tooltip": "Sets up active selected shortcut variables.",
       "sideMenuFields": [
         { "label": "Max Slots", "type": "number", "default": 8 },
         { "label": "Initial Slot", "type": "number", "default": 1 }
@@ -54,7 +54,7 @@
     },
     {
       "blockName": "COMPUTE MINIMAP MATRIX",
-      "tooltip": "Down-samples your background map data layout array into a compressed pixel grid overlay written to top VRAM coordinates.",
+      "tooltip": "Down-samples layout arrays onto overlay nodes.",
       "sideMenuFields": [
         { "label": "Minimap Location X", "type": "number", "default": 280 },
         { "label": "Minimap Location Y", "type": "number", "default": 10 },
@@ -63,34 +63,39 @@
       "ez80AssemblyTemplate": "ld hl, {MinimapLocationX}\nld de, {MinimapLocationY}\nld a, {ScalingMultiplier}\ncall _BlitMinimapGridChunk"
     },
     {
-      "blockName": "COMPARE HARDWARE VALUE REGISTERS",
-      "tooltip": "Evaluates two data variables or positions against a mathematical operator condition to trigger logical switches.",
+      "blockName": "CREATE ITEMS INVENTORY",
+      "tooltip": "Establishes a static data matrix memory footprint.",
       "sideMenuFields": [
-        { "label": "Register Alpha", "type": "text", "default": "Player_X" },
-        { "label": "Comparison Operator", "type": "text", "default": "GREATER_THAN" },
-        { "label": "Value Beta", "type": "number", "default": 300 }
+        { "label": "Total Slots", "type": "number", "default": 10 }
       ],
-      "ez80AssemblyTemplate": "ld hl, ({RegisterAlpha})\nld de, {ValueBeta}\nor a\nsbc hl, de\njr z, _CompareConditionFailed\njr nc, _CompareConditionFailed"
+      "ez80AssemblyTemplate": "ld a, {TotalSlots}\ncall _AllocateItemPointerGrid"
     },
     {
-      "blockName": "COMPUTE MATH OPERATION",
-      "tooltip": "Performs low-level mathematical operations directly across system variables matrices.",
+      "blockName": "ADD ITEM TO INVENTORY",
+      "tooltip": "Registers collected metrics flags parameters.",
       "sideMenuFields": [
-        { "label": "Target Variable", "type": "text", "default": "Player_Y" },
-        { "label": "Operator Code", "type": "text", "default": "ADD" },
-        { "label": "Value Delta", "type": "number", "default": 1 }
+        { "label": "Item Slot ID", "type": "number", "default": 0 }
       ],
-      "ez80AssemblyTemplate": "ld hl, ({TargetVariable})\nld de, {ValueDelta}\nadd hl, de\nld ({TargetVariable}), hl"
+      "ez80AssemblyTemplate": "ld a, {ItemSlotID}\ncall _SetInventoryAttributeMatrixFlag"
     },
     {
-      "blockName": "CLAMP VALUE REGISTERS",
-      "tooltip": "Evaluates the contents of a memory address; forces hard limits to prevent data variables overflow.",
+      "blockName": "MATH CALCULATE VALUE",
+      "tooltip": "Computes global numerical modifiers registers.",
       "sideMenuFields": [
-        { "label": "Memory Pointer", "type": "text", "default": "Player_Y" },
-        { "label": "Absolute Floor", "type": "number", "default": 0 },
-        { "label": "Absolute Ceiling", "type": "number", "default": 240 }
+        { "label": "Target Tracker", "type": "text", "default": "Player_Score" },
+        { "label": "Add Amount", "type": "number", "default": 10 }
       ],
-      "ez80AssemblyTemplate": "ld hl, ({MemoryPointer})\nld de, {AbsoluteFloor}\nor a\nsbc hl, de\njr nc, _CheckCeiling\nld hl, {AbsoluteFloor}\n_CheckCeiling:\nld de, {AbsoluteCeiling}\nor a\nsbc hl, de\njr c, _ClampDone\nld hl, {AbsoluteCeiling}\n_ClampDone:\nld ({MemoryPointer}), hl"
+      "ez80AssemblyTemplate": "ld hl, ({TargetTracker})\nld de, {AddAmount}\nadd hl, de\nld ({TargetTracker}), hl"
+    },
+    {
+      "blockName": "CLAMP INSIDE BOUNDS",
+      "tooltip": "Restricts value overflow anomalies counters.",
+      "sideMenuFields": [
+        { "label": "Variable Pointer", "type": "text", "default": "Player_Y" },
+        { "label": "Minimum Floor", "type": "number", "default": 0 },
+        { "label": "Maximum Ceiling", "type": "number", "default": 240 }
+      ],
+      "ez80AssemblyTemplate": "ld hl, ({VariablePointer})\nld de, {MinimumFloor}\nor a\nsbc hl, de\njr nc, _CeilCheck\nld hl, {MinimumFloor}\n_CeilCheck:\nld de, {MaximumCeiling}\nor a\nsbc hl, de\njr c, _ClampDone\nld hl, {MaximumCeiling}\n_ClampDone:\nld ({VariablePointer}), hl"
     }
   ]
 }
