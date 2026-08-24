@@ -210,29 +210,7 @@ async function loadSavedProjectData() {
 async function bootloadExtensions() {
   const activeFoldersDOMMap = {};
   
-  // 💎 MATCHED EXACT DICTIONARY: Synchronized word-for-word with your new simple English names!
-  const manualFolderSchema = {
-    'SPRITES': [
-      'CREATE PLAYER', 'CREATE ENEMY', 'MOVE WITH BUTTONS', 'SET SPEED VECTOR', 
-      'IF TOUCHING KIND', 'DESTROY CHAR', 'CAMERA FOLLOW CHAR', 'ANIMATE FRAME RATE', 
-      'FLIP IMAGES', 'RESIZE IMAGE DOUBLE'
-    ],
-    'CONTROLS': [
-      'WHEN BUTTON PRESSED', 'WHEN BOTH BUTTONS HELD', 'PLAY MUSIC NOTE', 
-      'PLAY EXPLOSION SOUND', 'WAIT TIMER TICK', 'LOAD NEXT SEQUEL'
-    ],
-    'LOGIC': [
-      'START BLOCK', 'LOOP BLOCK', 'CUSTOM CODE INJECTOR', 'ALLOCATE STORAGE BAG', 
-      'TOGGLE INVENTORY ATTRIBUTE', 'ALLOCATE QUICK HOTBAR', 'COMPUTE MINIMAP MATRIX', 
-      'COMPARE HARDWARE VALUE REGISTERS', 'COMPUTE MATH OPERATION', 'CLAMP VALUE REGISTERS',
-      'CREATE ITEMS INVENTORY', 'ADD ITEM TO INVENTORY', 'IF VARIABLE COMPARES', 
-      'MATH CALCULATE VALUE', 'CLAMP INSIDE BOUNDS', 'RESET GAME STATE'
-    ],
-    'SCENE': [
-      'GO TO STAGE MAP', 'TURN ON TORCH MASK'
-    ]
-  };
-
+  // 💎 100% AUTOMATIC OVERRIDE: The system reads your JSON extensions and builds folder tags directly from their contents!
   const targetCategories = ['SPRITES', 'CONTROLS', 'LOGIC', 'SCENE', 'CUSTOM'];
   
   targetCategories.forEach(categoryName => {
@@ -258,22 +236,34 @@ async function bootloadExtensions() {
       logToTerminal('Ollama', 'Successfully loaded extension packages.');
       
       result.data.forEach(ext => {
+        // Read the "category" header direct out of the JSON file to sort blocks automatically
+        let rawCategory = (ext.category || 'CUSTOM').trim().toUpperCase();
+        if (rawCategory.includes('SPRITE')) rawCategory = 'SPRITES';
+        if (rawCategory.includes('CONTROL')) rawCategory = 'CONTROLS';
+        if (rawCategory.includes('LOGIC')) rawCategory = 'LOGIC';
+        if (rawCategory.includes('SCENE')) rawCategory = 'SCENE';
+
+        let drawerBody = activeFoldersDOMMap[rawCategory];
+        if (!drawerBody) drawerBody = activeFoldersDOMMap['CUSTOM'];
+
         ext.newBlocks.forEach(block => {
           libraryBlocksRegistry.push(block);
-          let matchedFolder = 'CUSTOM';
-          for (const folderName in manualFolderSchema) { if (manualFolderSchema[folderName].includes(block.blockName)) { matchedFolder = folderName; break; } }
-          const drawerBody = activeFoldersDOMMap[matchedFolder]; if (!drawerBody) return;
 
           const blockElement = document.createElement('div');
           blockElement.style.backgroundColor = '#2d3139'; blockElement.style.padding = '8px'; blockElement.style.borderRadius = '4px'; blockElement.style.fontSize = '12px'; blockElement.style.cursor = 'pointer'; blockElement.style.borderLeft = '4px solid #4f46e5'; blockElement.style.userSelect = 'none';
           blockElement.innerText = block.blockName;
-          blockElement.addEventListener('click', () => { if (window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) window.HallowNexusCanvas.spawnNodeOnCanvas(block); });
+          
+          blockElement.addEventListener('click', () => { 
+            if (window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) {
+              window.HallowNexusCanvas.spawnNodeOnCanvas(block); 
+            }
+          });
           drawerBody.appendChild(blockElement);
         });
       });
       ipcRenderer.invoke('load-project-state').then(res => { if(res && res.success && res.data && res.data.chatHistory) aiLogs.innerHTML = res.data.chatHistory; });
     } else {
-      logToTerminal('System Error', 'Backend failed to read your JSON files. Check your extensions directory.');
+      logToTerminal('System Error', 'Backend failed to read JSON files.');
     }
   } catch (err) { 
     logToTerminal('Runtime Error', 'Extension loader crashed: ' + err.message); 
