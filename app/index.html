@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
-  <title>HallowNexus Studio - Ultimate Workbench</title>
+  <title>HallowNexus Studio - Advanced Production Workspace</title>
   <style>
     body {
       margin: 0; padding: 0;
@@ -53,45 +53,51 @@
     body.squish-active .panel-emulator { width: 320px; border-right: 1px solid #2d3139; }
     .panel-emulator { width: 0; background-color: #111216; overflow: hidden; display: flex; align-items: center; justify-content: center; font-family: monospace; color: #a78bfa; }
 
-    .asset-editor-modal-shell { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(11, 12, 16, 0.9); backdrop-filter: blur(10px); z-index: 10000; display: none; align-items: center; justify-content: center; }
-    .asset-editor-window-box { background-color: #16181f; border: 2px solid #4f46e5; border-radius: 8px; width: 1120px; height: 740px; padding: 25px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); }
-    .asset-window-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2d3139; padding-bottom: 10px; }
+    /* 💎 REDESIGNED WIDE-SCREEN SPLIT STUDIO HOOKS */
+    .asset-editor-modal-shell { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(11, 12, 16, 0.95); backdrop-filter: blur(12px); z-index: 10000; display: none; align-items: center; justify-content: center; }
+    .asset-editor-window-box { background-color: #16181f; border: 2px solid #4f46e5; border-radius: 12px; width: 1360px; height: 820px; padding: 25px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px; box-shadow: 0 30px 70px rgba(0,0,0,0.8); }
+    .asset-window-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2d3139; padding-bottom: 12px; }
     .studio-internal-tabs { display: flex; gap: 4px; background-color: #0b0c10; padding: 4px; border-radius: 6px; border: 1px solid #2d3139; }
-    .studio-tab-btn { background: transparent; border: none; color: #64748b; font-size: 12px; font-weight: bold; padding: 6px 14px; cursor: pointer; border-radius: 4px; }
+    .studio-tab-btn { background: transparent; border: none; color: #64748b; font-size: 13px; font-weight: bold; padding: 8px 18px; cursor: pointer; border-radius: 4px; }
     .studio-tab-btn.active-sub-tab { background-color: #4f46e5; color: #e2e8f0; }
 
-    .asset-layout-split-pane { display: flex; flex: 1; gap: 25px; overflow: hidden; }
-    .editor-matrix-view-left { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #0b0c10; border: 1px solid #2d3139; border-radius: 6px; position: relative; overflow: auto; }
-    .pixel-painting-grid-layer { display: grid; grid-template-columns: repeat(16, 22px); grid-template-rows: repeat(16, 22px); gap: 1px; background-color: #1a1c23; border: 2px solid #2d3139; padding: 2px; }
-    .grid-pixel-cell-dot { background-color: #111216; border-radius: 1px; cursor: pointer; width: 22px; height: 22px; }
+    /* Wide Split Layouts */
+    .asset-layout-split-pane { display: flex; flex: 1; gap: 30px; overflow: hidden; }
+    .editor-matrix-view-left { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; background-color: #0b0c10; border: 1px solid #2d3139; border-radius: 8px; padding: 15px; overflow-y: auto; }
     
-    .ti-palette-swatch-wrapper { display: grid; grid-template-columns: repeat(16, 1fr); gap: 2px; background-color: #0b0c10; padding: 6px; border-radius: 4px; border: 1px solid #2d3139; max-height: 90px; overflow-y: auto; }
-    .palette-color-block { width: 100%; height: 12px; border-radius: 1px; cursor: pointer; border: 1px solid transparent; }
-    .palette-color-block:hover, .palette-color-block.selected-swatch { border-color: #e2e8f0; }
-    .editor-controls-view-right { width: 380px; display: flex; flex-direction: column; gap: 10px; background-color: #111216; border: 1px solid #2d3139; border-radius: 6px; padding: 18px; box-sizing: border-box; overflow-y: auto; }
-    .studio-panel-content-pane { display: none; flex-direction: column; gap: 10px; height: 100%; }
+    /* 💎 GIANT 16x16 HIGH-CONTRAST CANVAS */
+    .pixel-painting-grid-layer { display: grid; grid-template-columns: repeat(16, 26px); grid-template-rows: repeat(16, 26px); gap: 1px; background-color: #1a1c23; border: 3px solid #2d3139; padding: 4px; border-radius: 4px; }
+    .grid-pixel-cell-dot { background-color: #111216; border-radius: 2px; cursor: pointer; width: 26px; height: 26px; transition: background 0.05s ease; }
+    /* Wide User Control Forms on Right Side */
+    .editor-controls-view-right { width: 500px; display: flex; flex-direction: column; gap: 15px; background-color: #111216; border: 1px solid #2d3139; border-radius: 8px; padding: 22px; box-sizing: border-box; overflow-y: auto; }
+    .studio-panel-content-pane { display: none; flex-direction: column; gap: 12px; height: 100%; }
     .studio-panel-content-pane.pane-visible { display: flex; }
 
-    .studio-paint-tool-belt-row { display: flex; gap: 6px; margin-bottom: 4px; background: #0b0c10; padding: 6px; border-radius: 4px; border: 1px solid #2d3139; }
-    .tool-belt-btn { padding: 5px 10px; font-size: 11px; background: #2d3139; color: #cbd5e1; border: none; border-radius: 3px; cursor: pointer; font-weight: bold; }
-    .tool-belt-btn.tool-active { background: #4f46e5; color: #fff; }
+    /* Wide Pro Tool Belts */
+    .studio-paint-tool-belt-row { display: flex; gap: 8px; width: 100%; background: #0b0c10; padding: 8px; border-radius: 6px; border: 1px solid #2d3139; box-sizing: border-box; margin-bottom: 10px; }
+    .tool-belt-btn { padding: 8px 16px; font-size: 12px; background: #2d3139; color: #cbd5e1; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    .tool-belt-btn.tool-active { background: #4f46e5; color: #fff; box-shadow: 0 0 8px rgba(79,70,229,0.5); }
 
-    .tile-asset-selector-tray { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background-color: #0b0c10; border: 1px solid #2d3139; border-radius: 4px; padding: 6px; max-height: 120px; overflow-y: auto; }
-    .tile-palette-thumb-card { aspect-ratio: 1; background-color: #16181f; border: 1px solid #2d3139; border-radius: 3px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #475569; }
-    .tile-palette-thumb-card.active-paint-tile { border-color: #4f46e5; box-shadow: 0 0 6px rgba(79, 70, 229, 0.4); }
+    .ti-palette-swatch-wrapper { display: grid; grid-template-columns: repeat(16, 1fr); gap: 3px; background-color: #0b0c10; padding: 10px; border-radius: 6px; border: 1px solid #2d3139; max-height: 100px; overflow-y: auto; width: 100%; box-sizing: border-box; }
+    .palette-color-block { width: 100%; height: 15px; border-radius: 2px; cursor: pointer; border: 1px solid transparent; }
+    .palette-color-block:hover, .palette-color-block.selected-swatch { border-color: #e2e8f0; }
+    .tile-asset-selector-tray { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background-color: #0b0c10; border: 1px solid #2d3139; border-radius: 6px; padding: 8px; max-height: 160px; overflow-y: auto; }
+    .tile-palette-thumb-card { aspect-ratio: 1; background-color: #16181f; border: 1px solid #2d3139; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; color: #cbd5e1; }
+    .tile-palette-thumb-card.active-paint-tile { border-color: #4f46e5; box-shadow: 0 0 8px rgba(79, 70, 229, 0.4); }
 
-    .animation-timeline-dropzone-row { display: flex; gap: 6px; background-color: #0b0c10; border: 2px dashed #4f46e5; border-radius: 6px; padding: 10px; min-height: 50px; overflow-x: auto; align-items: center; }
-    .timeline-frame-strip-item { width: 40px; height: 40px; background-color: #1c1e27; border: 1px solid #2d3139; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; color: #a78bfa; cursor: grab; position: relative; }
-    .frame-delete-node-badge { position: absolute; top: -4px; right: -4px; width: 12px; height: 12px; background: #dc2626; border-radius: 50%; color: #fff; font-size: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-    .parameter-stepper-field { display: flex; align-items: center; justify-content: space-between; background-color: #16181f; padding: 6px 12px; border-radius: 4px; border: 1px solid #2d3139; }
-    .stepper-num-input { width: 60px; background-color: #0b0c10; border: 1px solid #2d3139; color: #a78bfa; text-align: center; font-family: monospace; font-size: 12px; font-weight: bold; border-radius: 4px; padding: 2px 0; outline: none; }
-    .text-input-field { width: 140px; background-color: #0b0c10; border: 1px solid #2d3139; color: #e2e8f0; font-size: 12px; border-radius: 4px; padding: 4px 8px; outline: none; }
-    .raster-mask-preview-block { background-color: #0b0c10; border: 1px solid #2d3139; border-radius: 4px; padding: 8px; font-family: monospace; font-size: 11px; color: #22c55e; white-space: pre; height: 45px; overflow-y: auto; }
-    .custom-item-card-row { background-color: #16181f; border: 1px solid #2d3139; border-radius: 4px; padding: 8px; margin-bottom: 6px; font-size: 12px; display: flex; align-items: center; justify-content: space-between; }
+    /* 💎 MAKECODE STYLE EXPANDED DRAG AND DROP TIMELINE */
+    .animation-timeline-dropzone-row { display: flex; gap: 8px; background-color: #0b0c10; border: 2px dashed #4f46e5; border-radius: 8px; padding: 16px; min-height: 70px; overflow-x: auto; align-items: center; box-sizing: border-box; }
+    .timeline-frame-strip-item { width: 55px; height: 50px; background-color: #1c1e27; border: 1px solid #4f46e5; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; color: #a78bfa; cursor: grab; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+    .frame-delete-node-badge { position: absolute; top: -6px; right: -6px; width: 16px; height: 16px; background: #dc2626; border-radius: 50%; color: #fff; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; }
+
+    .parameter-stepper-field { display: flex; align-items: center; justify-content: space-between; background-color: #16181f; padding: 8px 14px; border-radius: 6px; border: 1px solid #2d3139; }
+    .stepper-num-input { width: 70px; background-color: #0b0c10; border: 1px solid #2d3139; color: #a78bfa; text-align: center; font-family: monospace; font-size: 13px; font-weight: bold; border-radius: 4px; padding: 4px 0; outline: none; }
+    .text-input-field { width: 180px; background-color: #0b0c10; border: 1px solid #2d3139; color: #e2e8f0; font-size: 13px; border-radius: 4px; padding: 6px 10px; outline: none; }
+    .raster-mask-preview-block { background-color: #0b0c10; border: 1px solid #2d3139; border-radius: 4px; padding: 10px; font-family: monospace; font-size: 11px; color: #22c55e; white-space: pre; height: 45px; overflow-y: auto; }
+    .custom-item-card-row { background-color: #16181f; border: 1px solid #2d3139; border-radius: 6px; padding: 10px; margin-bottom: 6px; font-size: 12px; display: flex; align-items: center; justify-content: space-between; }
   </style>
 </head>
 <body>
-
   <div class="asset-editor-modal-shell" id="nexus-asset-editor">
     <div class="asset-editor-window-box">
       <div class="asset-window-header">
@@ -101,56 +107,74 @@
           <button class="studio-tab-btn" data-target-pane="pane-item">3. Item Designer</button>
           <button class="studio-tab-btn" data-target-pane="pane-block">4. Custom Card Builder & Ledger</button>
         </div>
-        <button class="btn" id="btn-close-asset-editor" style="background-color: #dc2626; font-weight: bold;">Close Center</button>
+        <button class="btn" id="btn-close-asset-editor" style="background-color: #dc2626; font-weight: bold; padding: 8px 16px;">Close Studio Center</button>
       </div>
+      
       <div class="asset-layout-split-pane">
-        <div class="editor-matrix-view-left"><div class="pixel-painting-grid-layer" id="pixel-canvas-grid-box"></div></div>
-        <div class="editor-controls-view-right">
-          <div style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">TI-84 Plus CE 256 Color Lookup Grid</div>
+        <!-- 💎 LARGE LEFT PAINT INTERFACE -->
+        <div class="editor-matrix-view-left">
+          <div class="studio-paint-tool-belt-row">
+            <button class="tool-belt-btn tool-active" id="tool-btn-pen">✏️ Pen Tool</button>
+            <button class="tool-belt-btn" id="tool-btn-eraser">🧼 Eraser</button>
+            <button class="tool-belt-btn" id="tool-btn-bucket">🪣 Flood Bucket</button>
+            <button class="tool-belt-btn" id="tool-btn-clear" style="background:#b91c1c; color:#fff; margin-left:auto;">🧹 Clear Grid</button>
+          </div>
+          <div class="pixel-painting-grid-layer" id="pixel-canvas-grid-box"></div>
+          <div style="font-size: 11px; font-weight: bold; color: #475569; text-transform: uppercase; margin-top: 12px; width:100%;">TI-84 CE Color Spectrum Channels</div>
           <div class="ti-palette-swatch-wrapper" id="palette-swatch-container"></div>
-
+        </div>
+        <!-- 💎 RIGHT WORKSPACE CONTROL PANELS -->
+        <div class="editor-controls-view-right">
+          <!-- TAB 1: ALL ART BLOCK METADATA & PALETTES -->
           <div class="studio-panel-content-pane pane-visible" id="pane-art">
-            <div style="font-size: 11px; font-weight: bold; color: #a78bfa; text-transform: uppercase; margin-bottom: 4px;">Canvas Tool Belt</div>
-            <div class="studio-paint-tool-belt-row">
-              <button class="tool-belt-btn tool-active" id="tool-btn-pen">✏️ Pen</button>
-              <button class="tool-belt-btn" id="tool-btn-eraser">🧼 Eraser</button>
-              <button class="tool-belt-btn" id="tool-btn-bucket">🪣 Bucket Fill</button>
-              <button class="tool-belt-btn" id="tool-btn-clear" style="background:#b91c1c; color:#fff; margin-left:auto;">🧹 Clear</button>
+            <div style="font-size: 12px; font-weight: bold; color: #a78bfa; text-transform: uppercase; margin-bottom: 4px;">Asset Metadata Definitions</div>
+            <div class="parameter-stepper-field"><span>Unique Token Name ID</span><input type="text" class="text-input-field" id="custom-item-name-input" value="TILE_WALL_01"></div>
+            <div class="parameter-stepper-field">
+              <span>Asset Category Classification</span>
+              <select class="select-input" id="custom-asset-type-select" style="width:180px;"><option value="tile">Map Tile Block Asset</option><option value="sprite">Character Sprite Asset</option></select>
             </div>
-            <div style="font-size: 11px; font-weight: bold; color: #a78bfa; text-transform: uppercase; margin-bottom: 4px; margin-top:4px;">Asset Metadata Definitions</div>
-            <div class="parameter-stepper-field"><span>Name Token ID</span><input type="text" class="text-input-field" id="custom-item-name-input" value="TILE_WALL_01"></div>
-            <div class="parameter-stepper-field"><span>Classification</span><select class="select-input" id="custom-asset-type-select" style="width:140px;"><option value="tile">Map Tile Block</option><option value="sprite">Character Actor</option></select></div>
-            <div style="font-size: 11px; font-weight: bold; color: #cbd5e1; text-transform: uppercase; margin-top: 5px; margin-bottom: 4px;">Live Painted Tiles Tray</div>
-            <div class="tile-asset-selector-tray" id="live-painted-tiles-tray"><div class="tile-palette-thumb-card active-paint-tile" data-tile-id="0" style="background-color:#0b0c10;">WIPE</div></div>
+            <div style="font-size: 12px; font-weight: bold; color: #cbd5e1; text-transform: uppercase; margin-top: 10px; margin-bottom: 6px;">Live Painted Tiles Tray</div>
+            <div class="tile-asset-selector-tray" id="live-painted-tiles-tray">
+              <div class="tile-palette-thumb-card active-paint-tile" data-tile-id="0" style="background-color:#0b0c10;">WIPE</div>
+            </div>
           </div>
 
+          <!-- TAB 2: SEQUENCE ANIMATIONS & MAKECODE TIMELINE LAYER -->
           <div class="studio-panel-content-pane" id="pane-anim">
-            <div style="font-size: 11px; font-weight: bold; color: #a78bfa; text-transform: uppercase; margin-bottom: 2px;">MakeCode Style Frame Timeline</div>
-            <div class="animation-timeline-dropzone-row" id="nexus-timeline-dropzone"><span style="font-size:10px; color:#475569;" id="timeline-empty-notice">Drag assets from Tab 1 ledger and drop here!</span></div>
-            <div style="font-size: 11px; font-weight: bold; color: #a78bfa; text-transform: uppercase; margin-top: 6px; margin-bottom: 4px;">Per-Frame Hitbox Byte Offsets</div>
-            <div class="parameter-stepper-field"><span>Top Bound Offset</span><input type="number" class="stepper-num-input" id="hitbox-val-top" value="0" min="0" max="15"></div>
-            <div class="parameter-stepper-field"><span>Bottom Bound Offset</span><input type="number" class="stepper-num-input" id="hitbox-val-bottom" value="15" min="0" max="15"></div>
-            <div class="parameter-stepper-field"><span>Left Bound Offset</span><input type="number" class="stepper-num-input" id="hitbox-val-left" value="0" min="0" max="15"></div>
-            <div class="parameter-stepper-field"><span>Right Bound Offset</span><input type="number" class="stepper-num-input" id="hitbox-val-right" value="15" min="0" max="15"></div>
-            <div class="parameter-stepper-field"><span>Animation Frame Tick Hold</span><input type="number" class="stepper-num-input" id="custom-anim-frame-hold" value="8" min="1" max="60"></div>
+            <div style="font-size: 12px; font-weight: bold; color: #a78bfa; text-transform: uppercase; margin-bottom: 2px;">MakeCode Visual Frame Timeline Sequence</div>
+            <div class="animation-timeline-dropzone-row" id="nexus-timeline-dropzone">
+              <span style="font-size:11px; color:#475569;" id="timeline-empty-notice">Drag tile blocks from Tab 1 palette ledger and drop here!</span>
+            </div>
+            <div style="font-size: 12px; font-weight: bold; color: #a78bfa; text-transform: uppercase; margin-top: 8px; margin-bottom: 4px;">Per-Frame Hitbox Byte Offsets</div>
+            <div class="parameter-stepper-field"><span>Hitbox Top Boundary</span><input type="number" class="stepper-num-input" id="hitbox-val-top" value="0" min="0" max="15"></div>
+            <div class="parameter-stepper-field"><span>Hitbox Bottom Boundary</span><input type="number" class="stepper-num-input" id="hitbox-val-bottom" value="15" min="0" max="15"></div>
+            <div class="parameter-stepper-field"><span>Hitbox Left Boundary</span><input type="number" class="stepper-num-input" id="hitbox-val-left" value="0" min="0" max="15"></div>
+            <div class="parameter-stepper-field"><span>Hitbox Right Boundary</span><input type="number" class="stepper-num-input" id="hitbox-val-right" value="15" min="0" max="15"></div>
+            <div class="parameter-stepper-field"><span>Animation Frame Hold Ticks</span><input type="number" class="stepper-num-input" id="custom-anim-frame-hold" value="8" min="1" max="60"></div>
           </div>
+
+          <!-- TAB 3: 6-BYTE STRUCT DATABASE SHEET -->
           <div class="studio-panel-content-pane" id="pane-item">
-            <div style="font-size: 11px; font-weight: bold; color: #a78bfa; text-transform: uppercase; margin-bottom: 4px;">6-Byte Struct Modifiers Configuration</div>
-            <div class="parameter-stepper-field"><span>Base Stat Magnitude</span><input type="number" class="stepper-num-input" id="custom-item-stat-input" value="10"></div>
-            <div class="parameter-stepper-field"><span>Bit-Packed Status Effect</span><input type="number" class="stepper-num-input" id="custom-item-effect-bit" value="0" min="0" max="7"></div>
+            <div style="font-size: 12px; font-weight: bold; color: #a78bfa; text-transform: uppercase; margin-bottom: 4px;">6-Byte Struct Modifiers Configuration</div>
+            <div class="parameter-stepper-field"><span>Base Stat Magnitude Scalar</span><input type="number" class="stepper-num-input" id="custom-item-stat-input" value="10"></div>
+            <div class="parameter-stepper-field"><span>Bit-Packed Status Effect Flag</span><input type="number" class="stepper-num-input" id="custom-item-effect-bit" value="0" min="0" max="7"></div>
           </div>
 
+          <!-- TAB 4: OPEN INJECTOR & BLOCK TEMPLATE LEDGER -->
           <div class="studio-panel-content-pane" id="pane-block">
-            <div style="font-size: 11px; font-weight: bold; color: #a78bfa; text-transform: uppercase; margin-bottom: 4px;">Custom Card Generator Settings</div>
-            <div class="parameter-stepper-field"><span>Target Toolbox Accordion Drawer</span><select class="select-input" id="custom-block-category-select" style="width:140px;"><option value="SPRITES">Sprites</option><option value="CONTROLS">Controls</option><option value="LOGIC">Logic</option><option value="SCENE">Scene</option></select></div>
-            <div class="parameter-stepper-field"><span>Handwritten Script Variable Injector</span><input type="text" class="text-input-field" id="custom-block-code-snippet" placeholder="print('Injected!')"></div>
-            <div style="font-size: 11px; font-weight: bold; color: #cbd5e1; text-transform: uppercase; margin-top: 5px; margin-bottom: 4px;">Generated Components Ledger</div>
-            <div id="custom-items-list-container" style="max-height: 110px; overflow-y: auto; border: 1px solid #2d3139; padding: 4px; border-radius: 4px; background: #0b0c10;"><div style="font-size:10px; color:#64748b; text-align:center; padding:10px;">No components built yet.</div></div>
+            <div style="font-size: 12px; font-weight: bold; color: #a78bfa; text-transform: uppercase; margin-bottom: 4px;">Custom Block Generator Settings</div>
+            <div class="parameter-stepper-field">
+              <span>Target Accordion Drawer</span>
+              <select class="select-input" id="custom-block-category-select" style="width:180px;"><option value="SPRITES">Sprites</option><option value="CONTROLS">Controls</option><option value="LOGIC">Logic</option><option value="SCENE">Scene</option></select>
+            </div>
+            <div class="parameter-stepper-field"><span>Handwritten Script Variable Injector</span><input type="text" class="text-input-field" id="custom-block-code-snippet" placeholder="player.infuse_status()"></div>
+            <div style="font-size: 12px; font-weight: bold; color: #cbd5e1; text-transform: uppercase; margin-top: 5px; margin-bottom: 4px;">Generated Components Ledger</div>
+            <div id="custom-items-list-container" style="max-height: 120px; overflow-y: auto; border: 1px solid #2d3139; padding: 6px; border-radius: 6px; background: #0b0c10;"><div style="font-size:11px; color:#64748b; text-align:center; padding:10px;">No custom cards built yet.</div></div>
           </div>
 
-          <div style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; margin-bottom: 4px;">1-Bit Light Table Registry</div>
+          <div style="font-size: 11px; font-weight: bold; color: #475569; text-transform: uppercase; margin-top: 4px; margin-bottom: 4px;">1-Bit Light Table Output Map</div>
           <div class="raster-mask-preview-block" id="txt-raster-preview-box">0x00...</div>
-          <button class="btn btn-primary" id="btn-save-asset-payload" style="width: 100%; margin-top: auto; padding: 10px; font-weight: bold; text-transform: uppercase;">Compile Center Core Asset Data</button>
+          <button class="btn btn-primary" id="btn-save-asset-payload" style="width: 100%; margin-top: auto; padding: 12px; font-weight: bold; text-transform: uppercase; font-size:13px;">Compile Center Core Asset Data</button>
         </div>
       </div>
     </div>
@@ -176,7 +200,7 @@
     <div class="panel-canvas" id="canvas-viewport"><div class="canvas-grid" id="canvas-grid-layer"><div class="chunk-divider-line-indicator-h" style="top: 400px;"></div><div class="chunk-divider-line-indicator-h" style="top: 800px;"></div><div class="chunk-divider-line-indicator-v" style="left: 400px;"></div><div class="chunk-divider-line-indicator-v" style="left: 800px;"></div></div></div>
     <div class="panel-desk">
       <div class="desk-section"><div style="font-size: 12px; font-family: monospace; line-height: 1.6; color: #94a3b8;">Core Mode: <span style="color: #a78bfa;" id="lbl-active-core-mode">ARCADE OVERWORLD</span><br>Layer Mode: <span style="color: #4ade80;" id="lbl-active-layer-mode">VISUAL LOOKS</span><br>Active File: <span style="color: #a78bfa;" id="lbl-active-file">build_output.py</span><br></div></div>
-      <div class="desk-section" style="display: flex; flex-direction: column; border-bottom:none; flex: 1;"><h3 style="margin-top:0; font-size:13px; text-transform:uppercase; letter-spacing:0.5px; color:#cbd5e1;">Ollama Core Dashboard</h3><div class="ai-terminal" id="ai-logs">===========================================<br>🌐 HALLOWNEXUS UNIVERSAL GAME STUDIO CORE<br>===========================================<br><br>[📂 TOOLS ACTIVE]<br>Art canvas tool belt loaded with explicit Flood-Fill and Eraser matrix controls.<br><br>[🗺️ STREAMER LAYER]<br>Streaming 9 sectors concurrently via fixed RAM stride page pointers:<br> [Chunk_01] [Chunk_02] [Chunk_03]<br> [Chunk_04] [ACTIVE CORE] [Chunk_06]<br> [Chunk_07] [Chunk_08] [Chunk_09]<br>-------------------------------------------<br>Ecosystem active. Wire canvas grid operational.</div><input type="text" id="ollama-input" placeholder="Ask Ollama to clean wire graph..." style="background-color: #0b0c10; border: 1px solid #2d3139; color: #e2e8f0; padding: 8px; border-radius: 4px; font-size: 13px;"></div>
+      <div class="desk-section" style="display: flex; flex-direction: column; border-bottom:none; flex: 1;"><h3 style="margin-top:0; font-size:13px; text-transform:uppercase; letter-spacing:0.5px; color:#cbd5e1;">Ollama Core Dashboard</h3><div class="ai-terminal" id="ai-logs">===========================================<br>🌐 HALLOWNEXUS UNIVERSAL GAME STUDIO CORE<br>===========================================<br><br>[🤖 SYSTEM RE-ROUTING COMPLETED]<br>All dashboard telemetry data embedded natively inside Ollama Terminal layout slots.<br><br>[📂 ACTION COMMAND KEYS REFERENCE]<br>- Use 'File' dropdown menu triggers to wipe graph state or manually extract disk files snapshots.<br>- Click 'Open Unified Studio Center' to paint textures or assemble custom card parameters structures.<br><br>[🗺️ HARDWARE MATRIX CHUNK STREAMER LAYER]<br>Streaming 9 sectors concurrently via fixed RAM stride offsets page pointers:<br>  [Chunk_01] [Chunk_02] [Chunk_03]<br>  [Chunk_04] [ACTIVE CORE] [Chunk_06]<br>  [Chunk_07] [Chunk_08] [Chunk_09]<br>-------------------------------------------<br>Ecosystem active. Wire canvas grid operational.</div><input type="text" id="ollama-input" placeholder="Ask Ollama to clean wire graph..." style="background-color: #0b0c10; border: 1px solid #2d3139; color: #e2e8f0; padding: 8px; border-radius: 4px; font-size: 13px;"></div>
     </div>
   </div>
   <script src="sprite-editor.js"></script><script src="nexus-emulator.js"></script><script src="canvas-nodes.js"></script><script src="wire-linker.js"></script><script src="renderer.js"></script>
