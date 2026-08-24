@@ -1,128 +1,89 @@
 {
-  "extensionName": "Universal Object, Hitbox & MakeCode Style Sprite Engine",
+  "extensionName": "Universal Sprite and Character Pack",
   "category": "SPRITES",
   "newBlocks": [
     {
-      "blockName": "SUMMON SPRITE OF KIND",
-      "tooltip": "Instantiates a new active sprite structure in memory and flags its gameplay classification kind.",
+      "blockName": "CREATE PLAYER",
+      "tooltip": "Spawns the main player character onto the game screen at a set starting location.",
       "sideMenuFields": [
-        { "label": "Asset Pointer", "type": "text", "default": "PlayerSpriteData" },
-        { "label": "Sprite Kind", "type": "text", "default": "0" }
+        { "label": "X Coordinate", "type": "number", "default": 160 },
+        { "label": "Y Coordinate", "type": "number", "default": 120 }
       ],
-      "ez80AssemblyTemplate": "ld hl, {AssetPointer}\nld a, {SpriteKind}\ncall _SummonSpriteOfKind"
+      "ez80AssemblyTemplate": "ld hl, {XCoordinate}\nld (Player_X), hl\nld de, {YCoordinate}\nld (Player_Y), de\ncall _SummonPlayerSprite"
     },
     {
-      "blockName": "SET POSITION",
-      "tooltip": "Forces an instant rewrite of an entity's coordinate registers to lock it to specific spatial map positions.",
-      "sideMenuFields": [
-        { "label": "Slot ID", "type": "number", "default": 1 },
-        { "label": "X Pixel", "type": "number", "default": 160 },
-        { "label": "Y Pixel", "type": "number", "default": 120 }
-      ],
-      "ez80AssemblyTemplate": "ld a, {SlotID}\nld hl, {XPixel}\nld de, {YPixel}\ncall _SetSpritePosition"
-    },
-    {
-      "blockName": "SET VELOCITY",
-      "tooltip": "Injects a continuous movement vector delta that automatically increments spatial coordinates on every clock interrupt pass.",
+      "blockName": "CREATE ENEMY",
+      "tooltip": "Spawns an enemy character into an active slot on the map.",
       "sideMenuFields": [
         { "label": "Slot ID", "type": "number", "default": 1 },
-        { "label": "VX Delta", "type": "number", "default": 2 },
-        { "label": "VY Delta", "type": "number", "default": 0 }
+        { "label": "X Coordinate", "type": "number", "default": 80 },
+        { "label": "Y Coordinate", "type": "number", "default": 60 }
       ],
-      "ez80AssemblyTemplate": "ld a, {SlotID}\nld b, {VXDelta}\nld c, {VYDelta}\ncall _SetSpriteVelocity"
+      "ez80AssemblyTemplate": "ld a, {SlotID}\nld hl, {XCoordinate}\nld de, {YCoordinate}\ncall _SummonEnemySprite"
     },
     {
-      "blockName": "DESTROY SPRITE WITH EFFECT",
-      "tooltip": "Wipes an active sprite structure out of system registers and spawns a specific visual particle debris trail pattern.",
+      "blockName": "MOVE WITH BUTTONS",
+      "tooltip": "Allows the player to move this character dynamically using the arrow keys.",
       "sideMenuFields": [
-        { "label": "Slot ID", "type": "number", "default": 1 },
-        { "label": "Effect ID", "type": "number", "default": 1 }
+        { "label": "Speed", "type": "number", "default": 4 }
       ],
-      "ez80AssemblyTemplate": "ld a, {SlotID}\nld b, {EffectID}\ncall _DestroySpriteWithEffect"
+      "ez80AssemblyTemplate": "ld b, {Speed}\ncall _MoveSpriteWithControllers"
     },
     {
-      "blockName": "MOVE SPRITE WITH CONTROLLERS",
-      "tooltip": "Directly maps physical direction button inputs to an entity's coordinate registers at a set maximum speed step rate.",
+      "blockName": "SET SPEED VECTOR",
+      "tooltip": "Gives a character a constant moving speed in a certain direction.",
       "sideMenuFields": [
-        { "label": "Slot ID", "type": "number", "default": 1 },
-        { "label": "Max Speed", "type": "number", "default": 4 }
+        { "label": "X Speed", "type": "number", "default": 2 },
+        { "label": "Y Speed", "type": "number", "default": 0 }
       ],
-      "ez80AssemblyTemplate": "ld a, {SlotID}\nld b, {MaxSpeed}\ncall _MoveSpriteWithControllers"
+      "ez80AssemblyTemplate": "ld b, {XSpeed}\nld c, {YSpeed}\ncall _SetSpriteVelocity"
     },
     {
-      "blockName": "IF OVERLAPPING KIND",
-      "tooltip": "Performs continuous proximity bounding-box intersection sweeps between two different sprite kind indices to branch execution logic lanes.",
+      "blockName": "IF TOUCHING KIND",
+      "tooltip": "Checks if a character is bumping into another type of character to trigger a script path.",
       "sideMenuFields": [
-        { "label": "Kind Alpha", "type": "number", "default": 0 },
-        { "label": "Kind Beta", "type": "number", "default": 1 }
+        { "label": "Kind Alpha", "type": "text", "default": "Player" },
+        { "label": "Kind Beta", "type": "text", "default": "Enemy" }
       ],
-      "ez80AssemblyTemplate": "ld a, {KindAlpha}\nld b, {KindBeta}\ncall _CheckSpritesOverlapOfKind\njr nz, _OverlapConditionFailed"
+      "ez80AssemblyTemplate": "call _CheckSpritesOverlapOfKind\njr nz, _OverlapConditionFailed"
     },
     {
-      "blockName": "SET AUTO DESTROY ON WALL",
-      "tooltip": "Enforces a lifecycle flag that automatically garbage-collects a projectile or entity memory slot the frame it leaves the screen bounds.",
+      "blockName": "DESTROY CHAR",
+      "tooltip": "Removes a character cleanly from the game screen map registers.",
       "sideMenuFields": [
         { "label": "Slot ID", "type": "number", "default": 1 }
       ],
-      "ez80AssemblyTemplate": "ld a, {SlotID}\ncall _SetSpriteAutoDestroy"
+      "ez80AssemblyTemplate": "ld a, {SlotID}\ncall _DestroySpriteRecord"
     },
     {
-      "blockName": "SET BOUNDARY HITBOX",
-      "tooltip": "Configures a 4-byte fine-grained environmental boundary offset matrix bypassing standard 16x16 grid constraints.",
-      "sideMenuFields": [
-        { "label": "Top Offset", "type": "number", "default": 2 },
-        { "label": "Bottom Offset", "type": "number", "default": 14 },
-        { "label": "Left Offset", "type": "number", "default": 3 },
-        { "label": "Right Offset", "type": "number", "default": 13 }
-      ],
-      "ez80AssemblyTemplate": "ld a, {TopOffset}\nld b, {BottomOffset}\nld c, {LeftOffset}\nld d, {RightOffset}\ncall _ConfigureSubFullBoundaryHitbox"
-    },
-    {
-      "blockName": "RENDER SCREEN FRAME",
-      "tooltip": "Loops through all structured RAM object blocks and blits their sprite data matrices onto the screen VRAM buffer.",
+      "blockName": "CAMERA FOLLOW CHAR",
+      "tooltip": "Forces the game screen viewport to scroll and lock focus on this character.",
       "sideMenuFields": [],
-      "ez80AssemblyTemplate": "call _RenderAllActiveEntityPointers"
+      "ez80AssemblyTemplate": "call _CameraFollowPlayerSprite"
     },
     {
-      "blockName": "SET ANIMATION DELAY",
-      "tooltip": "Increments animation loop trackers automatically based on set frame hardware delay parameters.",
+      "blockName": "ANIMATE FRAME RATE",
+      "tooltip": "Sets up a flip-book sequence timing cycle to make sprites walk or run.",
       "sideMenuFields": [
-        { "label": "Frames Limit", "type": "number", "default": 4 },
-        { "label": "Tick Delay", "type": "number", "default": 8 }
+        { "label": "Total Frames", "type": "number", "default": 4 },
+        { "label": "Delay Ticks", "type": "number", "default": 8 }
       ],
-      "ez80AssemblyTemplate": "ld a, {FramesLimit}\nld b, {TickDelay}\ncall _CycleAnimationFrame"
+      "ez80AssemblyTemplate": "ld a, {TotalFrames}\nld b, {DelayTicks}\ncall _CycleAnimationFrame"
     },
     {
-      "blockName": "FLIP HORIZONTAL",
-      "tooltip": "Reverses the horizontal rendering orientation of a texture map vector inside double buffers layout frames.",
+      "blockName": "FLIP IMAGES",
+      "tooltip": "Flips the sprite image horizontally or vertically to change direction maps.",
       "sideMenuFields": [
-        { "label": "Slot ID", "type": "number", "default": 1 }
+        { "label": "Flip Left Right", "type": "number", "default": 1 },
+        { "label": "Flip Up Down", "type": "number", "default": 0 }
       ],
-      "ez80AssemblyTemplate": "ld a, {SlotID}\ncall _FlipTextureHorizontal"
+      "ez80AssemblyTemplate": "ld a, {FlipLeftRight}\nld b, {FlipUpDown}\ncall _FlipSpriteTexture"
     },
     {
-      "blockName": "FLIP VERTICAL",
-      "tooltip": "Reverses the vertical drawing layout sequence pass to flip asset textures upside down.",
-      "sideMenuFields": [
-        { "label": "Slot ID", "type": "number", "default": 1 }
-      ],
-      "ez80AssemblyTemplate": "ld a, {SlotID}\ncall _FlipTextureVertical"
-    },
-    {
-      "blockName": "SCALE DOUBLE SIZE",
-      "tooltip": "Executes a pixel-doubling blit matrix pass to scale rendering sizes cleanly on screen.",
-      "sideMenuFields": [
-        { "label": "Slot ID", "type": "number", "default": 1 }
-      ],
-      "ez80AssemblyTemplate": "ld a, {SlotID}\ncall _ScaleSpriteDouble"
-    },
-    {
-      "blockName": "SET TRANSPARENT PALETTE ALPHA",
-      "tooltip": "Designates an exact hardware color palette lookup index value as a clear skip parameter for un-boxed boundaries drawing.",
-      "sideMenuFields": [
-        { "label": "Color Index", "type": "number", "default": 0 }
-      ],
-      "ez80AssemblyTemplate": "ld a, {ColorIndex}\ncall _SetTransparentPaletteAlpha"
+      "blockName": "RESIZE IMAGE DOUBLE",
+      "tooltip": "Stretches a sprite to render at double its pixel layout canvas size.",
+      "sideMenuFields": [],
+      "ez80AssemblyTemplate": "call _ScaleSpriteDouble"
     }
   ]
 }
