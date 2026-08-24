@@ -9,9 +9,46 @@ const toolboxPanel = document.getElementById('toolbox');
 const ollamaInput = document.getElementById('ollama-input');
 const btnOpenSpriteDrawer = document.getElementById('btn-open-sprite-drawer');
 
+// 💎 EXPLICIT MENU AND SAVE BUTTON COMPONENT REFERENCE BINDINGS
+const btnSaveProject = document.getElementById('btn-save-project');
+const btnReturnMenu = document.getElementById('btn-return-menu');
+const mainMenuShell = document.getElementById('nexus-main-menu');
+const menuBtnNew = document.getElementById('menu-btn-new');
+const menuBtnLoad = document.getElementById('menu-btn-load');
+
 let libraryBlocksRegistry = [];
 
 if (btnClean) btnClean.innerText = '⚙️ Compile Project';
+
+// MAIN MENU SCREEN TRIGGER MATRIX
+if (menuBtnNew) {
+  menuBtnNew.addEventListener('click', () => {
+    mainMenuShell.style.display = 'none'; // Wipes the view shell to launch editor grid cleanly
+    logToTerminal('System', 'Initialized a fresh, unallocated canvas logic playground session.');
+  });
+}
+
+if (menuBtnLoad) {
+  menuBtnLoad.addEventListener('click', async () => {
+    mainMenuShell.style.display = 'none';
+    await loadSavedProjectData();
+  });
+}
+
+if (btnReturnMenu) {
+  btnReturnMenu.addEventListener('click', () => {
+    mainMenuShell.style.display = 'flex'; // Pulls the full menu layer back to overlay focus lines
+  });
+}
+
+// EXPLICIT HARD DISK DATA SAVE SECTOR LINK
+if (btnSaveProject) {
+  btnSaveProject.addEventListener('click', async () => {
+    logToTerminal('System', 'Executing an explicit snapshot freeze pass over your project arrays...');
+    await triggerAutoSavePass();
+    logToTerminal('Success', 'Project configurations successfully synchronized and locked down tight to: "workspace-save.json"!');
+  });
+}
 
 btnSquish.addEventListener('click', () => {
   document.body.classList.toggle('squish-active');
@@ -60,15 +97,20 @@ btnClean.addEventListener('click', async () => {
   try {
     const HallowNexusCompiler = require('../compiler.js');
     const projectCompiler = new HallowNexusCompiler(__dirname);
+    
+    // 💎 REAL TRANSPILATION CALL RUN: Unlocks actual under-the-hood assembly files writing
     projectCompiler.transpileGraph(nodesToCompile);
-    logToTerminal('Compiler', 'Successfully generated "build_output.asm" layout text blocks to disk.');
+    logToTerminal('Compiler', 'Successfully generated fresh, variable-substituted text source block code.');
+    
     const compileResult = await projectCompiler.compileToBinary('HALLOW');
     if (compileResult.success && window.HallowNexusEmulator && document.body.classList.contains('squish-active')) {
       window.HallowNexusEmulator.loadBinaryPayload(compileResult.bytecodePayload);
-      logToTerminal('Success', 'Build complete! Machine bytecode data successfully flashed.');
+      logToTerminal('Success', 'Build complete! Generated code file written safely to disk at: "generated/build_output.asm"');
+    } else if (compileResult.success) {
+      logToTerminal('Success', 'Build complete! Generated ".asm" text file records logged successfully to your local directory.');
     }
   } catch (err) {
-    logToTerminal('Compiler pipeline tracked successfully!', err);
+    logToTerminal('Compiler Error', 'Hardware compilation pipeline interrupted: ' + err);
   }
 });
 
@@ -134,6 +176,26 @@ if (ollamaInput) {
                   window.HallowNexusCanvas.spawnNodeOnCanvas(targetTemplate);
                 }
               }
+              if (actionData.action === 'link' && actionData.sourceName && actionData.targetName) {
+                setTimeout(() => {
+                  if (window.HallowNexusCanvas && window.HallowNexusCanvas.activeGraphNodes && window.HallowNexusWires) {
+                    const sourceNodeRecord = window.HallowNexusCanvas.activeGraphNodes.find(n => n.blockName === actionData.sourceName);
+                    const targetNodeRecord = window.HallowNexusCanvas.activeGraphNodes.find(n => n.blockName === actionData.targetName);
+                    if (sourceNodeRecord && targetNodeRecord) {
+                      const physicalSourceElement = document.getElementById(sourceNodeRecord.id);
+                      const physicalTargetElement = document.getElementById(targetNodeRecord.id);
+                      if (physicalSourceElement && physicalTargetElement) {
+                        const outSocketPin = physicalSourceElement.querySelector('.socket-port-out');
+                        const inSocketPin = physicalTargetElement.querySelector('.socket-port-in');
+                        if (outSocketPin && inSocketPin) {
+                          window.HallowNexusWires.handleSocketClick(outSocketPin);
+                          window.HallowNexusWires.handleSocketClick(inSocketPin);
+                        }
+                      }
+                    }
+                  }
+                }, 150);
+              }
             } catch (innerErr) {}
           });
         } else {
@@ -170,7 +232,7 @@ async function bootloadExtensions() {
     if (result.success && result.data.length > 0) {
       logToTerminal('Ollama', 'Successfully loaded custom block extension packages.');
       
-      // 💎 DIRECT RE-SORT DICTIONARY: Synchronized perfectly with your actual JSON names!
+      const activeFoldersDOMMap = {};
       const manualFolderSchema = {
         'SPRITES': [
           'SUMMON SPRITE OF KIND', 'SET POSITION', 'SET VELOCITY', 'DESTROY SPRITE WITH EFFECT', 
@@ -203,7 +265,6 @@ async function bootloadExtensions() {
         ]
       };
 
-      const activeFoldersDOMMap = {};
       const targetCategories = ['SPRITES', 'CONTROLS', 'LOGIC', 'SCENE', 'CUSTOM'];
 
       targetCategories.forEach(categoryName => {
@@ -272,7 +333,6 @@ async function bootloadExtensions() {
           drawerBody.appendChild(blockElement);
         });
       });
-      loadSavedProjectData();
     }
   } catch (err) {
     logToTerminal('Runtime Error', err.message);
