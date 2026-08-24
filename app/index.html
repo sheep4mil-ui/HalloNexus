@@ -22,6 +22,7 @@
     .btn-primary { background-color: #4f46e5; }
     .btn-primary:hover { background-color: #6366f1; }
     .workspace-container { display: flex; flex: 1; height: calc(100vh - 40px); position: relative; }
+    
     .panel-toolbox {
       width: 260px; background-color: #16181f; border-right: 1px solid #2d3139;
       display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; z-index: 10;
@@ -56,14 +57,48 @@
     body.squish-active .panel-toolbox { display: none; }
     body.squish-active .panel-emulator { width: 320px; border-right: 1px solid #2d3139; }
     .panel-emulator { width: 0; background-color: #111216; overflow: hidden; display: flex; align-items: center; justify-content: center; font-family: monospace; color: #a78bfa; }
+
+    /* 💎 PRODUCTION MAIN MENU OVERLAY PANEL SCREEN STYLE */
+    .nexus-main-menu-shell {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background-color: #0b0c10; z-index: 500; display: flex;
+      flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+    }
+    .menu-card-box {
+      background-color: #16181f; border: 2px solid #4f46e5; border-radius: 8px;
+      padding: 40px; width: 420px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    }
+    .menu-logo-text { font-size: 28px; font-weight: bold; color: #a78bfa; margin-bottom: 5px; }
+    .menu-sub-text { font-size: 12px; color: #64748b; margin-bottom: 30px; }
+    .menu-btn-item {
+      width: 100%; background-color: #2d3139; color: #e2e8f0; border: 1px solid #475569;
+      padding: 12px; font-size: 14px; border-radius: 6px; cursor: pointer; margin-bottom: 12px;
+      font-weight: bold; transition: all 0.15s ease;
+    }
+    .menu-btn-item:hover { background-color: #4f46e5; border-color: #6366f1; transform: translateY(-2px); }
   </style>
 </head>
 <body>
-  <div class="top-bar">
-    <button class="btn btn-primary" id="btn-squish">Switch Emulator</button>
-    <button class="btn" id="btn-clean">⚙️ Compile Project</button>
-    <button class="btn" id="btn-open-sprite-drawer" style="background-color: #16a34a; margin-left: 10px;">🎨 Draw Textures</button>
+
+  <!-- 🕹️ FULL STANDALONE GAME STUDIO MAIN MENU LAYER -->
+  <div class="nexus-main-menu-shell" id="nexus-main-menu">
+    <div class="menu-card-box">
+      <div class="menu-logo-text">⚡ HallowNexus IDE</div>
+      <div class="menu-sub-text">eZ80 TI-84 Plus CE Development Suite Matrix</div>
+      
+      <button class="menu-btn-item" id="menu-btn-new">🆕 Create New Project Grid</button>
+      <button class="menu-btn-item" id="menu-btn-load" style="background-color: #1e293b;">📂 Load Last Saved State</button>
+    </div>
   </div>
+
+  <div class="top-bar">
+    <button class="btn" id="btn-return-menu" style="background-color: #dc2626;">🚪 Main Menu</button>
+    <button class="btn btn-primary" id="btn-squish">Switch Emulator</button>
+    <button class="btn" id="btn-save-project" style="background-color: #16a34a;">💾 Save Project</button>
+    <button class="btn" id="btn-clean">⚙️ Compile Project</button>
+    <button class="btn" id="btn-open-sprite-drawer" style="background-color: #0891b2;">🎨 Draw Textures</button>
+  </div>
+  
   <div class="workspace-container">
     <div class="panel-emulator" id="emulator-window">[CE_EMULATOR_SCREEN]</div>
     <div class="panel-toolbox" id="toolbox">
