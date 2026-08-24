@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>HallowNexus Studio - eZ80 Engine Workspace</title>
+  <title>HallowNexus Studio - Universal IDE Workspace</title>
   <style>
     body {
       margin: 0; padding: 0;
@@ -10,50 +10,8 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       height: 100vh; display: flex; flex-direction: column; overflow: hidden;
     }
-    
-    /* IDE LAUNCHER SPLASH INTEGRATION */
-    .launcher-splash-shell {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background-color: #0b0c10; z-index: 9999; display: flex; padding: 40px; box-sizing: border-box; gap: 30px;
-    }
-    .launcher-left-panel {
-      flex: 1; background: linear-gradient(135deg, #16181f 0%, #0f1115 100%);
-      border: 1px solid #2d3139; border-radius: 6px; padding: 40px; display: flex; flex-direction: column;
-    }
-    .launcher-right-panel {
-      width: 480px; background-color: #111216; border: 1px solid #2d3139; border-radius: 6px; padding: 30px;
-      display: flex; flex-direction: column; overflow-y: auto;
-    }
-    .studio-title-badge { font-size: 28px; font-weight: 700; color: #a78bfa; letter-spacing: -0.5px; }
-    .studio-subtitle-text { font-size: 13px; color: #64748b; margin-top: 4px; margin-bottom: 40px; }
-    
-    .action-cards-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 40px; }
-    .action-card-item {
-      background-color: #1c1e27; border: 1px solid #2d3139; border-radius: 6px; padding: 20px;
-      cursor: pointer; text-align: left; transition: all 0.15s ease;
-    }
-    .action-card-item:hover { border-color: #4f46e5; background: #222533; }
-    .card-title-line { font-size: 15px; font-weight: bold; color: #e2e8f0; }
-    .card-desc-line { font-size: 12px; color: #64748b; margin-top: 4px; }
-    
-    .recent-files-header { font-size: 11px; font-weight: 600; color: #475569; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
-    .recent-project-row {
-      display: flex; justify-content: space-between; align-items: center; padding: 12px;
-      background-color: #12131a; border: 1px solid #1c1e27; border-radius: 4px; cursor: pointer; margin-bottom: 8px;
-    }
-    .recent-project-row:hover { background-color: #16181f; border-color: #4f46e5; }
-    
-    .infographic-block {
-      background-color: #16181f; border: 1px solid #2d3139; border-radius: 6px; padding: 20px; margin-bottom: 20px;
-    }
-    .infographic-title { font-size: 12px; font-weight: bold; color: #38bdf8; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .vector-graphic-canvas {
-      width: 100%; height: 110px; background-color: #0b0c10; border: 1px solid #2d3139; border-radius: 4px;
-      display: flex; align-items: center; justify-content: center; font-family: monospace; font-size: 11px; color: #4ade80; position: relative;
-    }
-
-    /* Core Workspace Frame Components */
-    .top-bar { height: 40px; background-color: #16181f; border-bottom: 1px solid #2d3139; display: flex; align-items: center; padding: 0 15px; gap: 8px; }
+    .top-bar { height: 40px; background-color: #16181f; border-bottom: 1px solid #2d3139; display: flex; align-items: center; padding: 0 15px; gap: 8px; position: relative; }
+    .menu-trigger-container { position: relative; display: inline-block; }
     .btn {
       background-color: #2d3139; color: #e2e8f0; border: none;
       padding: 6px 14px; font-size: 12px; border-radius: 4px; cursor: pointer; font-weight: 500;
@@ -62,8 +20,23 @@
     .btn-primary { background-color: #4f46e5; }
     .btn-primary:hover { background-color: #6366f1; }
     
+    .dropdown-menu-panel {
+      position: absolute; top: 32px; left: 0; background-color: #16181f;
+      border: 1px solid #2d3139; border-radius: 6px; width: 220px;
+      display: none; flex-direction: column; padding: 6px 0; z-index: 1000;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    .dropdown-item { padding: 8px 16px; font-size: 12px; color: #cbd5e1; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .dropdown-item:hover { background-color: #242835; color: #a78bfa; }
+    .dropdown-divider { height: 1px; background-color: #2d3139; margin: 6px 0; }
+    .shortcut-hint { color: #64748b; font-size: 10px; font-family: monospace; }
+
+    .selector-container { display: flex; align-items: center; gap: 6px; background-color: #1c1e27; border: 1px solid #2d3139; padding: 4px 8px; border-radius: 4px; margin-left: 10px; }
+    .selector-label { font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+    .select-input { background-color: #0b0c10; color: #a78bfa; border: 1px solid #2d3139; font-size: 12px; border-radius: 4px; padding: 2px 6px; font-weight: 600; outline: none; cursor: pointer; }
+
     .workspace-container { display: flex; flex: 1; height: calc(100vh - 40px); position: relative; }
-    .panel-toolbox { width: 260px; background-color: #111216; border-right: 1px solid #2d3139; display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; z-index: 10; overflow-y: auto; }
+    .panel-toolbox { width: 240px; background-color: #111216; border-right: 1px solid #2d3139; display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; z-index: 10; overflow-y: auto; }
     .panel-toolbox::-webkit-scrollbar { width: 6px; }
     .panel-toolbox::-webkit-scrollbar-thumb { background: #2d3139; border-radius: 3px; }
 
@@ -79,25 +52,36 @@
     body.squish-active .panel-emulator { width: 320px; border-right: 1px solid #2d3139; }
     .panel-emulator { width: 0; background-color: #111216; overflow: hidden; display: flex; align-items: center; justify-content: center; font-family: monospace; color: #a78bfa; }
 
-    /* Side-Sliding Documentation Shell */
-    .panel-docs-drawer {
-      position: absolute; top: 0; right: -420px; width: 400px; height: 100%;
-      background-color: #16181f; border-left: 2px solid #4f46e5; padding: 20px;
-      box-sizing: border-box; z-index: 400; overflow-y: auto; transition: right 0.25s ease-in-out;
-    }
+    .panel-docs-drawer { position: absolute; top: 0; right: -420px; width: 400px; height: 100%; background-color: #16181f; border-left: 2px solid #4f46e5; padding: 20px; box-sizing: border-box; z-index: 400; overflow-y: auto; transition: right 0.25s ease-in-out; }
     .panel-docs-drawer.drawer-active { right: 0; }
     .docs-section-card { background-color: #111216; border: 1px solid #2d3139; border-radius: 4px; padding: 12px; margin-bottom: 16px; }
     .docs-title-text { color: #a78bfa; font-size: 13px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; }
     .docs-picture-placeholder { background-color: #0b0c10; border: 1px solid #2d3139; border-radius: 4px; padding: 10px; font-family: monospace; font-size: 10px; color: #4ade80; line-height: 1.4; white-space: pre; overflow-x: auto; margin-top: 8px; }
+
+    .launcher-splash-shell { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #0b0c10; z-index: 9999; display: flex; padding: 40px; box-sizing: border-box; gap: 30px; }
+    .launcher-left-panel { flex: 1; background: linear-gradient(135deg, #16181f 0%, #0f1115 100%); border: 1px solid #2d3139; border-radius: 6px; padding: 40px; display: flex; flex-direction: column; }
+    .launcher-right-panel { width: 480px; background-color: #111216; border: 1px solid #2d3139; border-radius: 6px; padding: 30px; display: flex; flex-direction: column; overflow-y: auto; }
+    .studio-title-badge { font-size: 28px; font-weight: 700; color: #a78bfa; letter-spacing: -0.5px; }
+    .studio-subtitle-text { font-size: 13px; color: #64748b; margin-top: 4px; margin-bottom: 40px; }
+    .action-cards-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 40px; }
+    .action-card-item { background-color: #1c1e27; border: 1px solid #2d3139; border-radius: 6px; padding: 20px; cursor: pointer; text-align: left; transition: all 0.15s ease; }
+    .action-card-item:hover { border-color: #4f46e5; background: #222533; }
+    .card-title-line { font-size: 15px; font-weight: bold; color: #e2e8f0; }
+    .card-desc-line { font-size: 12px; color: #64748b; margin-top: 4px; }
+    .recent-files-header { font-size: 11px; font-weight: 600; color: #475569; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+    .recent-project-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; background-color: #12131a; border: 1px solid #1c1e27; border-radius: 4px; cursor: pointer; margin-bottom: 8px; }
+    .recent-project-row:hover { background-color: #16181f; border-color: #4f46e5; }
+    .infographic-block { background-color: #16181f; border: 1px solid #2d3139; border-radius: 6px; padding: 20px; margin-bottom: 20px; }
+    .infographic-title { font-size: 12px; font-weight: bold; color: #38bdf8; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .vector-graphic-canvas { width: 100%; height: 110px; background-color: #0b0c10; border: 1px solid #2d3139; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: monospace; font-size: 11px; color: #4ade80; position: relative; }
   </style>
 </head>
 <body>
 
-  <!-- MASTER DASHBOARD SPLASH FRAME -->
   <div class="launcher-splash-shell" id="nexus-main-menu">
     <div class="launcher-left-panel">
       <div class="studio-title-badge">HallowNexus Studio</div>
-      <div class="studio-subtitle-text">eZ80 TI-84 Plus CE Development Environment Suite Matrix</div>
+      <div class="studio-subtitle-text">Multi-Target Universal Development Environment Suite Matrix</div>
       
       <div class="action-cards-grid">
         <div class="action-card-item" id="menu-btn-new">
@@ -123,41 +107,86 @@
       <div style="font-size: 12px; color: #64748b; margin-bottom: 25px;">Visual blueprints mapping the low-level execution pipeline logic.</div>
       
       <div class="infographic-block">
-        <div class="infographic-title">1. Node Execution Port Sorting</div>
+        <div class="infographic-title">1. Cross-Compilation Engine</div>
         <div class="vector-graphic-canvas">
-          [START] -> (Node Alpha) ===> (Node Beta) -> [COMPILE]
-          <div style="position: absolute; bottom: 4px; right: 8px; font-size: 9px; color: #475569;">Transpiler Array Pass</div>
+          [CANVAS GRAPH] ----> [TRANSPILER CORE] ----> Python | Java | C++ | eZ80 ASM
+          <div style="position: absolute; bottom: 4px; right: 8px; font-size: 9px; color: #475569;">Universal Code Engine</div>
         </div>
-        <div style="font-size: 11px; color: #94a3b8; margin-top: 8px; line-height: 1.4;">Wired connector tracks enforce code line sequence. Unlinked blocks fall back automatically to standard bottom memory heap layouts.</div>
-      </div>
-
-      <div class="infographic-block">
-        <div class="infographic-title">2. 4-Byte Micro-Pixel Hitboxes</div>
-        <div class="vector-graphic-canvas" style="color: #38bdf8;">
-          +---[16x16 Grid Box]---+<br>
-
-          |  (Top Offset: 2)     |<br>
-          | [Hitbox Perimeter]   |<br>
-          |  (Bottom Offset: 14) |<br>
-          +----------------------+
-          <div style="position: absolute; bottom: 4px; right: 8px; font-size: 9px; color: #475569;">Fine-Grained Hitbox Matrix</div>
-        </div>
-        <div style="font-size: 11px; color: #94a3b8; margin-top: 8px; line-height: 1.4;">Bypasses regular tile blocks limits by tracking 4 coordinate sub-pixel bounds variables offsets to handle ultra-smooth collision reflections.</div>
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 8px; line-height: 1.4;">The abstract pipeline scans block layouts and maps variable substitutions straight into target-specified programmatic syntax.</div>
       </div>
     </div>
   </div>
 
-  <!-- Primary Interface Nav Row -->
   <div class="top-bar">
-    <button class="btn" id="btn-return-menu" style="background-color: #dc2626;">Main Dashboard</button>
+    <div class="menu-trigger-container">
+      <button class="btn btn-primary" id="btn-file-trigger">File</button>
+      <div class="dropdown-menu-panel" id="nexus-file-dropdown">
+        <div class="dropdown-item" id="drop-btn-new"><span>New Project Grid</span><span class="shortcut-hint">Ctrl+N</span></div>
+        <div class="dropdown-item" id="drop-btn-load"><span>Open Saved Workspace</span><span class="shortcut-hint">Ctrl+O</span></div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-item" id="drop-btn-save"><span>Save Project State</span><span class="shortcut-hint">Ctrl+S</span></div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-item" id="drop-btn-compile"><span>Transpile Source Data</span><span class="shortcut-hint">F5</span></div>
+      </div>
+    </div>
+
+    <div class="selector-container">
+      <span class="selector-label">Target Language:</span>
+      <select class="select-input" id="nexus-language-selector">
+        <option value="python">Python (.py)</option>
+        <option value="java">Java (.java)</option>
+        <option value="cpp">C++ (.cpp)</option>
+        <option value="asm">TI eZ80 ASM (.asm)</option>
+      </select>
+    </div>
+
+    <button class="btn" id="btn-return-menu" style="background-color: #dc2626; margin-left: auto;">Main Dashboard</button>
     <button class="btn" id="btn-squish">Switch Viewport Emulator</button>
-    <button class="btn btn-primary" id="btn-save-project">Save Project State</button>
-    <button class="btn" id="btn-clean" style="background-color: #16a34a;">Compile Project</button>
+    <button class="btn btn-primary" id="btn-save-project">Save State</button>
+    <button class="btn" id="btn-clean" style="background-color: #16a34a;">Transpile Project</button>
     <button class="btn" id="btn-open-sprite-drawer" style="background-color: #0891b2;">Draw Textures</button>
-    <button class="btn" id="btn-toggle-docs" style="background-color: #475569; color: #e2e8f0; margin-left: auto;">Visual Blueprints Guide</button>
+    <button class="btn" id="btn-toggle-docs" style="background-color: #475569; color: #e2e8f0;">Visual Guide</button>
   </div>
   
   <div class="workspace-container">
     <div class="panel-emulator" id="emulator-window">[CE_EMULATOR_SCREEN]</div>
     <div class="panel-toolbox" id="toolbox">
       <h3 style="margin-top:0; font-size:16px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Toolbox</h3>
+      <p style="font-size: 12px; color: #64748b; margin-bottom: 15px; margin-top:0;">Click accordion categories to open logic drawers.</p>
+    </div>
+    
+    <div class="panel-canvas" id="canvas-viewport">
+      <div class="canvas-grid" id="canvas-grid-layer"></div>
+      
+      <div class="panel-docs-drawer" id="nexus-docs-drawer">
+        <h2 style="color: #e2e8f0; margin-top: 0; font-size: 16px; border-bottom: 1px solid #2d3139; padding-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Visual Blueprint Index</h2>
+        <div class="docs-section-card">
+          <div class="docs-title-text">Universal Multi-Language Output</div>
+          <div style="font-size: 11px; color: #cbd5e1;">Toggle the Target Language selector on the top nav panel bar. The backend translation script will immediately re-map and transpile file extensions natively to match.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-desk">
+      <div class="desk-section">
+        <h3 style="margin-top:0; font-size:14px; text-transform:uppercase; letter-spacing:0.5px; color:#cbd5e1;">Project Status</h3>
+        <div style="font-size: 12px; font-family: monospace; line-height: 1.6; color: #94a3b8;">
+          Active Compiler File: <span style="color: #a78bfa;" id="lbl-active-file">build_output.py</span><br>
+          VRAM Engine Status: <span style="color: #4ade80;">60 FPS</span>
+        </div>
+      </div>
+      <div class="desk-section" style="display: flex; flex-direction: column;">
+        <h3 style="margin-top:0; font-size:14px; text-transform:uppercase; letter-spacing:0.5px; color:#cbd5e1;">Ollama Core</h3>
+        <div class="ai-terminal" id="ai-logs">HallowNexus Studio ready.<br>Ecosystem operational.</div>
+        <input type="text" id="ollama-input" placeholder="Ask Ollama to clean wire graph..." style="background-color: #0b0c10; border: 1px solid #2d3139; color: #e2e8f0; padding: 8px; border-radius: 4px; font-size: 13px;">
+      </div>
+    </div>
+  </div>
+  
+  <script src="sprite-editor.js"></script>
+  <script src="nexus-emulator.js"></script>
+  <script src="canvas-nodes.js"></script>
+  <script src="wire-linker.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>
