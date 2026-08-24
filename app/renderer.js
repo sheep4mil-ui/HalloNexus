@@ -9,7 +9,7 @@ const toolboxPanel = document.getElementById('toolbox');
 const ollamaInput = document.getElementById('ollama-input');
 const btnOpenSpriteDrawer = document.getElementById('btn-open-sprite-drawer');
 
-// 💎 EXPLICIT MENU AND SAVE BUTTON COMPONENT REFERENCE BINDINGS
+// LAUNCHER DASHBOARD COMPONENT REFERENCE BINDINGS
 const btnSaveProject = document.getElementById('btn-save-project');
 const btnReturnMenu = document.getElementById('btn-return-menu');
 const mainMenuShell = document.getElementById('nexus-main-menu');
@@ -20,33 +20,33 @@ let libraryBlocksRegistry = [];
 
 if (btnClean) btnClean.innerText = '⚙️ Compile Project';
 
-// MAIN MENU SCREEN TRIGGER MATRIX
+// MAIN DASHBOARD LAUNCHER CONTROLLER INTERFACES
 if (menuBtnNew) {
   menuBtnNew.addEventListener('click', () => {
-    mainMenuShell.style.display = 'none'; // Wipes the view shell to launch editor grid cleanly
-    logToTerminal('System', 'Initialized a fresh, unallocated canvas logic playground session.');
+    mainMenuShell.style.display = 'none'; // Dismisses splash layer to launch editor cleanly
+    logToTerminal('System', 'Initialized a fresh workspace playground matrix.');
   });
 }
 
 if (menuBtnLoad) {
   menuBtnLoad.addEventListener('click', async () => {
     mainMenuShell.style.display = 'none';
+    logToTerminal('Workspace', 'Synchronizing cached project configurations...');
     await loadSavedProjectData();
   });
 }
 
 if (btnReturnMenu) {
   btnReturnMenu.addEventListener('click', () => {
-    mainMenuShell.style.display = 'flex'; // Pulls the full menu layer back to overlay focus lines
+    mainMenuShell.style.display = 'flex'; // Brings back the launcher splash screen overlay
   });
 }
 
-// EXPLICIT HARD DISK DATA SAVE SECTOR LINK
 if (btnSaveProject) {
   btnSaveProject.addEventListener('click', async () => {
-    logToTerminal('System', 'Executing an explicit snapshot freeze pass over your project arrays...');
+    logToTerminal('Workspace', 'Executing explicit file freeze state pass...');
     await triggerAutoSavePass();
-    logToTerminal('Success', 'Project configurations successfully synchronized and locked down tight to: "workspace-save.json"!');
+    logToTerminal('Success', 'Project metrics written to: "workspace-save.json"!');
   });
 }
 
@@ -98,7 +98,7 @@ btnClean.addEventListener('click', async () => {
     const HallowNexusCompiler = require('../compiler.js');
     const projectCompiler = new HallowNexusCompiler(__dirname);
     
-    // 💎 REAL TRANSPILATION CALL RUN: Unlocks actual under-the-hood assembly files writing
+    // Execute true variable replacements asm file generation pass
     projectCompiler.transpileGraph(nodesToCompile);
     logToTerminal('Compiler', 'Successfully generated fresh, variable-substituted text source block code.');
     
@@ -107,10 +107,10 @@ btnClean.addEventListener('click', async () => {
       window.HallowNexusEmulator.loadBinaryPayload(compileResult.bytecodePayload);
       logToTerminal('Success', 'Build complete! Generated code file written safely to disk at: "generated/build_output.asm"');
     } else if (compileResult.success) {
-      logToTerminal('Success', 'Build complete! Generated ".asm" text file records logged successfully to your local directory.');
+      logToTerminal('Success', 'Build complete! Generated ".asm" text file records logged successfully.');
     }
   } catch (err) {
-    logToTerminal('Compiler Error', 'Hardware compilation pipeline interrupted: ' + err);
+    logToTerminal('Compiler Error', 'Pipeline interrupted: ' + err);
   }
 });
 
@@ -176,26 +176,6 @@ if (ollamaInput) {
                   window.HallowNexusCanvas.spawnNodeOnCanvas(targetTemplate);
                 }
               }
-              if (actionData.action === 'link' && actionData.sourceName && actionData.targetName) {
-                setTimeout(() => {
-                  if (window.HallowNexusCanvas && window.HallowNexusCanvas.activeGraphNodes && window.HallowNexusWires) {
-                    const sourceNodeRecord = window.HallowNexusCanvas.activeGraphNodes.find(n => n.blockName === actionData.sourceName);
-                    const targetNodeRecord = window.HallowNexusCanvas.activeGraphNodes.find(n => n.blockName === actionData.targetName);
-                    if (sourceNodeRecord && targetNodeRecord) {
-                      const physicalSourceElement = document.getElementById(sourceNodeRecord.id);
-                      const physicalTargetElement = document.getElementById(targetNodeRecord.id);
-                      if (physicalSourceElement && physicalTargetElement) {
-                        const outSocketPin = physicalSourceElement.querySelector('.socket-port-out');
-                        const inSocketPin = physicalTargetElement.querySelector('.socket-port-in');
-                        if (outSocketPin && inSocketPin) {
-                          window.HallowNexusWires.handleSocketClick(outSocketPin);
-                          window.HallowNexusWires.handleSocketClick(inSocketPin);
-                        }
-                      }
-                    }
-                  }
-                }, 150);
-              }
             } catch (innerErr) {}
           });
         } else {
@@ -233,6 +213,8 @@ async function bootloadExtensions() {
       logToTerminal('Ollama', 'Successfully loaded custom block extension packages.');
       
       const activeFoldersDOMMap = {};
+      
+      // EXPLICIT MANUAL ROUTER DICTIONARY MATRIX (Matches actual simple English JSON block names)
       const manualFolderSchema = {
         'SPRITES': [
           'SUMMON SPRITE OF KIND', 'SET POSITION', 'SET VELOCITY', 'DESTROY SPRITE WITH EFFECT', 
@@ -267,6 +249,7 @@ async function bootloadExtensions() {
 
       const targetCategories = ['SPRITES', 'CONTROLS', 'LOGIC', 'SCENE', 'CUSTOM'];
 
+      // Pre-render categories in locked order
       targetCategories.forEach(categoryName => {
         const headingBox = document.createElement('div');
         headingBox.style.color = '#a78bfa';
@@ -333,6 +316,7 @@ async function bootloadExtensions() {
           drawerBody.appendChild(blockElement);
         });
       });
+      loadSavedProjectData();
     }
   } catch (err) {
     logToTerminal('Runtime Error', err.message);
