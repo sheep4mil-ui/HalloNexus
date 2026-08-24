@@ -24,7 +24,6 @@ const assetEditorModal = document.getElementById('nexus-asset-editor');
 const pixelGridContainer = document.getElementById('pixel-canvas-grid-box');
 const txtRasterPreview = document.getElementById('txt-raster-preview-box');
 const paletteContainer = document.getElementById('palette-swatch-container');
-
 // DYNAMIC GAME-MODE CORE ELEMENTS
 const coreGamemodeSelector = document.getElementById('nexus-core-gamemode-selector');
 const lblActiveCoreMode = document.getElementById('lbl-active-core-mode');
@@ -113,15 +112,18 @@ if (btnToggleDocs) { btnToggleDocs.addEventListener('click', (e) => { docsDrawer
 
 if (btnOpenAssetStudio) {
   btnOpenAssetStudio.addEventListener('click', () => {
-    assetEditorModal.style.display = 'flex';
-    generateHardwarePaletteSwatches();
-    initializeAssetMatrixGridPainter();
+    if (assetEditorModal) {
+      assetEditorModal.style.display = 'flex';
+      generateHardwarePaletteSwatches();
+      initializeAssetMatrixGridPainter();
+      logToTerminal('System', 'Universal Art Studio engine workspace mounted.');
+    }
   });
 }
 
 if (btnCloseAssetEditor) {
   btnCloseAssetEditor.addEventListener('click', () => {
-    assetEditorModal.style.display = 'none';
+    if (assetEditorModal) assetEditorModal.style.display = 'none';
   });
 }
 function generateHardwarePaletteSwatches() {
@@ -149,9 +151,11 @@ function generateHardwarePaletteSwatches() {
   }
 }
 
-let isDrawingTexture = false;
-window.addEventListener('mousedown', () => { isDrawingTexture = true; });
-window.addEventListener('mouseup', () => { isDrawingTexture = false; });
+let isPaintBrushActive = false;
+if (pixelGridContainer) {
+  pixelGridContainer.addEventListener('mousedown', (e) => { e.preventDefault(); isPaintBrushActive = true; });
+  window.addEventListener('mouseup', () => { isPaintBrushActive = false; });
+}
 
 function initializeAssetMatrixGridPainter() {
   if (!pixelGridContainer || pixelGridContainer.children.length > 0) return;
@@ -161,7 +165,7 @@ function initializeAssetMatrixGridPainter() {
     pixelCell.className = 'grid-pixel-cell-dot';
     pixelCell.dataset.index = idx;
     
-    const handlePixelDrawAction = () => {
+    const executePixelStampPass = () => {
       const targetIdx = parseInt(pixelCell.dataset.index);
       paintedPixelsLookupMatrix[targetIdx] = activeSelectedPaletteColorIndex;
       
@@ -173,14 +177,13 @@ function initializeAssetMatrixGridPainter() {
       recomputeOneBitRasterMaskTable();
     };
 
-    pixelCell.addEventListener('mousedown', (e) => { e.preventDefault(); handlePixelDrawAction(); });
-    pixelCell.addEventListener('mouseenter', () => { if (isDrawingTexture) handlePixelDrawAction(); });
+    pixelCell.addEventListener('mousedown', () => { executePixelStampPass(); });
+    pixelCell.addEventListener('mouseenter', () => { if (isPaintBrushActive) executePixelStampPass(); });
     
     pixelGridContainer.appendChild(pixelCell);
   }
   recomputeOneBitRasterMaskTable();
 }
-
 function recomputeOneBitRasterMaskTable() {
   let bitmaskBytesList = [];
   for (let row = 0; row < 16; row++) {
@@ -195,6 +198,7 @@ function recomputeOneBitRasterMaskTable() {
   }
   if (txtRasterPreview) txtRasterPreview.innerText = bitmaskBytesList.join(', ');
 }
+
 if (btnSaveAssetPayload) {
   btnSaveAssetPayload.addEventListener('click', () => {
     const blockNameRaw = txtItemName.value.trim().toUpperCase().replace(/\s+/g, '_');
@@ -210,11 +214,12 @@ if (btnSaveAssetPayload) {
     const compiledCustomBlockNode = {
       blockName: blockNameRaw,
       category: chosenType === 'tile' ? 'SCENE' : 'SPRITES',
-      tooltip: `Pixel asset node card. Status Effect matrix bit: ${bitmaskValue}. Stat scalar: ${initialFieldStat}`,
+      tooltip: `Pixel asset node card. Status Effect bit: ${bitmaskValue}. Stat scalar: ${initialFieldStat}`,
       sideMenuFields: [
-        { label: "Magnitude Scalar", type: "number", default: initialFieldStat }
+        { label: "Variable Value", type: "number", default: initialFieldStat },
+        { label: "Inject Code Field", type: "text", default: "" }
       ],
-      ez80AssemblyTemplate: `; --- Pixel Art Card Node: [${blockNameRaw}] ---\nld a, ${bitmaskValue}\nld b, {MagnitudeScalar}\ncall _ExecutePixelStudioRuntimeCallback`
+      ez80AssemblyTemplate: `; --- Custom Card Node: [${blockNameRaw}] ---\nld a, {VariableValue}\n{InjectCodeField}\ncall _ExecutePixelStudioRuntimeCallback`
     };
     
     customGeneratedBlocksDatabase.push(compiledCustomBlockNode);
@@ -241,7 +246,6 @@ if (btnSaveAssetPayload) {
     assetEditorModal.style.display = 'none';
   });
 }
-
 function updateCustomGeneratedBlocksLedgerDisplay() {
   if (!itemLedgerContainer) return;
   if (customGeneratedBlocksDatabase.length === 0) {
@@ -273,6 +277,7 @@ btnSquish.addEventListener('click', () => {
     if (window.HallowNexusEmulator && window.HallowNexusEmulator.stopHardwareClock) window.HallowNexusEmulator.stopHardwareClock();
   }
 });
+
 btnClean.addEventListener('click', async () => {
   if (!window.HallowNexusCanvas || !window.HallowNexusCanvas.getWiredExecutionOrder) {
     logToTerminal('Compiler Error', 'Canvas architecture module buffering.');
@@ -314,9 +319,6 @@ if (ollamaInput) {
   ollamaInput.addEventListener('keydown', async (e) => {
     if (e.key === 'Enter' && ollamaInput.value.trim() !== '') {
       const userMessage = ollamaInput.value; logToTerminal('You', userMessage); ollamaInput.value = ''; 
-      logToTerminal('Ollama', 'Analyzing wire graph matrix...');
-      const workspaceContext = { nodes: (window.HallowNexusCanvas && window.HallowNexusCanvas.activeGraphNodes) || [], wires: (window.HallowNexusWires && window.HallowNexusWires.establishedWires) || [] };
-      const serverResult = await window.electronAPI.saveProjectState(workspaceContext);
     }
   });
 }
@@ -366,6 +368,7 @@ async function bootloadExtensions() {
     
     { blockName: "CREATE PLAYER", category: "SPRITES", tooltip: "Spawns player graphics vectors.", sideMenuFields: [{label:"X",type:"number",default:160},{label:"Y",type:"number",default:120}] },
     { blockName: "CREATE ENEMY", category: "SPRITES", tooltip: "Spawns map enemy logic registers map.", sideMenuFields: [{label:"Slot ID",type:"number",default:1}] },
+    { blockName: "SPRITE CONFIG MATRIX", category: "SPRITES", tooltip: "Configures character model asset slot. Toggles static sprite vs dynamic loop animations with per-frame hitbox boundaries data structures.", sideMenuFields: [{label:"Model Slot Type",type:"text",default:"ANIMATION_LOOP"},{label:"Reel Token ID",type:"text",default:"WALK_LEFT"},{label:"Frame Hitbox Top",type:"number",default:0}] },
     { blockName: "MOVE WITH BUTTONS", category: "SPRITES", tooltip: "Arrow keys matrix input tracker loops speed adjustments.", sideMenuFields: [] },
     { blockName: "IF TOUCHING KIND", category: "SPRITES", tooltip: "4-byte micro-pixel offsets hitbox cross boundary collision analysis.", sideMenuFields: [] },
     
@@ -374,6 +377,7 @@ async function bootloadExtensions() {
     { blockName: "PLAY EXPLOSION SOUND", category: "CONTROLS", tooltip: "Zero floating math procedural white noise sweep data blocks.", sideMenuFields: [] },
     
     { blockName: "GO TO STAGE MAP", category: "SCENE", tooltip: "Loads base 9-chunk grid streaming coordinates sectors array matrix.", sideMenuFields: [{label:"Map Pointer Data",type:"text",default:"Stage1Data"}] },
+    { blockName: "TRIGGER SCREEN SHAKE", category: "SCENE", tooltip: "Distorts hardware offset pointers to slam viewing window frames.", sideMenuFields: [{label:"Duration Ticks",type:"number",default:15}] },
     { blockName: "TURN ON TORCH MASK", category: "SCENE", tooltip: "Applies 1-bit raster look-up table shading flashlight cones shadows mask.", sideMenuFields: [] }
   ];
   
