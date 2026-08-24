@@ -1,5 +1,3 @@
-const { ipcRenderer } = require('electron');
-
 const btnSquish = document.getElementById('btn-squish');
 const btnClean = document.getElementById('btn-clean'); 
 const canvasViewport = document.getElementById('canvas-viewport');
@@ -19,7 +17,7 @@ const docsDrawerShell = document.getElementById('nexus-docs-drawer');
 const languageSelectorInput = document.getElementById('nexus-language-selector');
 const lblActiveFileDisplay = document.getElementById('lbl-active-file');
 
-// ADVANCED ASSET LAYERS & DYNAMIC CHUNKS STUDIO POINTERS
+// ADVANCED LAYER & ASSET MODAL DOM HOOKS
 const btnOpenAssetStudio = document.getElementById('btn-open-asset-studio');
 const btnCloseAssetEditor = document.getElementById('btn-close-asset-editor');
 const assetEditorModal = document.getElementById('nexus-asset-editor');
@@ -27,7 +25,10 @@ const pixelGridContainer = document.getElementById('pixel-canvas-grid-box');
 const txtRasterPreview = document.getElementById('txt-raster-preview-box');
 const paletteContainer = document.getElementById('palette-swatch-container');
 
-// BLOCK GENERATOR LEDGER & 4-PASS TOGGLES BINDINGS
+// DYNAMIC GAME-MODE CORE ELEMENTS
+const coreGamemodeSelector = document.getElementById('nexus-core-gamemode-selector');
+const lblActiveCoreMode = document.getElementById('lbl-active-core-mode');
+
 const itemLedgerContainer = document.getElementById('custom-items-list-container');
 const txtItemName = document.getElementById('custom-item-name-input');
 const numItemStat = document.getElementById('custom-item-stat-input');
@@ -43,10 +44,88 @@ let customGeneratedBlocksDatabase = [];
 let activeSelectedPaletteColorIndex = 1;
 let currentActiveEditorLayerIndex = 0; // 0=Visuals, 1=Collision, 2=Light, 3=Interaction
 let activePaintBrushTileID = 0;
+let currentGlobalGameModeSetting = 'arcade';
 
-// GENERATE REAL TI-84 CE 256-COLOR GRAPHICS PALETTE SWITCHES (3-3-2 BIT CHANNELS)
+function logToTerminal(sender, message) {
+  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  if (aiLogs) {
+    aiLogs.innerHTML += '<br><span style="color: #38bdf8;">[' + time + ']</span> <b>' + sender + ':</b> ' + message;
+    aiLogs.scrollTop = aiLogs.scrollHeight;
+  }
+}
+if (coreGamemodeSelector) {
+  coreGamemodeSelector.addEventListener('change', () => {
+    currentGlobalGameModeSetting = coreGamemodeSelector.value;
+    const modeLabelsMap = {
+      'arcade': 'PURE ARCADE OVERWORLD',
+      'textbox': 'PURE TEXTBOX / VISUAL NOVEL',
+      'hybrid': 'HYBRID INTERLOCKING ENGINE'
+    };
+    if (lblActiveCoreMode) lblActiveCoreMode.innerText = modeLabelsMap[currentGlobalGameModeSetting];
+    logToTerminal('System', 'Engine core compilation architecture re-routed to: ' + modeLabelsMap[currentGlobalGameModeSetting]);
+  });
+}
+
+// 4-PASS DESIGN WORKSPACE LAYER TAB BUTTONS
+document.querySelectorAll('.layer-tab-btn').forEach(tabBtn => {
+  tabBtn.addEventListener('click', () => {
+    document.querySelectorAll('.layer-tab-btn').forEach(b => b.classList.remove('tab-active'));
+    tabBtn.classList.add('tab-active');
+    
+    currentActiveEditorLayerIndex = parseInt(tabBtn.dataset.layer);
+    const layerNames = ['VISUAL LOOKS', 'MICRO-OFFSET COLLISIONS', '1-BIT LIGHT MASKING', 'ENTITIES INTERACTION/CHUNKS'];
+    if (lblActiveLayerMode) lblActiveLayerMode.innerText = layerNames[currentActiveEditorLayerIndex];
+    logToTerminal('Workspace', `Switched map workspace focus to: ${layerNames[currentActiveEditorLayerIndex]}`);
+  });
+});
+
+if (languageSelectorInput) {
+  languageSelectorInput.addEventListener('change', () => {
+    const selectedExtension = languageSelectorInput.value;
+    let textMapping = 'build_output.py';
+    if (selectedExtension === 'java') textMapping = 'HallowNexusGame.java';
+    if (selectedExtension === 'cpp') textMapping = 'build_output.cpp';
+    if (selectedExtension === 'asm') textMapping = 'build_output.asm';
+    if (lblActiveFileDisplay) lblActiveFileDisplay.innerText = textMapping;
+    logToTerminal('System', 'Switched cross-compilation pipeline to: ' + selectedExtension.toUpperCase());
+  });
+}
+if (menuBtnNew) {
+  menuBtnNew.addEventListener('click', () => {
+    mainMenuShell.style.display = 'none'; 
+    document.querySelectorAll('.node-card').forEach(node => node.remove());
+    document.querySelectorAll('.canvas-nexus-wire').forEach(wire => wire.remove());
+    if (window.HallowNexusCanvas && window.HallowNexusCanvas.activeGraphNodes) window.HallowNexusCanvas.activeGraphNodes.length = 0;
+    if (window.HallowNexusWires && window.HallowNexusWires.establishedWires) window.HallowNexusWires.establishedWires.length = 0;
+    logToTerminal('System', 'Initialized a fresh workspace playground matrix.');
+  });
+}
+
+if (menuBtnLoad) {
+  menuBtnLoad.addEventListener('click', async () => {
+    mainMenuShell.style.display = 'none';
+    await loadSavedProjectData();
+  });
+}
+
+if (btnReturnMenu) { btnReturnMenu.addEventListener('click', () => { mainMenuShell.style.display = 'flex'; }); }
+if (btnToggleDocs) { btnToggleDocs.addEventListener('click', (e) => { docsDrawerShell.classList.toggle('drawer-active'); e.stopPropagation(); }); }
+
+if (btnOpenAssetStudio) {
+  btnOpenAssetStudio.addEventListener('click', () => {
+    assetEditorModal.style.display = 'flex';
+    generateHardwarePaletteSwatches();
+    initializeAssetMatrixGridPainter();
+  });
+}
+
+if (btnCloseAssetEditor) {
+  btnCloseAssetEditor.addEventListener('click', () => {
+    assetEditorModal.style.display = 'none';
+  });
+}
 function generateHardwarePaletteSwatches() {
-  if (paletteContainer.children.length > 0) return;
+  if (!paletteContainer || paletteContainer.children.length > 0) return;
   
   for (let idx = 0; idx < 256; idx++) {
     const redChannel = Math.floor(((idx >> 5) & 0x07) * (255 / 7));
@@ -70,114 +149,43 @@ function generateHardwarePaletteSwatches() {
   }
 }
 
-// 4-PASS DESIGN WORKSPACE LAYER TOGGLE BUTTONS
-document.querySelectorAll('.layer-tab-btn').forEach(tabBtn => {
-  tabBtn.addEventListener('click', () => {
-    document.querySelectorAll('.layer-tab-btn').forEach(b => b.classList.remove('tab-active'));
-    tabBtn.classList.add('tab-active');
-    
-    currentActiveEditorLayerIndex = parseInt(tabBtn.dataset.layer);
-    const layerNames = ['VISUAL LOOKS', 'MICRO-OFFSET COLLISIONS', '1-BIT LIGHT MASKING', 'ENTITIES INTERACTION/CHUNKS'];
-    if (lblActiveLayerMode) lblActiveLayerMode.innerText = layerNames[currentActiveEditorLayerIndex];
-    logToTerminal('Workspace', `Switched map workspace focus to: ${layerNames[currentActiveEditorLayerIndex]}`);
-  });
-});
-if (languageSelectorInput) {
-  languageSelectorInput.addEventListener('change', () => {
-    const selectedExtension = languageSelectorInput.value;
-    let textMapping = 'build_output.py';
-    if (selectedExtension === 'java') textMapping = 'HallowNexusGame.java';
-    if (selectedExtension === 'cpp') textMapping = 'build_output.cpp';
-    if (selectedExtension === 'asm') textMapping = 'build_output.asm';
-    if (lblActiveFileDisplay) lblActiveFileDisplay.innerText = textMapping;
-    logToTerminal('System', 'Switched compilation target pipeline to: ' + selectedExtension.toUpperCase());
-  });
-}
-
-if (menuBtnNew) {
-  menuBtnNew.addEventListener('click', () => {
-    mainMenuShell.style.display = 'none'; 
-    document.querySelectorAll('.node-card').forEach(node => node.remove());
-    document.querySelectorAll('.canvas-nexus-wire').forEach(wire => wire.remove());
-    if (window.HallowNexusCanvas && window.HallowNexusCanvas.activeGraphNodes) window.HallowNexusCanvas.activeGraphNodes.length = 0;
-    if (window.HallowNexusWires && window.HallowNexusWires.establishedWires) window.HallowNexusWires.establishedWires.length = 0;
-    logToTerminal('System', 'Initialized a fresh workspace playground matrix.');
-  });
-}
-
-if (menuBtnLoad) {
-  menuBtnLoad.addEventListener('click', async () => {
-    mainMenuShell.style.display = 'none';
-    await loadSavedProjectData();
-  });
-}
-
-if (btnReturnMenu) {
-  btnReturnMenu.addEventListener('click', () => {
-    mainMenuShell.style.display = 'flex'; 
-  });
-}
-
-if (btnSaveProject) {
-  btnSaveProject.addEventListener('click', async () => {
-    logToTerminal('Workspace', 'Executing explicit file freeze state pass...');
-    await triggerAutoSavePass();
-    logToTerminal('Success', 'Project metrics written to: "workspace-save.json"!');
-  });
-}
-
-if (btnToggleDocs) {
-  btnToggleDocs.addEventListener('click', (e) => {
-    docsDrawerShell.classList.toggle('drawer-active');
-    e.stopPropagation();
-  });
-}
-
-if (btnOpenAssetStudio) {
-  btnOpenAssetStudio.addEventListener('click', () => {
-    assetEditorModal.style.display = 'flex';
-    generateHardwarePaletteSwatches();
-    initializeAssetMatrixGridPainter();
-  });
-}
-
-if (btnCloseAssetEditor) {
-  btnCloseAssetEditor.addEventListener('click', () => {
-    assetEditorModal.style.display = 'none';
-  });
-}
+let isDrawingTexture = false;
+window.addEventListener('mousedown', () => { isDrawingTexture = true; });
+window.addEventListener('mouseup', () => { isDrawingTexture = false; });
 
 function initializeAssetMatrixGridPainter() {
-  if (pixelGridContainer.children.length > 0) return;
+  if (!pixelGridContainer || pixelGridContainer.children.length > 0) return;
   
   for (let idx = 0; idx < 256; idx++) {
     const pixelCell = document.createElement('div');
     pixelCell.className = 'grid-pixel-cell-dot';
     pixelCell.dataset.index = idx;
     
-    pixelCell.addEventListener('click', () => {
+    const handlePixelDrawAction = () => {
       const targetIdx = parseInt(pixelCell.dataset.index);
-      paintedPixelsLookupMatrix[targetIdx] = paintedPixelsLookupMatrix[targetIdx] > 0 ? 0 : activeSelectedPaletteColorIndex;
+      paintedPixelsLookupMatrix[targetIdx] = activeSelectedPaletteColorIndex;
       
       const r = Math.floor(((activeSelectedPaletteColorIndex >> 5) & 0x07) * (255 / 7));
       const g = Math.floor(((activeSelectedPaletteColorIndex >> 2) & 0x07) * (255 / 7));
       const b = Math.floor((activeSelectedPaletteColorIndex & 0x03) * (255 / 3));
       
-      pixelCell.style.backgroundColor = paintedPixelsLookupMatrix[targetIdx] > 0 ? `rgb(${r},${g},${b})` : '#111216';
+      pixelCell.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
       recomputeOneBitRasterMaskTable();
-    });
+    };
+
+    pixelCell.addEventListener('mousedown', (e) => { e.preventDefault(); handlePixelDrawAction(); });
+    pixelCell.addEventListener('mouseenter', () => { if (isDrawingTexture) handlePixelDrawAction(); });
     
     pixelGridContainer.appendChild(pixelCell);
   }
+  recomputeOneBitRasterMaskTable();
 }
 
-// Fixed 16x16 bitmask parser looping limits bounds variables check
 function recomputeOneBitRasterMaskTable() {
   let bitmaskBytesList = [];
   for (let row = 0; row < 16; row++) {
     let trackingRowByte = 0;
-    for (let col = 0; col < 16; col++) {
-      if (col >= 8) continue; // Compress matrix fields into packed binary arrays channels
+    for (let col = 0; col < 8; col++) {
       const linearIndex = (row * 16) + col;
       if (paintedPixelsLookupMatrix[linearIndex] > 0) {
         trackingRowByte |= (1 << (7 - col));
@@ -189,7 +197,7 @@ function recomputeOneBitRasterMaskTable() {
 }
 if (btnSaveAssetPayload) {
   btnSaveAssetPayload.addEventListener('click', () => {
-    const blockNameRaw = txtItemName.value.trim().toUpperCase();
+    const blockNameRaw = txtItemName.value.trim().toUpperCase().replace(/\s+/g, '_');
     const chosenType = selAssetType.value;
     const initialFieldStat = parseInt(numItemStat.value) || 0;
     const bitmaskValue = parseInt(numItemEffectBit.value) || 0;
@@ -229,12 +237,13 @@ if (btnSaveAssetPayload) {
     }
     
     updateCustomGeneratedBlocksLedgerDisplay();
-    logToTerminal('Studio Compiler', `Successfully registered pixel art asset: [${blockNameRaw}] as target classification: ${chosenType.toUpperCase()}`);
+    logToTerminal('Studio Compiler', `Successfully registered pixel art asset: [${blockNameRaw}] as classification: ${chosenType.toUpperCase()}`);
     assetEditorModal.style.display = 'none';
   });
 }
 
 function updateCustomGeneratedBlocksLedgerDisplay() {
+  if (!itemLedgerContainer) return;
   if (customGeneratedBlocksDatabase.length === 0) {
     itemLedgerContainer.innerHTML = `<div style="font-size:11px; color:#64748b; text-align:center; padding:10px;">No custom nodes injected yet. Open Art Studio to generate cards.</div>`;
     return;
@@ -248,6 +257,13 @@ function updateCustomGeneratedBlocksLedgerDisplay() {
   });
 }
 
+if (btnSaveProject) {
+  btnSaveProject.addEventListener('click', async () => {
+    await triggerAutoSavePass();
+    logToTerminal('Workspace', 'Project snapshot file saved successfully.');
+  });
+}
+
 btnSquish.addEventListener('click', () => {
   document.body.classList.toggle('squish-active');
   logToTerminal('System', 'Layout updated. Playtest emulator swapped.');
@@ -257,16 +273,6 @@ btnSquish.addEventListener('click', () => {
     if (window.HallowNexusEmulator && window.HallowNexusEmulator.stopHardwareClock) window.HallowNexusEmulator.stopHardwareClock();
   }
 });
-
-async function triggerAutoSavePass() {
-  const stateSnapshot = {
-    nodes: (window.HallowNexusCanvas && window.HallowNexusCanvas.activeGraphNodes) || [],
-    wires: (window.HallowNexusWires && window.HallowNexusWires.establishedWires) || [],
-    chatHistory: aiLogs.innerHTML,
-    customBlocks: customGeneratedBlocksDatabase
-  };
-  await ipcRenderer.invoke('save-project-state', stateSnapshot);
-}
 btnClean.addEventListener('click', async () => {
   if (!window.HallowNexusCanvas || !window.HallowNexusCanvas.getWiredExecutionOrder) {
     logToTerminal('Compiler Error', 'Canvas architecture module buffering.');
@@ -277,12 +283,14 @@ btnClean.addEventListener('click', async () => {
     logToTerminal('Compiler Warning', 'Canvas workspace empty. Drop some blocks first!');
     return;
   }
+  
   const chosenLangKey = languageSelectorInput ? languageSelectorInput.value : 'python';
-  logToTerminal('Compiler', 'Initiating cross-compilation targeting: ' + chosenLangKey.toUpperCase());
+  logToTerminal('Compiler', `Initiating compilation pass targeting: [${chosenLangKey.toUpperCase()}] running mode frame: [${currentGlobalGameModeSetting.toUpperCase()}]`);
+  
   try {
     const HallowNexusCompiler = require('../compiler.js');
     const projectCompiler = new HallowNexusCompiler(__dirname);
-    const generatedPathResult = projectCompiler.transpileGraph(nodesToCompile, chosenLangKey);
+    const generatedPathResult = projectCompiler.transpileGraph(nodesToCompile, chosenLangKey, currentGlobalGameModeSetting);
     logToTerminal('Success', 'Transpilation complete! File written to: ' + generatedPathResult);
   } catch (err) { logToTerminal('Compiler Error', 'Pipeline exception caught: ' + err.message); }
 });
@@ -302,21 +310,41 @@ window.addEventListener('mousemove', (e) => {
 });
 window.addEventListener('mouseup', () => { if (isPanning) { isPanning = false; canvasViewport.style.cursor = 'default'; } });
 
-function logToTerminal(sender, message) {
-  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  aiLogs.innerHTML += '<br><span style="color: #38bdf8;">[' + time + ']</span> <b>' + sender + ':</b> ' + message;
-  aiLogs.scrollTop = aiLogs.scrollHeight;
+if (ollamaInput) {
+  ollamaInput.addEventListener('keydown', async (e) => {
+    if (e.key === 'Enter' && ollamaInput.value.trim() !== '') {
+      const userMessage = ollamaInput.value; logToTerminal('You', userMessage); ollamaInput.value = ''; 
+      logToTerminal('Ollama', 'Analyzing wire graph matrix...');
+      const workspaceContext = { nodes: (window.HallowNexusCanvas && window.HallowNexusCanvas.activeGraphNodes) || [], wires: (window.HallowNexusWires && window.HallowNexusWires.establishedWires) || [] };
+      const serverResult = await window.electronAPI.saveProjectState(workspaceContext);
+    }
+  });
+}
+
+async function triggerAutoSavePass() {
+  const stateSnapshot = {
+    nodes: (window.HallowNexusCanvas && window.HallowNexusCanvas.activeGraphNodes) || [],
+    wires: (window.HallowNexusWires && window.HallowNexusWires.establishedWires) || [],
+    chatHistory: aiLogs.innerHTML,
+    customBlocks: customGeneratedBlocksDatabase,
+    globalGameMode: currentGlobalGameModeSetting
+  };
+  await window.electronAPI.saveProjectState(stateSnapshot);
 }
 
 async function loadSavedProjectData() {
   try {
-    const result = await ipcRenderer.invoke('load-project-state');
+    const result = await window.electronAPI.loadProjectState();
     if (result && result.success && result.data) {
       document.querySelectorAll('.node-card').forEach(node => node.remove());
       document.querySelectorAll('.canvas-nexus-wire').forEach(wire => wire.remove());
       if (window.HallowNexusCanvas && window.HallowNexusCanvas.activeGraphNodes) window.HallowNexusCanvas.activeGraphNodes.length = 0;
       if (window.HallowNexusWires && window.HallowNexusWires.establishedWires) window.HallowNexusWires.establishedWires.length = 0;
       if (result.data.chatHistory) aiLogs.innerHTML = result.data.chatHistory;
+      if (result.data.globalGameMode) {
+        currentGlobalGameModeSetting = result.data.globalGameMode;
+        if(coreGamemodeSelector) coreGamemodeSelector.value = currentGlobalGameModeSetting;
+      }
       if (result.data.customBlocks) {
         customGeneratedBlocksDatabase = result.data.customBlocks;
         updateCustomGeneratedBlocksLedgerDisplay();
@@ -325,14 +353,11 @@ async function loadSavedProjectData() {
     }
   } catch (err) {}
 }
-
 async function bootloadExtensions() {
   const activeFoldersDOMMap = {};
-  
-  // ULTRA EXTENDED TURING COMPLETE BLOCK SET BLUEPRINTS REGISTRY
   const masterStudioBlocks = [
     { blockName: "START BLOCK", category: "LOGIC", tooltip: "The global execution entry point framework initialization root.", sideMenuFields: [] },
-    { blockName: "LOOP BLOCK", category: "LOGIC", tooltip: "Continuous engine logic processing infinite cycle tick frame rule.", sideMenuFields: [{label:"Target FPS",type:"number",default:60}] },
+    { blockName: "LOOP BLOCK", category: "LOGIC", tooltip: "Continuous engine logic processing infinite loop.", sideMenuFields: [{label:"Target FPS",type:"number",default:60}] },
     { blockName: "CUSTOM CODE INJECTOR", category: "LOGIC", tooltip: "Inject raw handwritten target scripts templates straight into the flow.", sideMenuFields: [{label:"Lang",type:"text",default:"python"}] },
     { blockName: "SAVE GAME DATA", category: "LOGIC", tooltip: "Dumps highly compressed 32-Byte Save Block array into hardware partitions.", sideMenuFields: [{label:"Slot Number",type:"number",default:1}] },
     { blockName: "LOAD GAME DATA", category: "LOGIC", tooltip: "Validates verification magic header signature and restores entity metrics.", sideMenuFields: [{label:"Slot Number",type:"number",default:1}] },
@@ -340,11 +365,11 @@ async function bootloadExtensions() {
     { blockName: "EXIT TO MAIN OVERWORLD", category: "LOGIC", tooltip: "Restores frozen coordinates stacks registers and transfers highscore tracking bytes.", sideMenuFields: [] },
     
     { blockName: "CREATE PLAYER", category: "SPRITES", tooltip: "Spawns player graphics vectors.", sideMenuFields: [{label:"X",type:"number",default:160},{label:"Y",type:"number",default:120}] },
-    { blockName: "CREATE ENEMY", category: "SPRITES", tooltip: "Spawns entity logic registers map.", sideMenuFields: [{label:"Slot ID",type:"number",default:1}] },
+    { blockName: "CREATE ENEMY", category: "SPRITES", tooltip: "Spawns map enemy logic registers map.", sideMenuFields: [{label:"Slot ID",type:"number",default:1}] },
     { blockName: "MOVE WITH BUTTONS", category: "SPRITES", tooltip: "Arrow keys matrix input tracker loops speed adjustments.", sideMenuFields: [] },
     { blockName: "IF TOUCHING KIND", category: "SPRITES", tooltip: "4-byte micro-pixel offsets hitbox cross boundary collision analysis.", sideMenuFields: [] },
     
-    { blockName: "WHEN BUTTON PRESSED", category: "CONTROLS", tooltip: "Hardware scan lane controller flag bitmask scanner.", sideMenuFields: [{label:"Target Key",type:"text",default:"sk_2nd"}] },
+    { blockName: "WHEN BUTTON PRESSED", category: "CONTROLS", tooltip: "Hardware key scan pass controller flag detector lane.", sideMenuFields: [{label:"Target Key",type:"text",default:"sk_2nd"}] },
     { blockName: "PLAY MUSIC NOTE", category: "CONTROLS", tooltip: "Audio square wave pulse sound generator tone frequencies.", sideMenuFields: [{label:"Hz",type:"number",default:440}] },
     { blockName: "PLAY EXPLOSION SOUND", category: "CONTROLS", tooltip: "Zero floating math procedural white noise sweep data blocks.", sideMenuFields: [] },
     
@@ -376,6 +401,30 @@ async function bootloadExtensions() {
     blockElement.addEventListener('click', () => { if (window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) window.HallowNexusCanvas.spawnNodeOnCanvas(block); });
     drawerBody.appendChild(blockElement);
   });
+
+  try {
+    const result = await window.electronAPI.loadExtensions();
+    if (result && result.success && result.data && result.data.length > 0) {
+      result.data.forEach(ext => {
+        ext.newBlocks.forEach(block => {
+          if (libraryBlocksRegistry.some(b => b.blockName === block.blockName)) return;
+          libraryBlocksRegistry.push(block);
+          let targetFolder = (ext.category || 'CUSTOM').trim().toUpperCase();
+          if (targetFolder.includes('SPRITE')) targetFolder = 'SPRITES';
+          if (targetFolder.includes('CONTROL')) targetFolder = 'CONTROLS';
+          if (targetFolder.includes('LOGIC')) targetFolder = 'LOGIC';
+          if (targetFolder.includes('SCENE')) targetFolder = 'SCENE';
+
+          const drawerBody = activeFoldersDOMMap[targetFolder] || activeFoldersDOMMap['CUSTOM'];
+          const blockElement = document.createElement('div');
+          blockElement.style.backgroundColor = '#2d3139'; blockElement.style.padding = '8px'; blockElement.style.borderRadius = '4px'; blockElement.style.fontSize = '12px'; blockElement.style.cursor = 'pointer'; blockElement.style.borderLeft = '4px solid #4f46e5'; blockElement.style.userSelect = 'none';
+          blockElement.innerText = block.blockName;
+          blockElement.addEventListener('click', () => { if (window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) window.HallowNexusCanvas.spawnNodeOnCanvas(block); });
+          drawerBody.appendChild(blockElement);
+        });
+      });
+    }
+  } catch (err) {}
 }
 
 bootloadExtensions();
