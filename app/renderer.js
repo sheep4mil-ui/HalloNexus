@@ -210,7 +210,28 @@ async function loadSavedProjectData() {
 async function bootloadExtensions() {
   const activeFoldersDOMMap = {};
   
-  // 💎 100% AUTOMATIC OVERRIDE: The system reads your JSON extensions and builds folder tags directly from their contents!
+  // Hardcoded blueprint schema to render elements instantly even if files fail to load
+  const backupBlockBlueprints = [
+    { blockName: "CREATE PLAYER", category: "SPRITES", tooltip: "Spawns player onto screen.", sideMenuFields: [{label:"X",type:"number",default:160},{label:"Y",type:"number",default:120}] },
+    { blockName: "CREATE ENEMY", category: "SPRITES", tooltip: "Spawns an enemy character.", sideMenuFields: [{label:"Slot",type:"number",default:1}] },
+    { blockName: "MOVE WITH BUTTONS", category: "SPRITES", tooltip: "Enables keyboard input movement.", sideMenuFields: [{label:"Speed",type:"number",default:4}] },
+    { blockName: "SET SPEED VECTOR", category: "SPRITES", tooltip: "Gives a constant moving speed.", sideMenuFields: [{label:"X Speed",type:"number",default:2}] },
+    { blockName: "IF TOUCHING KIND", category: "SPRITES", tooltip: "Checks distance overlap conditions.", sideMenuFields: [] },
+    { blockName: "DESTROY CHAR", category: "SPRITES", tooltip: "Removes entity out of tracking memory.", sideMenuFields: [] },
+    { blockName: "WHEN BUTTON PRESSED", category: "CONTROLS", tooltip: "Scans active hardware input lines.", sideMenuFields: [{label:"Key",type:"text",default:"sk_2nd"}] },
+    { blockName: "PLAY MUSIC NOTE", category: "CONTROLS", tooltip: "Outputs high frequency wave tones.", sideMenuFields: [{label:"Hz",type:"number",default:440}] },
+    { blockName: "PLAY EXPLOSION SOUND", category: "CONTROLS", tooltip: "Generates square noise data signals.", sideMenuFields: [] },
+    { blockName: "WAIT TIMER TICK", category: "CONTROLS", tooltip: "Delays active instruction threads loop.", sideMenuFields: [{label:"Ticks",type:"number",default:30}] },
+    { blockName: "START BLOCK", category: "LOGIC", tooltip: "The execution map initialization root entry.", sideMenuFields: [] },
+    { blockName: "LOOP BLOCK", category: "LOGIC", tooltip: "Continuous engine logic runtime step execution.", sideMenuFields: [] },
+    { blockName: "CUSTOM CODE INJECTOR", category: "LOGIC", tooltip: "Inject raw targeted script languages inputs.", sideMenuFields: [{label:"Lang",type:"text",default:"python"}] },
+    { blockName: "ALLOCATE STORAGE BAG", category: "LOGIC", tooltip: "Pre-allocates index tracker limits.", sideMenuFields: [] },
+    { blockName: "MATH CALCULATE VALUE", category: "LOGIC", tooltip: "Computes global numerical modifiers registers.", sideMenuFields: [] },
+    { blockName: "CLAMP INSIDE BOUNDS", category: "LOGIC", tooltip: "Restricts value overflow anomalies counters.", sideMenuFields: [] },
+    { blockName: "GO TO STAGE MAP", category: "SCENE", tooltip: "Draws base map layout metrics layers.", sideMenuFields: [] },
+    { blockName: "TURN ON TORCH MASK", category: "SCENE", tooltip: "Applies environmental lighting masks arrays.", sideMenuFields: [] }
+  ];
+
   const targetCategories = ['SPRITES', 'CONTROLS', 'LOGIC', 'SCENE', 'CUSTOM'];
   
   targetCategories.forEach(categoryName => {
@@ -232,41 +253,53 @@ async function bootloadExtensions() {
 
   try {
     const result = await ipcRenderer.invoke('load-extensions');
-    if (result && result.success && result.data.length > 0) {
+    let dynamicDataLoaded = false;
+
+    if (result && result.success && result.data && result.data.length > 0) {
       logToTerminal('Ollama', 'Successfully loaded extension packages.');
+      dynamicDataLoaded = true;
       
       result.data.forEach(ext => {
-        // Read the "category" header direct out of the JSON file to sort blocks automatically
-        let rawCategory = (ext.category || 'CUSTOM').trim().toUpperCase();
-        if (rawCategory.includes('SPRITE')) rawCategory = 'SPRITES';
-        if (rawCategory.includes('CONTROL')) rawCategory = 'CONTROLS';
-        if (rawCategory.includes('LOGIC')) rawCategory = 'LOGIC';
-        if (rawCategory.includes('SCENE')) rawCategory = 'SCENE';
-
-        let drawerBody = activeFoldersDOMMap[rawCategory];
-        if (!drawerBody) drawerBody = activeFoldersDOMMap['CUSTOM'];
-
         ext.newBlocks.forEach(block => {
+          // Prevent duplicates by checking if block name is already stored in registry
+          if (libraryBlocksRegistry.some(b => b.blockName === block.blockName)) return;
+          
           libraryBlocksRegistry.push(block);
+          let targetFolder = (ext.category || 'CUSTOM').trim().toUpperCase();
+          if (targetFolder.includes('SPRITE')) targetFolder = 'SPRITES';
+          if (targetFolder.includes('CONTROL')) targetFolder = 'CONTROLS';
+          if (targetFolder.includes('LOGIC')) targetFolder = 'LOGIC';
+          if (targetFolder.includes('SCENE')) targetFolder = 'SCENE';
+
+          let drawerBody = activeFoldersDOMMap[targetFolder];
+          if (!drawerBody) drawerBody = activeFoldersDOMMap['CUSTOM'];
 
           const blockElement = document.createElement('div');
           blockElement.style.backgroundColor = '#2d3139'; blockElement.style.padding = '8px'; blockElement.style.borderRadius = '4px'; blockElement.style.fontSize = '12px'; blockElement.style.cursor = 'pointer'; blockElement.style.borderLeft = '4px solid #4f46e5'; blockElement.style.userSelect = 'none';
           blockElement.innerText = block.blockName;
-          
-          blockElement.addEventListener('click', () => { 
-            if (window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) {
-              window.HallowNexusCanvas.spawnNodeOnCanvas(block); 
-            }
-          });
+          blockElement.addEventListener('click', () => { if (window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) window.HallowNexusCanvas.spawnNodeOnCanvas(block); });
           drawerBody.appendChild(blockElement);
         });
       });
-      ipcRenderer.invoke('load-project-state').then(res => { if(res && res.success && res.data && res.data.chatHistory) aiLogs.innerHTML = res.data.chatHistory; });
-    } else {
-      logToTerminal('System Error', 'Backend failed to read JSON files.');
     }
+
+    // 💎 FAIL-SAFE INJECTION: If disk files are corrupt/empty, mount hardcoded fallbacks instantly
+    if (!dynamicDataLoaded) {
+      logToTerminal('System Warning', 'Data buffer empty. Activating standalone fail-safe block cache registry.');
+      backupBlockBlueprints.forEach(block => {
+        libraryBlocksRegistry.push(block);
+        const drawerBody = activeFoldersDOMMap[block.category];
+        const blockElement = document.createElement('div');
+        blockElement.style.backgroundColor = '#2d3139'; blockElement.style.padding = '8px'; blockElement.style.borderRadius = '4px'; blockElement.style.fontSize = '12px'; blockElement.style.cursor = 'pointer'; blockElement.style.borderLeft = '4px solid #4f46e5'; blockElement.style.userSelect = 'none';
+        blockElement.innerText = block.blockName;
+        blockElement.addEventListener('click', () => { if (window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) window.HallowNexusCanvas.spawnNodeOnCanvas(block); });
+        drawerBody.appendChild(blockElement);
+      });
+    }
+
+    ipcRenderer.invoke('load-project-state').then(res => { if(res && res.success && res.data && res.data.chatHistory) aiLogs.innerHTML = res.data.chatHistory; });
   } catch (err) { 
-    logToTerminal('Runtime Error', 'Extension loader crashed: ' + err.message); 
+    logToTerminal('Runtime Error', 'Extension loader exception managed: ' + err.message); 
   }
 }
 
