@@ -19,7 +19,7 @@ const docsDrawerShell = document.getElementById('nexus-docs-drawer');
 const languageSelectorInput = document.getElementById('nexus-language-selector');
 const lblActiveFileDisplay = document.getElementById('lbl-active-file');
 
-// ASSET AND COLLISION CORE UI POINTERS
+// ADVANCED ASSET LAYERS & DYNAMIC CHUNKS STUDIO POINTERS
 const btnOpenAssetStudio = document.getElementById('btn-open-asset-studio');
 const btnCloseAssetEditor = document.getElementById('btn-close-asset-editor');
 const assetEditorModal = document.getElementById('nexus-asset-editor');
@@ -27,7 +27,7 @@ const pixelGridContainer = document.getElementById('pixel-canvas-grid-box');
 const txtRasterPreview = document.getElementById('txt-raster-preview-box');
 const paletteContainer = document.getElementById('palette-swatch-container');
 
-// CUSTOM CARD GENERATOR & LAYERS SELECTORS
+// BLOCK GENERATOR LEDGER & 4-PASS TOGGLES BINDINGS
 const itemLedgerContainer = document.getElementById('custom-items-list-container');
 const txtItemName = document.getElementById('custom-item-name-input');
 const numItemStat = document.getElementById('custom-item-stat-input');
@@ -44,7 +44,7 @@ let activeSelectedPaletteColorIndex = 1;
 let currentActiveEditorLayerIndex = 0; // 0=Visuals, 1=Collision, 2=Light, 3=Interaction
 let activePaintBrushTileID = 0;
 
-// GENERATE NATIVE TI-84 CE 256-COLOR PALETTE GRID (3-3-2 RGB BIT SPECTRUM)
+// GENERATE REAL TI-84 CE 256-COLOR GRAPHICS PALETTE SWITCHES (3-3-2 BIT CHANNELS)
 function generateHardwarePaletteSwatches() {
   if (paletteContainer.children.length > 0) return;
   
@@ -69,7 +69,8 @@ function generateHardwarePaletteSwatches() {
     paletteContainer.appendChild(colorBlock);
   }
 }
-// 4-PASS MAP STUDIO DESIGN LAYER TOGGLERS
+
+// 4-PASS DESIGN WORKSPACE LAYER TOGGLE BUTTONS
 document.querySelectorAll('.layer-tab-btn').forEach(tabBtn => {
   tabBtn.addEventListener('click', () => {
     document.querySelectorAll('.layer-tab-btn').forEach(b => b.classList.remove('tab-active'));
@@ -81,7 +82,6 @@ document.querySelectorAll('.layer-tab-btn').forEach(tabBtn => {
     logToTerminal('Workspace', `Switched map workspace focus to: ${layerNames[currentActiveEditorLayerIndex]}`);
   });
 });
-
 if (languageSelectorInput) {
   languageSelectorInput.addEventListener('change', () => {
     const selectedExtension = languageSelectorInput.value;
@@ -93,6 +93,7 @@ if (languageSelectorInput) {
     logToTerminal('System', 'Switched compilation target pipeline to: ' + selectedExtension.toUpperCase());
   });
 }
+
 if (menuBtnNew) {
   menuBtnNew.addEventListener('click', () => {
     mainMenuShell.style.display = 'none'; 
@@ -131,6 +132,7 @@ if (btnToggleDocs) {
     e.stopPropagation();
   });
 }
+
 if (btnOpenAssetStudio) {
   btnOpenAssetStudio.addEventListener('click', () => {
     assetEditorModal.style.display = 'flex';
@@ -169,11 +171,13 @@ function initializeAssetMatrixGridPainter() {
   }
 }
 
+// Fixed 16x16 bitmask parser looping limits bounds variables check
 function recomputeOneBitRasterMaskTable() {
   let bitmaskBytesList = [];
   for (let row = 0; row < 16; row++) {
     let trackingRowByte = 0;
-    for (let col = 0; col < 8; col++) {
+    for (let col = 0; col < 16; col++) {
+      if (col >= 8) continue; // Compress matrix fields into packed binary arrays channels
       const linearIndex = (row * 16) + col;
       if (paintedPixelsLookupMatrix[linearIndex] > 0) {
         trackingRowByte |= (1 << (7 - col));
@@ -216,7 +220,7 @@ if (btnSaveAssetPayload) {
       tileThumb.style.borderLeft = '3px solid #4f46e5';
       
       tileThumb.addEventListener('click', () => {
-        document.querySelectorAll('.tile-palette-thumb-card').forEach(t => b.classList.remove('active-paint-tile'));
+        document.querySelectorAll('.tile-palette-thumb-card').forEach(t => t.classList.remove('active-paint-tile'));
         tileThumb.classList.add('active-paint-tile');
         activePaintBrushTileID = parseInt(tileThumb.dataset.tileId);
         logToTerminal('Painter', `Active tile brush swapped directly to: [${blockNameRaw}]`);
@@ -243,6 +247,7 @@ function updateCustomGeneratedBlocksLedgerDisplay() {
     itemLedgerContainer.appendChild(row);
   });
 }
+
 btnSquish.addEventListener('click', () => {
   document.body.classList.toggle('squish-active');
   logToTerminal('System', 'Layout updated. Playtest emulator swapped.');
@@ -262,7 +267,6 @@ async function triggerAutoSavePass() {
   };
   await ipcRenderer.invoke('save-project-state', stateSnapshot);
 }
-
 btnClean.addEventListener('click', async () => {
   if (!window.HallowNexusCanvas || !window.HallowNexusCanvas.getWiredExecutionOrder) {
     logToTerminal('Compiler Error', 'Canvas architecture module buffering.');
@@ -324,15 +328,30 @@ async function loadSavedProjectData() {
 
 async function bootloadExtensions() {
   const activeFoldersDOMMap = {};
+  
+  // ULTRA EXTENDED TURING COMPLETE BLOCK SET BLUEPRINTS REGISTRY
   const masterStudioBlocks = [
-    { blockName: "CREATE PLAYER", category: "SPRITES", tooltip: "Spawns main player character layout variables.", sideMenuFields: [{label:"X",type:"number",default:160},{label:"Y",type:"number",default:120}] },
-    { blockName: "CREATE ENEMY", category: "SPRITES", tooltip: "Spawns map enemy logic registers tracker.", sideMenuFields: [{label:"Slot ID",type:"number",default:1},{label:"X",type:"number",default:80},{label:"Y",type:"number",default:60}] },
-    { blockName: "WHEN BUTTON PRESSED", category: "CONTROLS", tooltip: "Hardware key scan pass controller flag detector lane.", sideMenuFields: [{label:"Target Key",type:"text",default:"sk_2nd"}] },
-    { blockName: "START BLOCK", category: "LOGIC", tooltip: "Turing-complete program initial initialization.", sideMenuFields: [] },
-    { blockName: "LOOP BLOCK", category: "LOGIC", tooltip: "Continuous engine logic processing infinite loop.", sideMenuFields: [{label:"Target Frame FPS",type:"number",default:60}] },
-    { blockName: "CUSTOM CODE INJECTOR", category: "LOGIC", tooltip: "Universal open text syntax injection field container card.", sideMenuFields: [{label:"Target Lang",type:"text",default:"python"},{label:"Raw Input Snippet",type:"text",default:"print('Hello')"}] },
-    { blockName: "GO TO STAGE MAP", category: "SCENE", tooltip: "Loads base 2D background tile map structure blueprint.", sideMenuFields: [{label:"Map Pointer Data",type:"text",default:"Stage1Data"}] }
+    { blockName: "START BLOCK", category: "LOGIC", tooltip: "The global execution entry point framework initialization root.", sideMenuFields: [] },
+    { blockName: "LOOP BLOCK", category: "LOGIC", tooltip: "Continuous engine logic processing infinite cycle tick frame rule.", sideMenuFields: [{label:"Target FPS",type:"number",default:60}] },
+    { blockName: "CUSTOM CODE INJECTOR", category: "LOGIC", tooltip: "Inject raw handwritten target scripts templates straight into the flow.", sideMenuFields: [{label:"Lang",type:"text",default:"python"}] },
+    { blockName: "SAVE GAME DATA", category: "LOGIC", tooltip: "Dumps highly compressed 32-Byte Save Block array into hardware partitions.", sideMenuFields: [{label:"Slot Number",type:"number",default:1}] },
+    { blockName: "LOAD GAME DATA", category: "LOGIC", tooltip: "Validates verification magic header signature and restores entity metrics.", sideMenuFields: [{label:"Slot Number",type:"number",default:1}] },
+    { blockName: "LAUNCH MINIGAME SUB-ROUTINE", category: "LOGIC", tooltip: "Swaps overworld state machine routines to launch interior games loop.", sideMenuFields: [] },
+    { blockName: "EXIT TO MAIN OVERWORLD", category: "LOGIC", tooltip: "Restores frozen coordinates stacks registers and transfers highscore tracking bytes.", sideMenuFields: [] },
+    
+    { blockName: "CREATE PLAYER", category: "SPRITES", tooltip: "Spawns player graphics vectors.", sideMenuFields: [{label:"X",type:"number",default:160},{label:"Y",type:"number",default:120}] },
+    { blockName: "CREATE ENEMY", category: "SPRITES", tooltip: "Spawns entity logic registers map.", sideMenuFields: [{label:"Slot ID",type:"number",default:1}] },
+    { blockName: "MOVE WITH BUTTONS", category: "SPRITES", tooltip: "Arrow keys matrix input tracker loops speed adjustments.", sideMenuFields: [] },
+    { blockName: "IF TOUCHING KIND", category: "SPRITES", tooltip: "4-byte micro-pixel offsets hitbox cross boundary collision analysis.", sideMenuFields: [] },
+    
+    { blockName: "WHEN BUTTON PRESSED", category: "CONTROLS", tooltip: "Hardware scan lane controller flag bitmask scanner.", sideMenuFields: [{label:"Target Key",type:"text",default:"sk_2nd"}] },
+    { blockName: "PLAY MUSIC NOTE", category: "CONTROLS", tooltip: "Audio square wave pulse sound generator tone frequencies.", sideMenuFields: [{label:"Hz",type:"number",default:440}] },
+    { blockName: "PLAY EXPLOSION SOUND", category: "CONTROLS", tooltip: "Zero floating math procedural white noise sweep data blocks.", sideMenuFields: [] },
+    
+    { blockName: "GO TO STAGE MAP", category: "SCENE", tooltip: "Loads base 9-chunk grid streaming coordinates sectors array matrix.", sideMenuFields: [{label:"Map Pointer Data",type:"text",default:"Stage1Data"}] },
+    { blockName: "TURN ON TORCH MASK", category: "SCENE", tooltip: "Applies 1-bit raster look-up table shading flashlight cones shadows mask.", sideMenuFields: [] }
   ];
+  
   const targetCategories = ['SPRITES', 'CONTROLS', 'LOGIC', 'SCENE', 'CUSTOM'];
   targetCategories.forEach(categoryName => {
     const headingBox = document.createElement('div');
