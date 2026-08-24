@@ -4,7 +4,7 @@
   "newBlocks": [
     {
       "blockName": "WHEN BUTTON PRESSED",
-      "tooltip": "Scans the calculator keys to see if a button is being pushed by the user.",
+      "tooltip": "Scans active hardware input lines.",
       "sideMenuFields": [
         { "label": "Target Key", "type": "text", "default": "sk_2nd" }
       ],
@@ -12,7 +12,7 @@
     },
     {
       "blockName": "WHEN BOTH BUTTONS HELD",
-      "tooltip": "Triggers a logical branch path if two keys are being pressed simultaneously.",
+      "tooltip": "Triggers logical path if two keys match.",
       "sideMenuFields": [
         { "label": "Key Alpha", "type": "text", "default": "sk_Right" },
         { "label": "Key Beta", "type": "text", "default": "sk_Alpha" }
@@ -21,7 +21,7 @@
     },
     {
       "blockName": "PLAY MUSIC NOTE",
-      "tooltip": "Blasts a musical pitch out of the link jack port pins at a set tempo rhythm.",
+      "tooltip": "Outputs high frequency wave tones.",
       "sideMenuFields": [
         { "label": "Note Pitch Hz", "type": "number", "default": 440 },
         { "label": "Length Ms", "type": "number", "default": 250 }
@@ -30,13 +30,13 @@
     },
     {
       "blockName": "PLAY EXPLOSION SOUND",
-      "tooltip": "Generates a retro crunchy noise effect for explosions or crashes.",
+      "tooltip": "Generates square noise data signals.",
       "sideMenuFields": [],
       "ez80AssemblyTemplate": "call _TriggerProceduralNoiseExplosion"
     },
     {
       "blockName": "WAIT TIMER TICK",
-      "tooltip": "Forces the game thread script to pause for a moment before continuing downstream logic.",
+      "tooltip": "Delays active instruction threads loop.",
       "sideMenuFields": [
         { "label": "Ticks Delay", "type": "number", "default": 30 }
       ],
@@ -44,7 +44,7 @@
     },
     {
       "blockName": "LOAD NEXT SEQUEL",
-      "tooltip": "Saves your score data and securely opens up an entirely separate sequel game file.",
+      "tooltip": "Saves metrics and links separate game binary.",
       "sideMenuFields": [
         { "label": "Sequel App Name", "type": "text", "default": "GAME2" }
       ],
