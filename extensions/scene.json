@@ -1,10 +1,10 @@
 {
-  "extensionName": "Universal Map and Scene Pack",
+  "extensionName": "Universal Environment Panner Pack",
   "category": "SCENE",
   "newBlocks": [
     {
       "blockName": "GO TO STAGE MAP",
-      "tooltip": "Binds a 2D tile array grid onto your background rendering engine map data list.",
+      "tooltip": "Draws base map layout metrics layers.",
       "sideMenuFields": [
         { "label": "Map Pointer Data", "type": "text", "default": "Stage1Data" }
       ],
@@ -12,7 +12,7 @@
     },
     {
       "blockName": "TURN ON TORCH MASK",
-      "tooltip": "Overlays a dark mask layer over the map screen with a moving light cone centered on a character.",
+      "tooltip": "Applies environmental lighting masks arrays.",
       "sideMenuFields": [
         { "label": "Follow Char Slot", "type": "number", "default": 1 }
       ],
