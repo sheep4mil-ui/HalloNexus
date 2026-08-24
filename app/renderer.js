@@ -7,13 +7,6 @@ const toolboxPanel = document.getElementById('toolbox');
 const ollamaInput = document.getElementById('ollama-input');
 
 const btnSaveProject = document.getElementById('btn-save-project');
-const btnReturnMenu = document.getElementById('btn-return-menu');
-const mainMenuShell = document.getElementById('nexus-main-menu');
-const menuBtnNew = document.getElementById('menu-btn-new');
-const menuBtnLoad = document.getElementById('menu-btn-load');
-
-const btnToggleDocs = document.getElementById('btn-toggle-docs');
-const docsDrawerShell = document.getElementById('nexus-docs-drawer');
 const languageSelectorInput = document.getElementById('nexus-language-selector');
 const lblActiveFileDisplay = document.getElementById('lbl-active-file');
 
@@ -36,6 +29,7 @@ const numItemEffectBit = document.getElementById('custom-item-effect-bit');
 const btnSaveAssetPayload = document.getElementById('btn-save-asset-payload');
 const lblActiveLayerMode = document.getElementById('lbl-active-layer-mode');
 const liveTilesTray = document.getElementById('live-painted-tiles-tray');
+const timelineDropzone = document.getElementById('nexus-timeline-dropzone');
 
 let libraryBlocksRegistry = [];
 let paintedPixelsLookupMatrix = Array(256).fill(0);
@@ -44,7 +38,8 @@ let activeSelectedPaletteColorIndex = 1;
 let currentActiveEditorLayerIndex = 0; // 0=Visuals, 1=Collision, 2=Light, 3=Interaction
 let activePaintBrushTileID = 0;
 let currentGlobalGameModeSetting = 'arcade';
-
+let compiledAnimationSequenceTimeline = [];
+let activeStudioPaintToolSetting = 'pen';
 function logToTerminal(sender, message) {
   const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   if (aiLogs) {
@@ -52,25 +47,19 @@ function logToTerminal(sender, message) {
     aiLogs.scrollTop = aiLogs.scrollHeight;
   }
 }
+
 if (coreGamemodeSelector) {
   coreGamemodeSelector.addEventListener('change', () => {
     currentGlobalGameModeSetting = coreGamemodeSelector.value;
-    const modeLabelsMap = {
-      'arcade': 'PURE ARCADE OVERWORLD',
-      'textbox': 'PURE TEXTBOX / VISUAL NOVEL',
-      'hybrid': 'HYBRID INTERLOCKING ENGINE'
-    };
+    const modeLabelsMap = { 'arcade': 'PURE ARCADE OVERWORLD', 'textbox': 'PURE TEXTBOX / VISUAL NOVEL', 'hybrid': 'HYBRID INTERLOCKING ENGINE' };
     if (lblActiveCoreMode) lblActiveCoreMode.innerText = modeLabelsMap[currentGlobalGameModeSetting];
     logToTerminal('System', 'Engine core compilation architecture re-routed to: ' + modeLabelsMap[currentGlobalGameModeSetting]);
   });
 }
-
-// 4-PASS DESIGN WORKSPACE LAYER TAB BUTTONS
 document.querySelectorAll('.layer-tab-btn').forEach(tabBtn => {
   tabBtn.addEventListener('click', () => {
     document.querySelectorAll('.layer-tab-btn').forEach(b => b.classList.remove('tab-active'));
     tabBtn.classList.add('tab-active');
-    
     currentActiveEditorLayerIndex = parseInt(tabBtn.dataset.layer);
     const layerNames = ['VISUAL LOOKS', 'MICRO-OFFSET COLLISIONS', '1-BIT LIGHT MASKING', 'ENTITIES INTERACTION/CHUNKS'];
     if (lblActiveLayerMode) lblActiveLayerMode.innerText = layerNames[currentActiveEditorLayerIndex];
@@ -89,26 +78,14 @@ if (languageSelectorInput) {
     logToTerminal('System', 'Switched cross-compilation pipeline to: ' + selectedExtension.toUpperCase());
   });
 }
-if (menuBtnNew) {
-  menuBtnNew.addEventListener('click', () => {
-    mainMenuShell.style.display = 'none'; 
-    document.querySelectorAll('.node-card').forEach(node => node.remove());
-    document.querySelectorAll('.canvas-nexus-wire').forEach(wire => wire.remove());
-    if (window.HallowNexusCanvas && window.HallowNexusCanvas.activeGraphNodes) window.HallowNexusCanvas.activeGraphNodes.length = 0;
-    if (window.HallowNexusWires && window.HallowNexusWires.establishedWires) window.HallowNexusWires.establishedWires.length = 0;
-    logToTerminal('System', 'Initialized a fresh workspace playground matrix.');
-  });
-}
-
-if (menuBtnLoad) {
-  menuBtnLoad.addEventListener('click', async () => {
-    mainMenuShell.style.display = 'none';
-    await loadSavedProjectData();
-  });
-}
-
-if (btnReturnMenu) { btnReturnMenu.addEventListener('click', () => { mainMenuShell.style.display = 'flex'; }); }
-if (btnToggleDocs) { btnToggleDocs.addEventListener('click', (e) => { docsDrawerShell.classList.toggle('drawer-active'); e.stopPropagation(); }); }
+setTimeout(() => {
+  const dBtnNew = document.getElementById('drop-btn-new');
+  const dBtnLoad = document.getElementById('drop-btn-load');
+  const dBtnSave = document.getElementById('drop-btn-save');
+  if (dBtnNew) dBtnNew.addEventListener('click', () => { document.querySelectorAll('.node-card').forEach(n => n.remove()); logToTerminal('System', 'Reset Canvas Grid.'); });
+  if (dBtnLoad) dBtnLoad.addEventListener('click', () => { loadSavedProjectData(); });
+  if (dBtnSave) dBtnSave.addEventListener('click', () => { triggerAutoSavePass(); logToTerminal('Workspace', 'Snapshot saved.'); });
+}, 500);
 
 if (btnOpenAssetStudio) {
   btnOpenAssetStudio.addEventListener('click', () => {
@@ -116,37 +93,46 @@ if (btnOpenAssetStudio) {
       assetEditorModal.style.display = 'flex';
       generateHardwarePaletteSwatches();
       initializeAssetMatrixGridPainter();
-      logToTerminal('System', 'Universal Art Studio engine workspace mounted.');
+      initializeToolBeltButtonListeners();
+      logToTerminal('System', 'Unified Multi-Tab Studio Center mounted.');
     }
   });
 }
-
-if (btnCloseAssetEditor) {
-  btnCloseAssetEditor.addEventListener('click', () => {
-    if (assetEditorModal) assetEditorModal.style.display = 'none';
+if (btnCloseAssetEditor) { btnCloseAssetEditor.addEventListener('click', () => { if (assetEditorModal) assetEditorModal.style.display = 'none'; }); }
+document.querySelectorAll('.studio-tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.studio-tab-btn').forEach(t => t.classList.remove('active-sub-tab'));
+    document.querySelectorAll('.studio-panel-content-pane').forEach(p => p.classList.remove('pane-visible'));
+    btn.classList.add('active-sub-tab');
+    const targetPaneId = btn.dataset.targetPane;
+    const targetPaneDOM = document.getElementById(targetPaneId);
+    if (targetPaneDOM) targetPaneDOM.classList.add('pane-visible');
   });
+});
+
+function initializeToolBeltButtonListeners() {
+  const tPen = document.getElementById('tool-btn-pen');
+  const tEraser = document.getElementById('tool-btn-eraser');
+  const tBucket = document.getElementById('tool-btn-bucket');
+  const tClear = document.getElementById('tool-btn-clear');
+  const clearActiveToolState = () => { document.querySelectorAll('.tool-belt-btn').forEach(b => b.classList.remove('tool-active')); };
+  if (tPen) tPen.onclick = () => { clearActiveToolState(); tPen.classList.add('tool-active'); activeStudioPaintToolSetting = 'pen'; };
+  if (tEraser) tEraser.onclick = () => { clearActiveToolState(); tEraser.classList.add('tool-active'); activeStudioPaintToolSetting = 'eraser'; };
+  if (tBucket) tBucket.onclick = () => { clearActiveToolState(); tBucket.classList.add('tool-active'); activeStudioPaintToolSetting = 'bucket'; };
+  if (tClear) tClear.onclick = () => { paintedPixelsLookupMatrix.fill(0); document.querySelectorAll('.grid-pixel-cell-dot').forEach(d => d.style.backgroundColor = '#111216'); recomputeOneBitRasterMaskTable(); };
 }
 function generateHardwarePaletteSwatches() {
   if (!paletteContainer || paletteContainer.children.length > 0) return;
-  
   for (let idx = 0; idx < 256; idx++) {
     const redChannel = Math.floor(((idx >> 5) & 0x07) * (255 / 7));
     const greenChannel = Math.floor(((idx >> 2) & 0x07) * (255 / 7));
     const blueChannel = Math.floor((idx & 0x03) * (255 / 3));
-    
     const colorBlock = document.createElement('div');
     colorBlock.className = 'palette-color-block';
     colorBlock.style.backgroundColor = `rgb(${redChannel}, ${greenChannel}, ${blueChannel})`;
     colorBlock.dataset.colorIndex = idx;
-    
     if (idx === activeSelectedPaletteColorIndex) colorBlock.classList.add('selected-swatch');
-    
-    colorBlock.addEventListener('click', () => {
-      document.querySelectorAll('.palette-color-block').forEach(b => b.classList.remove('selected-swatch'));
-      colorBlock.classList.add('selected-swatch');
-      activeSelectedPaletteColorIndex = idx;
-    });
-    
+    colorBlock.addEventListener('click', () => { document.querySelectorAll('.palette-color-block').forEach(b => b.classList.remove('selected-swatch')); colorBlock.classList.add('selected-swatch'); activeSelectedPaletteColorIndex = idx; });
     paletteContainer.appendChild(colorBlock);
   }
 }
@@ -159,44 +145,87 @@ if (pixelGridContainer) {
 
 function initializeAssetMatrixGridPainter() {
   if (!pixelGridContainer || pixelGridContainer.children.length > 0) return;
-  
   for (let idx = 0; idx < 256; idx++) {
     const pixelCell = document.createElement('div');
     pixelCell.className = 'grid-pixel-cell-dot';
     pixelCell.dataset.index = idx;
-    
     const executePixelStampPass = () => {
       const targetIdx = parseInt(pixelCell.dataset.index);
-      paintedPixelsLookupMatrix[targetIdx] = activeSelectedPaletteColorIndex;
-      
-      const r = Math.floor(((activeSelectedPaletteColorIndex >> 5) & 0x07) * (255 / 7));
-      const g = Math.floor(((activeSelectedPaletteColorIndex >> 2) & 0x07) * (255 / 7));
-      const b = Math.floor((activeSelectedPaletteColorIndex & 0x03) * (255 / 3));
-      
-      pixelCell.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+      if (activeStudioPaintToolSetting === 'bucket') { executeStackFloodFillBucket(targetIdx); return; }
+      const colorToApply = activeStudioPaintToolSetting === 'eraser' ? 0 : activeSelectedPaletteColorIndex;
+      paintedPixelsLookupMatrix[targetIdx] = colorToApply;
+      const r = Math.floor(((colorToApply >> 5) & 0x07) * (255 / 7));
+      const g = Math.floor(((colorToApply >> 2) & 0x07) * (255 / 7));
+      const b = Math.floor((colorToApply & 0x03) * (255 / 3));
+      pixelCell.style.backgroundColor = colorToApply > 0 ? `rgb(${r}, ${g}, ${b})` : '#111216';
       recomputeOneBitRasterMaskTable();
     };
-
     pixelCell.addEventListener('mousedown', () => { executePixelStampPass(); });
-    pixelCell.addEventListener('mouseenter', () => { if (isPaintBrushActive) executePixelStampPass(); });
-    
+    pixelCell.addEventListener('mouseenter', () => { if (isPaintBrushActive && activeStudioPaintToolSetting !== 'bucket') executePixelStampPass(); });
     pixelGridContainer.appendChild(pixelCell);
   }
   recomputeOneBitRasterMaskTable();
 }
+function executeStackFloodFillBucket(startingIndex) {
+  const targetColor = paintedPixelsLookupMatrix[startingIndex];
+  const fillStructuredColor = activeSelectedPaletteColorIndex;
+  if (targetColor === fillStructuredColor) return;
+  let indexProcessStack = [startingIndex];
+  while (indexProcessStack.length > 0) {
+    const currentIdx = indexProcessStack.pop();
+    if (paintedPixelsLookupMatrix[currentIdx] !== targetColor) continue;
+    paintedPixelsLookupMatrix[currentIdx] = fillStructuredColor;
+    const cellDOM = document.querySelector(`.grid-pixel-cell-dot[data-index="${currentIdx}"]`);
+    if (cellDOM) {
+      const r = Math.floor(((fillStructuredColor >> 5) & 0x07) * (255 / 7));
+      const g = Math.floor(((fillStructuredColor >> 2) & 0x07) * (255 / 7));
+      const b = Math.floor((fillStructuredColor & 0x03) * (255 / 3));
+      cellDOM.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+    }
+    const row = Math.floor(currentIdx / 16);
+    const col = currentIdx % 16;
+    if (row > 0) indexProcessStack.push(currentIdx - 16);
+    if (row < 15) indexProcessStack.push(currentIdx + 16);
+    if (col > 0) indexProcessStack.push(currentIdx - 1);
+    if (col < 15) indexProcessStack.push(currentIdx + 1);
+  }
+  recomputeOneBitRasterMaskTable();
+}
+
 function recomputeOneBitRasterMaskTable() {
   let bitmaskBytesList = [];
   for (let row = 0; row < 16; row++) {
     let trackingRowByte = 0;
     for (let col = 0; col < 8; col++) {
       const linearIndex = (row * 16) + col;
-      if (paintedPixelsLookupMatrix[linearIndex] > 0) {
-        trackingRowByte |= (1 << (7 - col));
-      }
+      if (paintedPixelsLookupMatrix[linearIndex] > 0) { trackingRowByte |= (1 << (7 - col)); }
     }
     bitmaskBytesList.push('0x' + trackingRowByte.toString(16).toUpperCase().padStart(2, '0'));
   }
   if (txtRasterPreview) txtRasterPreview.innerText = bitmaskBytesList.join(', ');
+}
+function attachDragAndDropToThumbCard(cardDOM, nameRaw) {
+  cardDOM.draggable = true;
+  cardDOM.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', nameRaw); });
+}
+
+if (timelineDropzone) {
+  timelineDropzone.addEventListener('dragover', (e) => { e.preventDefault(); });
+  timelineDropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const droppedAssetName = e.dataTransfer.getData('text/plain');
+    if (!droppedAssetName) return;
+    const notice = document.getElementById('timeline-empty-notice');
+    if (notice) notice.remove();
+    compiledAnimationSequenceTimeline.push(droppedAssetName);
+    const frameStrip = document.createElement('div');
+    frameStrip.className = 'timeline-frame-strip-item';
+    frameStrip.innerText = droppedAssetName.substring(0, 3) + compiledAnimationSequenceTimeline.length;
+    const deleteBadge = document.createElement('div');
+    deleteBadge.className = 'frame-delete-node-badge'; deleteBadge.innerText = '×';
+    deleteBadge.addEventListener('click', (ev) => { ev.stopPropagation(); frameStrip.remove(); compiledAnimationSequenceTimeline = compiledAnimationSequenceTimeline.filter(n => n !== droppedAssetName); });
+    frameStrip.appendChild(deleteBadge); timelineDropzone.appendChild(frameStrip);
+  });
 }
 
 if (btnSaveAssetPayload) {
@@ -204,233 +233,76 @@ if (btnSaveAssetPayload) {
     const blockNameRaw = txtItemName.value.trim().toUpperCase().replace(/\s+/g, '_');
     const chosenType = selAssetType.value;
     const initialFieldStat = parseInt(numItemStat.value) || 0;
-    const bitmaskValue = parseInt(numItemEffectBit.value) || 0;
-    
-    if (!blockNameRaw) {
-      alert('Please define a Unique Name Token ID for this pixel asset.');
-      return;
+    const chosenDrawer = document.getElementById('custom-block-category-select').value;
+    const customSnippet = document.getElementById('custom-block-code-snippet').value || "";
+    if (!blockNameRaw) { alert('Please define a ID Token.'); return; }
+    const compiledCustomBlockNode = { blockName: blockNameRaw, category: chosenDrawer, tooltip: `Timeline Frames: ${compiledAnimationSequenceTimeline.length}.`, sideMenuFields: [{ label: "Value", type: "number", default: initialFieldStat }], ez80AssemblyTemplate: `; --- Custom node ---\ncall _ExecuteCallback` };
+    customGeneratedBlocksDatabase.push(compiledCustomBlockNode); libraryBlocksRegistry.push(compiledCustomBlockNode);
+    if (liveTilesTray) {
+      const tileThumb = document.createElement('div'); tileThumb.className = 'tile-palette-thumb-card'; tileThumb.innerText = blockNameRaw.substring(0, 4);
+      tileThumb.addEventListener('click', () => { activePaintBrushTileID = customGeneratedBlocksDatabase.length; });
+      attachDragAndDropToThumbCard(tileThumb, blockNameRaw); liveTilesTray.appendChild(tileThumb);
     }
-    
-    const compiledCustomBlockNode = {
-      blockName: blockNameRaw,
-      category: chosenType === 'tile' ? 'SCENE' : 'SPRITES',
-      tooltip: `Pixel asset node card. Status Effect bit: ${bitmaskValue}. Stat scalar: ${initialFieldStat}`,
-      sideMenuFields: [
-        { label: "Variable Value", type: "number", default: initialFieldStat },
-        { label: "Inject Code Field", type: "text", default: "" }
-      ],
-      ez80AssemblyTemplate: `; --- Custom Card Node: [${blockNameRaw}] ---\nld a, {VariableValue}\n{InjectCodeField}\ncall _ExecutePixelStudioRuntimeCallback`
-    };
-    
-    customGeneratedBlocksDatabase.push(compiledCustomBlockNode);
-    libraryBlocksRegistry.push(compiledCustomBlockNode);
-    
-    if (chosenType === 'tile' && liveTilesTray) {
-      const tileThumb = document.createElement('div');
-      tileThumb.className = 'tile-palette-thumb-card';
-      tileThumb.dataset.tileId = customGeneratedBlocksDatabase.length;
-      tileThumb.innerText = blockNameRaw.substring(0, 4);
-      tileThumb.style.borderLeft = '3px solid #4f46e5';
-      
-      tileThumb.addEventListener('click', () => {
-        document.querySelectorAll('.tile-palette-thumb-card').forEach(t => t.classList.remove('active-paint-tile'));
-        tileThumb.classList.add('active-paint-tile');
-        activePaintBrushTileID = parseInt(tileThumb.dataset.tileId);
-        logToTerminal('Painter', `Active tile brush swapped directly to: [${blockNameRaw}]`);
-      });
-      liveTilesTray.appendChild(tileThumb);
-    }
-    
-    updateCustomGeneratedBlocksLedgerDisplay();
-    logToTerminal('Studio Compiler', `Successfully registered pixel art asset: [${blockNameRaw}] as classification: ${chosenType.toUpperCase()}`);
-    assetEditorModal.style.display = 'none';
+    updateCustomGeneratedBlocksLedgerDisplay(); assetEditorModal.style.display = 'none';
   });
 }
 function updateCustomGeneratedBlocksLedgerDisplay() {
   if (!itemLedgerContainer) return;
-  if (customGeneratedBlocksDatabase.length === 0) {
-    itemLedgerContainer.innerHTML = `<div style="font-size:11px; color:#64748b; text-align:center; padding:10px;">No custom nodes injected yet. Open Art Studio to generate cards.</div>`;
-    return;
-  }
+  if (customGeneratedBlocksDatabase.length === 0) { itemLedgerContainer.innerHTML = `<div style="font-size:10px; color:#64748b; text-align:center; padding:10px;">No components built yet.</div>`; return; }
   itemLedgerContainer.innerHTML = '';
   customGeneratedBlocksDatabase.forEach(block => {
-    const row = document.createElement('div');
-    row.className = 'custom-item-card-row';
-    row.innerHTML = `<div><span style="color:#a78bfa; font-weight:bold;">🎨 ${block.blockName}</span><br><span style="font-size:10px; color:#475569;">Internal Class: ${block.category}</span></div>`;
+    const row = document.createElement('div'); row.className = 'custom-item-card-row';
+    row.innerHTML = `<div><span style="color:#a78bfa; font-weight:bold;">⚙️ ${block.blockName}</span><br><span style="font-size:10px; color:#475569;">Internal Class: ${block.category}</span></div>`;
     itemLedgerContainer.appendChild(row);
   });
 }
 
-if (btnSaveProject) {
-  btnSaveProject.addEventListener('click', async () => {
-    await triggerAutoSavePass();
-    logToTerminal('Workspace', 'Project snapshot file saved successfully.');
-  });
-}
-
-btnSquish.addEventListener('click', () => {
-  document.body.classList.toggle('squish-active');
-  logToTerminal('System', 'Layout updated. Playtest emulator swapped.');
-  if (document.body.classList.contains('squish-active')) {
-    if (window.HallowNexusEmulator && window.HallowNexusEmulator.mountEmulatorScreen) window.HallowNexusEmulator.mountEmulatorScreen();
-  } else {
-    if (window.HallowNexusEmulator && window.HallowNexusEmulator.stopHardwareClock) window.HallowNexusEmulator.stopHardwareClock();
-  }
-});
-
 btnClean.addEventListener('click', async () => {
-  if (!window.HallowNexusCanvas || !window.HallowNexusCanvas.getWiredExecutionOrder) {
-    logToTerminal('Compiler Error', 'Canvas architecture module buffering.');
-    return;
-  }
-  const nodesToCompile = window.HallowNexusCanvas.getWiredExecutionOrder();
-  if (nodesToCompile.length === 0) {
-    logToTerminal('Compiler Warning', 'Canvas workspace empty. Drop some blocks first!');
-    return;
-  }
-  
+  if (!window.HallowNexusCanvas || !window.HallowNexusCanvas.getWiredExecutionOrder) return;
+  const nodesToCompile = window.HallowNexusCanvas.getWiredExecutionOrder(); if (nodesToCompile.length === 0) return;
   const chosenLangKey = languageSelectorInput ? languageSelectorInput.value : 'python';
-  logToTerminal('Compiler', `Initiating compilation pass targeting: [${chosenLangKey.toUpperCase()}] running mode frame: [${currentGlobalGameModeSetting.toUpperCase()}]`);
-  
   try {
     const HallowNexusCompiler = require('../compiler.js');
     const projectCompiler = new HallowNexusCompiler(__dirname);
-    const generatedPathResult = projectCompiler.transpileGraph(nodesToCompile, chosenLangKey, currentGlobalGameModeSetting);
-    logToTerminal('Success', 'Transpilation complete! File written to: ' + generatedPathResult);
-  } catch (err) { logToTerminal('Compiler Error', 'Pipeline exception caught: ' + err.message); }
+    projectCompiler.transpileGraph(nodesToCompile, chosenLangKey, currentGlobalGameModeSetting);
+  } catch (err) {}
 });
-
-let isPanning = false;
-let startX = 0, startY = 0, transformX = 0, transformY = 0;
-canvasViewport.addEventListener('mousedown', (e) => {
-  if (e.button === 1 || e.target === canvasViewport || e.target === canvasGridLayer) {
-    isPanning = true; startX = e.clientX - transformX; startY = e.clientY - transformY;
-    canvasViewport.style.cursor = 'grabbing';
-  }
-});
-window.addEventListener('mousemove', (e) => {
-  if (!isPanning) return;
-  transformX = e.clientX - startX; transformY = e.clientY - startY;
-  canvasGridLayer.style.transform = `translate(${transformX}px, ${transformY}px)`;
-});
-window.addEventListener('mouseup', () => { if (isPanning) { isPanning = false; canvasViewport.style.cursor = 'default'; } });
-
-if (ollamaInput) {
-  ollamaInput.addEventListener('keydown', async (e) => {
-    if (e.key === 'Enter' && ollamaInput.value.trim() !== '') {
-      const userMessage = ollamaInput.value; logToTerminal('You', userMessage); ollamaInput.value = ''; 
-    }
-  });
-}
 
 async function triggerAutoSavePass() {
-  const stateSnapshot = {
-    nodes: (window.HallowNexusCanvas && window.HallowNexusCanvas.activeGraphNodes) || [],
-    wires: (window.HallowNexusWires && window.HallowNexusWires.establishedWires) || [],
-    chatHistory: aiLogs.innerHTML,
-    customBlocks: customGeneratedBlocksDatabase,
-    globalGameMode: currentGlobalGameModeSetting
-  };
+  const stateSnapshot = { nodes: [], customBlocks: customGeneratedBlocksDatabase, globalGameMode: currentGlobalGameModeSetting };
   await window.electronAPI.saveProjectState(stateSnapshot);
 }
 
 async function loadSavedProjectData() {
   try {
     const result = await window.electronAPI.loadProjectState();
-    if (result && result.success && result.data) {
-      document.querySelectorAll('.node-card').forEach(node => node.remove());
-      document.querySelectorAll('.canvas-nexus-wire').forEach(wire => wire.remove());
-      if (window.HallowNexusCanvas && window.HallowNexusCanvas.activeGraphNodes) window.HallowNexusCanvas.activeGraphNodes.length = 0;
-      if (window.HallowNexusWires && window.HallowNexusWires.establishedWires) window.HallowNexusWires.establishedWires.length = 0;
-      if (result.data.chatHistory) aiLogs.innerHTML = result.data.chatHistory;
-      if (result.data.globalGameMode) {
-        currentGlobalGameModeSetting = result.data.globalGameMode;
-        if(coreGamemodeSelector) coreGamemodeSelector.value = currentGlobalGameModeSetting;
-      }
-      if (result.data.customBlocks) {
-        customGeneratedBlocksDatabase = result.data.customBlocks;
-        updateCustomGeneratedBlocksLedgerDisplay();
-        customGeneratedBlocksDatabase.forEach(bl => libraryBlocksRegistry.push(bl));
-      }
-    }
+    if (result && result.success && result.data && result.data.customBlocks) { customGeneratedBlocksDatabase = result.data.customBlocks; updateCustomGeneratedBlocksLedgerDisplay(); }
   } catch (err) {}
 }
+
 async function bootloadExtensions() {
-  const activeFoldersDOMMap = {};
   const masterStudioBlocks = [
-    { blockName: "START BLOCK", category: "LOGIC", tooltip: "The global execution entry point framework initialization root.", sideMenuFields: [] },
-    { blockName: "LOOP BLOCK", category: "LOGIC", tooltip: "Continuous engine logic processing infinite loop.", sideMenuFields: [{label:"Target FPS",type:"number",default:60}] },
-    { blockName: "CUSTOM CODE INJECTOR", category: "LOGIC", tooltip: "Inject raw handwritten target scripts templates straight into the flow.", sideMenuFields: [{label:"Lang",type:"text",default:"python"}] },
-    { blockName: "SAVE GAME DATA", category: "LOGIC", tooltip: "Dumps highly compressed 32-Byte Save Block array into hardware partitions.", sideMenuFields: [{label:"Slot Number",type:"number",default:1}] },
-    { blockName: "LOAD GAME DATA", category: "LOGIC", tooltip: "Validates verification magic header signature and restores entity metrics.", sideMenuFields: [{label:"Slot Number",type:"number",default:1}] },
-    { blockName: "LAUNCH MINIGAME SUB-ROUTINE", category: "LOGIC", tooltip: "Swaps overworld state machine routines to launch interior games loop.", sideMenuFields: [] },
-    { blockName: "EXIT TO MAIN OVERWORLD", category: "LOGIC", tooltip: "Restores frozen coordinates stacks registers and transfers highscore tracking bytes.", sideMenuFields: [] },
-    
-    { blockName: "CREATE PLAYER", category: "SPRITES", tooltip: "Spawns player graphics vectors.", sideMenuFields: [{label:"X",type:"number",default:160},{label:"Y",type:"number",default:120}] },
-    { blockName: "CREATE ENEMY", category: "SPRITES", tooltip: "Spawns map enemy logic registers map.", sideMenuFields: [{label:"Slot ID",type:"number",default:1}] },
-    { blockName: "SPRITE CONFIG MATRIX", category: "SPRITES", tooltip: "Configures character model asset slot. Toggles static sprite vs dynamic loop animations with per-frame hitbox boundaries data structures.", sideMenuFields: [{label:"Model Slot Type",type:"text",default:"ANIMATION_LOOP"},{label:"Reel Token ID",type:"text",default:"WALK_LEFT"},{label:"Frame Hitbox Top",type:"number",default:0}] },
-    { blockName: "MOVE WITH BUTTONS", category: "SPRITES", tooltip: "Arrow keys matrix input tracker loops speed adjustments.", sideMenuFields: [] },
-    { blockName: "IF TOUCHING KIND", category: "SPRITES", tooltip: "4-byte micro-pixel offsets hitbox cross boundary collision analysis.", sideMenuFields: [] },
-    
-    { blockName: "WHEN BUTTON PRESSED", category: "CONTROLS", tooltip: "Hardware key scan pass controller flag detector lane.", sideMenuFields: [{label:"Target Key",type:"text",default:"sk_2nd"}] },
-    { blockName: "PLAY MUSIC NOTE", category: "CONTROLS", tooltip: "Audio square wave pulse sound generator tone frequencies.", sideMenuFields: [{label:"Hz",type:"number",default:440}] },
-    { blockName: "PLAY EXPLOSION SOUND", category: "CONTROLS", tooltip: "Zero floating math procedural white noise sweep data blocks.", sideMenuFields: [] },
-    
-    { blockName: "GO TO STAGE MAP", category: "SCENE", tooltip: "Loads base 9-chunk grid streaming coordinates sectors array matrix.", sideMenuFields: [{label:"Map Pointer Data",type:"text",default:"Stage1Data"}] },
-    { blockName: "TRIGGER SCREEN SHAKE", category: "SCENE", tooltip: "Distorts hardware offset pointers to slam viewing window frames.", sideMenuFields: [{label:"Duration Ticks",type:"number",default:15}] },
-    { blockName: "TURN ON TORCH MASK", category: "SCENE", tooltip: "Applies 1-bit raster look-up table shading flashlight cones shadows mask.", sideMenuFields: [] }
+    { blockName: "START BLOCK", category: "LOGIC", sideMenuFields: [] },
+    { blockName: "LOOP BLOCK", category: "LOGIC", sideMenuFields: [{label:"Target FPS",type:"number",default:60}] },
+    { blockName: "SPRITE CONFIG MATRIX", category: "SPRITES", sideMenuFields: [{label:"Model Slot Type",type:"text",default:"ANIMATION_LOOP"}] }
   ];
-  
   const targetCategories = ['SPRITES', 'CONTROLS', 'LOGIC', 'SCENE', 'CUSTOM'];
+  const activeFoldersDOMMap = {};
   targetCategories.forEach(categoryName => {
-    const headingBox = document.createElement('div');
-    headingBox.style.color = '#cbd5e1'; headingBox.style.backgroundColor = '#1c1e27'; headingBox.style.padding = '10px'; headingBox.style.marginTop = '10px'; headingBox.style.borderRadius = '4px'; headingBox.style.cursor = 'pointer'; headingBox.style.fontSize = '12px'; headingBox.style.fontWeight = '600'; headingBox.style.border = '1px solid #2d3139'; headingBox.style.letterSpacing = '0.5px';
-    headingBox.innerText = categoryName; toolboxPanel.appendChild(headingBox);
-    const drawerBody = document.createElement('div');
-    drawerBody.className = `nexus-toolbox-drawer nexus-toolbox-drawer-${categoryName}`; drawerBody.style.display = 'none'; drawerBody.style.flexDirection = 'column'; drawerBody.style.gap = '6px'; drawerBody.style.padding = '8px 5px 4px 5px'; toolboxPanel.appendChild(drawerBody);
-    headingBox.addEventListener('click', () => {
-      const allDrawersList = document.querySelectorAll('.nexus-toolbox-drawer');
-      const isTargetCurrentlyClosed = (drawerBody.style.display === 'none');
-      allDrawersList.forEach(d => d.style.display = 'none'); 
-      drawerBody.style.display = isTargetCurrentlyClosed ? 'flex' : 'none'; 
-    });
+    const headingBox = document.createElement('div'); headingBox.style.color = '#cbd5e1'; headingBox.style.backgroundColor = '#1c1e27'; headingBox.style.padding = '10px'; headingBox.style.marginTop = '10px'; headingBox.style.fontSize = '12px'; headingBox.style.fontWeight = '600'; headingBox.style.border = '1px solid #2d3139'; headingBox.innerText = categoryName; toolboxPanel.appendChild(headingBox);
+    const drawerBody = document.createElement('div'); drawerBody.className = `nexus-toolbox-drawer nexus-toolbox-drawer-${categoryName}`; drawerBody.style.display = 'none'; drawerBody.style.flexDirection = 'column'; drawerBody.style.gap = '6px'; drawerBody.style.padding = '8px 5px'; toolboxPanel.appendChild(drawerBody);
+    headingBox.onclick = () => { drawerBody.style.display = drawerBody.style.display === 'none' ? 'flex' : 'none'; };
     activeFoldersDOMMap[categoryName] = drawerBody;
   });
   masterStudioBlocks.forEach(block => {
     libraryBlocksRegistry.push(block);
     const drawerBody = activeFoldersDOMMap[block.category] || activeFoldersDOMMap['CUSTOM'];
-    const blockElement = document.createElement('div');
-    blockElement.style.backgroundColor = '#2d3139'; blockElement.style.padding = '8px'; blockElement.style.borderRadius = '4px'; blockElement.style.fontSize = '12px'; blockElement.style.cursor = 'pointer'; blockElement.style.borderLeft = '4px solid #4f46e5'; blockElement.style.userSelect = 'none';
-    blockElement.innerText = block.blockName;
-    blockElement.addEventListener('click', () => { if (window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) window.HallowNexusCanvas.spawnNodeOnCanvas(block); });
-    drawerBody.appendChild(blockElement);
+    const blockElement = document.createElement('div'); blockElement.style.backgroundColor = '#2d3139'; blockElement.style.padding = '8px'; blockElement.style.borderRadius = '4px'; blockElement.style.fontSize = '12px'; blockElement.style.cursor = 'pointer'; blockElement.innerText = block.blockName;
+    blockElement.onclick = () => { if (window.HallowNexusCanvas) window.HallowNexusCanvas.spawnNodeOnCanvas(block); }; drawerBody.appendChild(blockElement);
   });
-
-  try {
-    const result = await window.electronAPI.loadExtensions();
-    if (result && result.success && result.data && result.data.length > 0) {
-      result.data.forEach(ext => {
-        ext.newBlocks.forEach(block => {
-          if (libraryBlocksRegistry.some(b => b.blockName === block.blockName)) return;
-          libraryBlocksRegistry.push(block);
-          let targetFolder = (ext.category || 'CUSTOM').trim().toUpperCase();
-          if (targetFolder.includes('SPRITE')) targetFolder = 'SPRITES';
-          if (targetFolder.includes('CONTROL')) targetFolder = 'CONTROLS';
-          if (targetFolder.includes('LOGIC')) targetFolder = 'LOGIC';
-          if (targetFolder.includes('SCENE')) targetFolder = 'SCENE';
-
-          const drawerBody = activeFoldersDOMMap[targetFolder] || activeFoldersDOMMap['CUSTOM'];
-          const blockElement = document.createElement('div');
-          blockElement.style.backgroundColor = '#2d3139'; blockElement.style.padding = '8px'; blockElement.style.borderRadius = '4px'; blockElement.style.fontSize = '12px'; blockElement.style.cursor = 'pointer'; blockElement.style.borderLeft = '4px solid #4f46e5'; blockElement.style.userSelect = 'none';
-          blockElement.innerText = block.blockName;
-          blockElement.addEventListener('click', () => { if (window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) window.HallowNexusCanvas.spawnNodeOnCanvas(block); });
-          drawerBody.appendChild(blockElement);
-        });
-      });
-    }
-  } catch (err) {}
 }
 
+let canvasViewportViewport = document.getElementById('canvas-viewport');
+if(canvasViewportViewport){ canvasViewportViewport.addEventListener('mouseup', () => { document.querySelectorAll('.tile-palette-thumb-card').forEach(card => { if(card.dataset.tileId === "0") attachDragAndDropToThumbCard(card, "WIPE_TILE"); }); }); }
 bootloadExtensions();
-if (window.HallowNexusWires) window.HallowNexusWires.initWireCanvas();
 window.addEventListener('mouseup', () => { triggerAutoSavePass(); });
