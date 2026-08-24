@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>HallowNexus IDE</title>
+  <title>HallowNexus Studio - eZ80 Engine Workspace</title>
   <style>
     body {
       margin: 0; padding: 0;
@@ -10,112 +10,136 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       height: 100vh; display: flex; flex-direction: column; overflow: hidden;
     }
-    .top-bar {
-      height: 40px; background-color: #16181f; border-bottom: 1px solid #2d3139;
-      display: flex; align-items: center; padding: 0 15px; gap: 8px; position: relative;
+    
+    /* 🪐 PROFESSIONAL MAKECODE-ARCADE STYLE DASHBOARD MAIN MENU LAUNCHER */
+    .launcher-splash-shell {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background-color: #0b0c10; z-index: 9999; display: flex; padding: 40px; box-sizing: border-box; gap: 30px;
     }
+    .launcher-left-panel {
+      flex: 1; background: linear-gradient(135deg, #16181f 0%, #0f1115 100%);
+      border: 1px solid #2d3139; border-radius: 12px; padding: 40px; display: flex; flex-direction: column;
+    }
+    .launcher-right-panel {
+      width: 480px; background-color: #111216; border: 1px solid #2d3139; border-radius: 12px; padding: 30px;
+      display: flex; flex-direction: column; overflow-y: auto;
+    }
+    .studio-title-badge { font-size: 32px; font-weight: 800; color: #a78bfa; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; }
+    .studio-subtitle-text { font-size: 13px; color: #64748b; margin-top: 4px; margin-bottom: 40px; }
+    
+    .action-cards-grid { display: grid; grid-template-columns: repeat(2, 1xl); gap: 16px; margin-bottom: 40px; }
+    .action-card-item {
+      background-color: #1c1e27; border: 1px solid #2d3139; border-radius: 8px; padding: 20px;
+      cursor: pointer; text-align: left; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .action-card-item:hover { border-color: #4f46e5; background: #222533; transform: translateY(-2px); }
+    .card-icon-slot { font-size: 24px; margin-bottom: 12px; }
+    .card-title-line { font-size: 15px; font-weight: bold; color: #e2e8f0; }
+    .card-desc-line { font-size: 12px; color: #64748b; margin-top: 4px; }
+    
+    .recent-files-header { font-size: 12px; font-weight: bold; color: #475569; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+    .recent-project-row {
+      display: flex; justify-content: space-between; align-items: center; padding: 12px;
+      background-color: #12131a; border: 1px solid #1c1e27; border-radius: 6px; cursor: pointer; margin-bottom: 8px;
+    }
+    .recent-project-row:hover { background-color: #16181f; border-color: #4f46e5; }
+    
+    /* 🖼️ EMBEDDED TECHNICAL INFOGRAPHIC PICTURE DIAGRAMS */
+    .infographic-block {
+      background-color: #16181f; border: 1px solid #2d3139; border-radius: 8px; padding: 20px; margin-bottom: 20px;
+    }
+    .infographic-title { font-size: 13px; font-weight: bold; color: #38bdf8; display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
+    .vector-graphic-canvas {
+      width: 100%; height: 110px; background-color: #0b0c10; border: 1px solid #2d3139; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center; font-family: monospace; font-size: 11px; color: #4ade80; position: relative;
+    }
+
+    /* Standard IDE Editor Interface Styles */
+    .top-bar { height: 40px; background-color: #1a1c23; border-bottom: 1px solid #2d3139; display: flex; align-items: center; padding: 0 15px; gap: 8px; }
     .menu-trigger-container { position: relative; display: inline-block; }
-    .btn {
-      background-color: #2d3139; color: #e2e8f0; border: none;
-      padding: 6px 14px; font-size: 12px; border-radius: 4px; cursor: pointer; font-weight: 500;
-    }
-    .btn:hover { background-color: #3e4450; }
-    .btn-primary { background-color: #4f46e5; }
-    .btn-primary:hover { background-color: #6366f1; }
-    
-    .dropdown-menu-panel {
-      position: absolute; top: 32px; left: 0; background-color: #16181f;
-      border: 1px solid #2d3139; border-radius: 6px; width: 220px;
-      display: none; flex-direction: column; padding: 6px 0; z-index: 1000;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    }
-    .dropdown-item {
-      padding: 8px 16px; font-size: 12px; color: #cbd5e1; cursor: pointer;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .dropdown-item:hover { background-color: #242835; color: #a78bfa; }
-    .dropdown-divider { height: 1px; background-color: #2d3139; margin: 6px 0; }
-    .shortcut-hint { color: #64748b; font-size: 10px; font-family: monospace; }
-
     .workspace-container { display: flex; flex: 1; height: calc(100vh - 40px); position: relative; }
-    
-    /* Premium MakeCode Arcade Style Toolbox Sidebar */
-    .panel-toolbox {
-      width: 240px; background-color: #111216; border-right: 1px solid #2d3139;
-      display: flex; flex-direction: column; padding: 12px; box-sizing: border-box; z-index: 10; overflow-y: auto;
-    }
-    .panel-toolbox::-webkit-scrollbar { width: 6px; }
-    .panel-toolbox::-webkit-scrollbar-track { background: #111216; }
-    .panel-toolbox::-webkit-scrollbar-thumb { background: #2d3139; border-radius: 3px; }
-
+    .panel-toolbox { width: 260px; background-color: #16181f; border-right: 1px solid #2d3139; display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; z-index: 10; overflow-y: auto; }
     .panel-canvas { flex: 1; background-color: #0b0c10; position: relative; overflow: hidden; }
-    .canvas-grid {
-      position: absolute; width: 5000px; height: 5000px;
-      background-image: 
-        linear-gradient(to right, #1b1d24 1px, transparent 1px),
-        linear-gradient(to bottom, #1b1d24 1px, transparent 1px);
-      background-size: 25px 25px;
-    }
-    .node-card { user-select: none !important; -webkit-user-select: none !important; }
-    .socket-flash-confirm { animation: socketFlashLoop 0.3s ease-in-out 3; }
-    @keyframes socketFlashLoop {
-      0%, 100% { background-color: #22c55e; box-shadow: 0 0 8px #22c55e; }
-      50% { background-color: #1a1c23; box-shadow: none; }
-    }
-    
-    .panel-desk { width: 280px; background-color: #111216; border-left: 1px solid #2d3139; display: flex; flex-direction: column; box-sizing: border-box; z-index: 10; }
+    .canvas-grid { position: absolute; width: 5000px; height: 5000px; background-image: linear-gradient(to right, #1b1d24 1px, transparent 1px), linear-gradient(to bottom, #1b1d24 1px, transparent 1px); background-size: 25px 25px; }
+    .panel-desk { width: 320px; background-color: #16181f; border-left: 1px solid #2d3139; display: flex; flex-direction: column; box-sizing: border-box; z-index: 10; }
     .desk-section { padding: 15px; border-bottom: 1px solid #2d3139; }
     .desk-section:last-child { border-bottom: none; flex: 1; }
-    .ai-terminal {
-      background-color: #0b0c10; border: 1px solid #2d3139; border-radius: 4px;
-      height: 140px; padding: 10px; font-family: monospace; font-size: 11px; color: #38bdf8; overflow-y: auto; margin-bottom: 10px;
-    }
+    .ai-terminal { background-color: #0b0c10; border: 1px solid #2d3139; border-radius: 4px; height: 180px; padding: 10px; font-family: monospace; font-size: 12px; color: #38bdf8; overflow-y: auto; margin-bottom: 10px; }
     body.squish-active .panel-toolbox { display: none; }
     body.squish-active .panel-emulator { width: 320px; border-right: 1px solid #2d3139; }
     .panel-emulator { width: 0; background-color: #111216; overflow: hidden; display: flex; align-items: center; justify-content: center; font-family: monospace; color: #a78bfa; }
-
-    /* 💎 MAKECODE STYLE SLIDE-OUT VISUAL BLUEPRINTS GUIDE PANEL */
-    .panel-docs-drawer {
-      position: absolute; top: 0; right: -420px; width: 400px; height: 100%;
-      background-color: #16181f; border-left: 2px solid #4f46e5; padding: 20px;
-      box-sizing: border-box; z-index: 400; overflow-y: auto; transition: right 0.3s ease-in-out;
-      box-shadow: -10px 0 30px rgba(0,0,0,0.6);
-    }
-    .panel-docs-drawer.drawer-active { right: 0; }
-    .docs-section-card {
-      background-color: #111216; border: 1px solid #2d3139; border-radius: 6px;
-      padding: 12px; margin-bottom: 16px;
-    }
-    .docs-title-text { color: #a78bfa; font-size: 14px; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-    
-    /* Embedded Ascii/CSS visual layouts to simulate picture maps precisely */
-    .docs-picture-placeholder {
-      background-color: #0b0c10; border: 1px solid #4f46e5; border-radius: 4px;
-      padding: 10px; font-family: monospace; font-size: 10px; color: #22c55e;
-      line-height: 1.4; white-space: pre; overflow-x: auto; margin-top: 8px;
-    }
   </style>
 </head>
 <body>
 
-  <div class="top-bar">
-    <div class="menu-trigger-container">
-      <button class="btn btn-primary" id="btn-file-trigger">📄 File</button>
-      <div class="dropdown-menu-panel" id="nexus-file-dropdown">
-        <div class="dropdown-item" id="drop-btn-new"><span>New Project Grid</span><span class="shortcut-hint">Ctrl+N</span></div>
-        <div class="dropdown-item" id="drop-btn-load"><span>Open Saved Workspace</span><span class="shortcut-hint">Ctrl+O</span></div>
-        <div class="dropdown-divider"></div>
-        <div class="dropdown-item" id="drop-btn-save"><span>Save Project State</span><span class="shortcut-hint">Ctrl+S</span></div>
-        <div class="dropdown-divider"></div>
-        <div class="dropdown-item" id="drop-btn-compile"><span>Transpile asm Data</span><span class="shortcut-hint">F5</span></div>
+  <!-- 🚀 RETRO COMMERCIAL-GRADE MAIN LAUNCHER MENU -->
+  <div class="launcher-splash-shell" id="nexus-main-menu">
+    
+    <!-- Left Workspace Dashboard Panel -->
+    <div class="launcher-left-panel">
+      <div class="studio-title-badge">⚡ HallowNexus Studio</div>
+      <div class="studio-subtitle-text">Professional Production Suite for eZ80 TI-84 Plus CE Hardware</div>
+      
+      <div class="action-cards-grid">
+        <div class="action-card-item" id="menu-btn-new">
+          <div class="card-icon-slot">🧩</div>
+          <div class="card-title-line">New Project Matrix</div>
+          <div class="card-desc-line">Initialize an empty canvas flow grid with infinite branching ports.</div>
+        </div>
+      </div>
+      
+      <div class="recent-files-header">Open Recent Saved Workspaces</div>
+      <div class="recent-project-row" id="menu-btn-load">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span>📁</span>
+          <div>
+            <div style="font-size: 13px; font-weight: bold;">workspace-save.json</div>
+            <div style="font-size: 11px; color: #475569;">Local Application State Cache Slot</div>
+          </div>
+        </div>
+        <span style="font-size: 12px; color: #a78bfa; font-family: monospace;">LOAD STATE</span>
       </div>
     </div>
-
-    <button class="btn" id="btn-squish">Switch Viewport Emulator</button>
-    <button class="btn" id="btn-open-sprite-drawer" style="background-color: #0891b2;">🎨 Draw Textures</button>
     
-    <!-- 💎 NEW PROFESSIONAL DOCUMENTATION MENU TRIGGER BUTTON -->
-    <button class="btn" id="btn-toggle-docs" style="background-color: #eab308; color: #0f172a; margin-left: auto;">💡 Visual Blueprints Guide</button>
+    <!-- Right Built-in Interactive Picture / Infographics Panel Guide -->
+    <div class="launcher-right-panel">
+      <div style="font-size: 15px; font-weight: bold; color: #e2e8f0; margin-bottom: 5px;">📖 Built-In Reference Diagrams</div>
+      <div style="font-size: 12px; color: #64748b; margin-bottom: 25px;">Visual blueprints mapping the low-level execution pipeline logic.</div>
+      
+      <!-- Picture Infographic 1: Wire Compiler Sequencing -->
+      <div class="infographic-block">
+        <div class="infographic-title">⛓️ 1. Node Execution Port Sorting</div>
+        <div class="vector-graphic-canvas">
+          [START] -> (Node Alpha) ==(Wire)==> (Node Beta) -> [COMPILE]
+          <div style="position: absolute; bottom: 4px; right: 8px; font-size: 9px; color: #475569;">Transpiler Array Pass</div>
+        </div>
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 8px; line-height: 1.4;">Wired connector tracks enforce code line sequence. Unlinked blocks fall back automatically to standard bottom memory heap layouts.</div>
+      </div>
+
+      <!-- Picture Infographic 2: eZ80 Hardware VRAM Registers Mapping -->
+      <div class="infographic-block">
+        <div class="infographic-title">📺 2. 4-Byte Micro-Pixel Hitboxes</div>
+        <div class="vector-graphic-canvas" style="color: #38bdf8;">
+          +---[16x16 Grid Box]---+<br>
+
+          |  (Top Offset: 2)     |<br>
+          | [Hitbox Perimeter]   |<br>
+          |  (Bottom Offset: 14) |<br>
+          +----------------------+
+          <div style="position: absolute; bottom: 4px; right: 8px; font-size: 9px; color: #475569;">Fine-Grained Hitbox Matrix</div>
+        </div>
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 8px; line-height: 1.4;">Bypasses regular tile blocks limits by tracking 4 coordinate sub-pixel bounds variables offsets to handle ultra-smooth collision reflections.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main IDE Window Workspace Panel Top-Bar Navigation Menu -->
+  <div class="top-bar">
+    <button class="btn" id="btn-return-menu" style="background-color: #dc2626;">🚪 Main Dashboard</button>
+    <button class="btn" id="btn-squish">Switch Viewport Emulator</button>
+    <button class="btn btn-primary" id="btn-save-project">💾 Save Project State</button>
+    <button class="btn" id="btn-clean" style="background-color: #16a34a;">⚙️ Compile Project</button>
+    <button class="btn" id="btn-open-sprite-drawer" style="background-color: #0891b2;">🎨 Draw Textures</button>
   </div>
   
   <div class="workspace-container">
@@ -124,51 +148,9 @@
       <h3>Toolbox</h3>
       <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Click accordion categories to open logic drawers.</p>
     </div>
-    
     <div class="panel-canvas" id="canvas-viewport">
       <div class="canvas-grid" id="canvas-grid-layer"></div>
-      
-      <!-- 🪐 PROFESSIONAL BUILT-IN GRAPHIC DOCUMENTATION DRAWER MATRICES -->
-      <div class="panel-docs-drawer" id="nexus-docs-drawer">
-        <h2 style="color: #e2e8f0; margin-top: 0; font-size: 18px; border-bottom: 1px solid #2d3139; padding-bottom: 8px;">📖 Visual Blueprint Index</h2>
-        <p style="font-size: 12px; color: #94a3b8; margin-bottom: 20px;">Built-in wire schematics and map layouts for the game suite creator.</p>
-        
-        <div class="docs-section-card">
-          <div class="docs-title-text">🧗 1. Core Platformer Movement Map</div>
-          <div style="font-size: 11px; color: #cbd5e1;">Connect your input button checker straight into your character speed vectors allocation cards to compile gravity jumps loops.</div>
-          <div class="docs-picture-placeholder">
-[CREATE PLAYER] (Out) --------> [MOVE WITH BUTTONS]
-  * X: 160                         * Speed: 4
-  * Y: 120
-                                       | (Out)
-                                       v
-                                [CLAMP INSIDE BOUNDS]
-                                   * Min: 0  Max: 240</div>
-        </div>
-
-        <div class="docs-section-card">
-          <div class="docs-title-text">🛡️ 2. Sub-Pixel Hitbox Overlaps Check</div>
-          <div style="font-size: 11px; color: #cbd5e1;">Wire up overlapping kind triggers to intercept enemy entity slots positions vectors for battle damage tracking loops.</div>
-          <div class="docs-picture-placeholder">
-[IF TOUCHING KIND] (True) -----> [PLAY EXPLOSION SOUND]
-  * Alpha: Player                   
-  * Beta: Enemy                        | (Out)
-                                       v
-                                [DESTROY CHAR]
-                                   * Slot ID: 1</div>
-        </div>
-
-        <div class="docs-section-card">
-          <div class="docs-title-text">🖼️ 3. Scene Background Tile Bind</div>
-          <div style="font-size: 11px; color: #cbd5e1;">Load tile arrays matrices straight before activating lighting cones lookup masks in the scene drawers layers.</div>
-          <div class="docs-picture-placeholder">
-[GO TO STAGE MAP] (Out) -------> [TURN ON TORCH MASK]
-  * Data: Stage1Data               * Follow Slot: 1</div>
-        </div>
-      </div>
-
     </div>
-
     <div class="panel-desk">
       <div class="desk-section">
         <h3>Project Status</h3>
@@ -178,4 +160,6 @@
           VRAM Engine: <span style="color: #4ade80;">60 FPS</span>
         </div>
       </div>
-      <div class="desk-section" style=
+      <div class="desk-section" style="display: flex; flex-direction: column;">
+        <h3>Ollama Core</h3>
+        <div class="ai-terminal" id="ai-logs">HallowNexus Studio ready.<br>Project ecosystem operational.</div>
