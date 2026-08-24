@@ -235,11 +235,13 @@ if (btnSaveAssetPayload) {
     const initialFieldStat = parseInt(numItemStat.value) || 0;
     const chosenDrawer = document.getElementById('custom-block-category-select').value;
     const customSnippet = document.getElementById('custom-block-code-snippet').value || "";
-    if (!blockNameRaw) { alert('Please define a ID Token.'); return; }
+    if (!blockNameRaw) { alert('Please define an ID Token.'); return; }
+    
     const compiledCustomBlockNode = { blockName: blockNameRaw, category: chosenDrawer, tooltip: `Timeline Frames: ${compiledAnimationSequenceTimeline.length}.`, sideMenuFields: [{ label: "Value", type: "number", default: initialFieldStat }], ez80AssemblyTemplate: `; --- Custom node ---\ncall _ExecuteCallback` };
     customGeneratedBlocksDatabase.push(compiledCustomBlockNode); libraryBlocksRegistry.push(compiledCustomBlockNode);
     if (liveTilesTray) {
       const tileThumb = document.createElement('div'); tileThumb.className = 'tile-palette-thumb-card'; tileThumb.innerText = blockNameRaw.substring(0, 4);
+      tileThumb.style.borderLeft = '3px solid #4f46e5';
       tileThumb.addEventListener('click', () => { activePaintBrushTileID = customGeneratedBlocksDatabase.length; });
       attachDragAndDropToThumbCard(tileThumb, blockNameRaw); liveTilesTray.appendChild(tileThumb);
     }
@@ -280,24 +282,46 @@ async function loadSavedProjectData() {
   } catch (err) {}
 }
 
+// 💎 FIXED BLOCKS RESTORER: Injects every master blueprint block natively into the side accordion folders on load
 async function bootloadExtensions() {
   const masterStudioBlocks = [
     { blockName: "START BLOCK", category: "LOGIC", sideMenuFields: [] },
     { blockName: "LOOP BLOCK", category: "LOGIC", sideMenuFields: [{label:"Target FPS",type:"number",default:60}] },
-    { blockName: "SPRITE CONFIG MATRIX", category: "SPRITES", sideMenuFields: [{label:"Model Slot Type",type:"text",default:"ANIMATION_LOOP"}] }
+    { blockName: "CUSTOM CODE INJECTOR", category: "LOGIC", sideMenuFields: [{label:"Lang",type:"text",default:"python"}] },
+    { blockName: "SAVE GAME DATA", category: "LOGIC", sideMenuFields: [{label:"Slot Number",type:"number",default:1}] },
+    { blockName: "LOAD GAME DATA", category: "LOGIC", sideMenuFields: [{label:"Slot Number",type:"number",default:1}] },
+    { blockName: "LAUNCH MINIGAME SUB-ROUTINE", category: "LOGIC", sideMenuFields: [] },
+    { blockName: "EXIT TO MAIN OVERWORLD", category: "LOGIC", sideMenuFields: [] },
+    
+    { blockName: "CREATE PLAYER", category: "SPRITES", sideMenuFields: [{label:"X",type:"number",default:160},{label:"Y",type:"number",default:120}] },
+    { blockName: "CREATE ENEMY", category: "SPRITES", sideMenuFields: [{label:"Slot ID",type:"number",default:1}] },
+    { blockName: "SPRITE CONFIG MATRIX", category: "SPRITES", sideMenuFields: [{label:"Model Slot Type",type:"text",default:"ANIMATION_LOOP"}] },
+    { blockName: "MOVE WITH BUTTONS", category: "SPRITES", sideMenuFields: [] },
+    { blockName: "IF TOUCHING KIND", category: "SPRITES", sideMenuFields: [] },
+    
+    { blockName: "WHEN BUTTON PRESSED", category: "CONTROLS", sideMenuFields: [{label:"Target Key",type:"text",default:"sk_2nd"}] },
+    { blockName: "PLAY MUSIC NOTE", category: "CONTROLS", sideMenuFields: [{label:"Hz",type:"number",default:440}] },
+    { blockName: "PLAY EXPLOSION SOUND", category: "CONTROLS", sideMenuFields: [] },
+    
+    { blockName: "GO TO STAGE MAP", category: "SCENE", sideMenuFields: [{label:"Map Pointer Data",type:"text",default:"Stage1Data"}] },
+    { blockName: "TRIGGER SCREEN SHAKE", category: "SCENE", sideMenuFields: [{label:"Duration Ticks",type:"number",default:15}] },
+    { blockName: "TURN ON TORCH MASK", category: "SCENE", sideMenuFields: [] }
   ];
+  
   const targetCategories = ['SPRITES', 'CONTROLS', 'LOGIC', 'SCENE', 'CUSTOM'];
   const activeFoldersDOMMap = {};
+  
   targetCategories.forEach(categoryName => {
-    const headingBox = document.createElement('div'); headingBox.style.color = '#cbd5e1'; headingBox.style.backgroundColor = '#1c1e27'; headingBox.style.padding = '10px'; headingBox.style.marginTop = '10px'; headingBox.style.fontSize = '12px'; headingBox.style.fontWeight = '600'; headingBox.style.border = '1px solid #2d3139'; headingBox.innerText = categoryName; toolboxPanel.appendChild(headingBox);
+    const headingBox = document.createElement('div'); headingBox.style.color = '#cbd5e1'; headingBox.style.backgroundColor = '#1c1e27'; headingBox.style.padding = '10px'; headingBox.style.marginTop = '10px'; headingBox.style.borderRadius = '4px'; headingBox.style.cursor = 'pointer'; headingBox.style.fontSize = '12px'; headingBox.style.fontWeight = '600'; headingBox.style.border = '1px solid #2d3139'; headingBox.style.letterSpacing = '0.5px'; headingBox.innerText = categoryName; toolboxPanel.appendChild(headingBox);
     const drawerBody = document.createElement('div'); drawerBody.className = `nexus-toolbox-drawer nexus-toolbox-drawer-${categoryName}`; drawerBody.style.display = 'none'; drawerBody.style.flexDirection = 'column'; drawerBody.style.gap = '6px'; drawerBody.style.padding = '8px 5px'; toolboxPanel.appendChild(drawerBody);
     headingBox.onclick = () => { drawerBody.style.display = drawerBody.style.display === 'none' ? 'flex' : 'none'; };
     activeFoldersDOMMap[categoryName] = drawerBody;
   });
+  
   masterStudioBlocks.forEach(block => {
     libraryBlocksRegistry.push(block);
     const drawerBody = activeFoldersDOMMap[block.category] || activeFoldersDOMMap['CUSTOM'];
-    const blockElement = document.createElement('div'); blockElement.style.backgroundColor = '#2d3139'; blockElement.style.padding = '8px'; blockElement.style.borderRadius = '4px'; blockElement.style.fontSize = '12px'; blockElement.style.cursor = 'pointer'; blockElement.innerText = block.blockName;
+    const blockElement = document.createElement('div'); blockElement.style.backgroundColor = '#2d3139'; blockElement.style.padding = '8px'; blockElement.style.borderRadius = '4px'; blockElement.style.fontSize = '12px'; blockElement.style.cursor = 'pointer'; blockElement.style.borderLeft = '4px solid #4f46e5'; blockElement.style.userSelect = 'none'; blockElement.innerText = block.blockName;
     blockElement.onclick = () => { if (window.HallowNexusCanvas) window.HallowNexusCanvas.spawnNodeOnCanvas(block); }; drawerBody.appendChild(blockElement);
   });
 }
