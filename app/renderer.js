@@ -9,21 +9,22 @@ const toolboxPanel = document.getElementById('toolbox');
 const ollamaInput = document.getElementById('ollama-input');
 const btnOpenSpriteDrawer = document.getElementById('btn-open-sprite-drawer');
 
-// LAUNCHER DASHBOARD COMPONENT REFERENCE BINDINGS
 const btnSaveProject = document.getElementById('btn-save-project');
 const btnReturnMenu = document.getElementById('btn-return-menu');
 const mainMenuShell = document.getElementById('nexus-main-menu');
 const menuBtnNew = document.getElementById('menu-btn-new');
 const menuBtnLoad = document.getElementById('menu-btn-load');
 
+const btnToggleDocs = document.getElementById('btn-toggle-docs');
+const docsDrawerShell = document.getElementById('nexus-docs-drawer');
+
 let libraryBlocksRegistry = [];
 
-if (btnClean) btnClean.innerText = '⚙️ Compile Project';
+if (btnClean) btnClean.innerText = 'Compile Project';
 
-// MAIN DASHBOARD LAUNCHER CONTROLLER INTERFACES
 if (menuBtnNew) {
   menuBtnNew.addEventListener('click', () => {
-    mainMenuShell.style.display = 'none'; // Dismisses splash layer to launch editor cleanly
+    mainMenuShell.style.display = 'none'; 
     logToTerminal('System', 'Initialized a fresh workspace playground matrix.');
   });
 }
@@ -38,7 +39,7 @@ if (menuBtnLoad) {
 
 if (btnReturnMenu) {
   btnReturnMenu.addEventListener('click', () => {
-    mainMenuShell.style.display = 'flex'; // Brings back the launcher splash screen overlay
+    mainMenuShell.style.display = 'flex'; 
   });
 }
 
@@ -47,6 +48,13 @@ if (btnSaveProject) {
     logToTerminal('Workspace', 'Executing explicit file freeze state pass...');
     await triggerAutoSavePass();
     logToTerminal('Success', 'Project metrics written to: "workspace-save.json"!');
+  });
+}
+
+if (btnToggleDocs) {
+  btnToggleDocs.addEventListener('click', (e) => {
+    docsDrawerShell.classList.toggle('drawer-active');
+    e.stopPropagation();
   });
 }
 
@@ -82,7 +90,6 @@ async function triggerAutoSavePass() {
   };
   await ipcRenderer.invoke('save-project-state', stateSnapshot);
 }
-
 btnClean.addEventListener('click', async () => {
   if (!window.HallowNexusCanvas || !window.HallowNexusCanvas.getWiredExecutionOrder) {
     logToTerminal('Compiler Error', 'Canvas architecture module buffering.');
@@ -97,8 +104,6 @@ btnClean.addEventListener('click', async () => {
   try {
     const HallowNexusCompiler = require('../compiler.js');
     const projectCompiler = new HallowNexusCompiler(__dirname);
-    
-    // Execute true variable replacements asm file generation pass
     projectCompiler.transpileGraph(nodesToCompile);
     logToTerminal('Compiler', 'Successfully generated fresh, variable-substituted text source block code.');
     
@@ -141,12 +146,6 @@ window.addEventListener('mouseup', () => {
   }
 });
 
-function logToTerminal(sender, message) {
-  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  aiLogs.innerHTML += '<br><span style="color: #a78bfa;">[' + time + ']</span> <b>' + sender + ':</b> ' + message;
-  aiLogs.scrollTop = aiLogs.scrollHeight;
-  triggerAutoSavePass();
-}
 if (ollamaInput) {
   ollamaInput.addEventListener('keydown', async (e) => {
     if (e.key === 'Enter' && ollamaInput.value.trim() !== '') {
@@ -187,7 +186,6 @@ if (ollamaInput) {
     }
   });
 }
-
 async function loadSavedProjectData() {
   const result = await ipcRenderer.invoke('load-project-state');
   if (result.success && result.data) {
@@ -213,8 +211,6 @@ async function bootloadExtensions() {
       logToTerminal('Ollama', 'Successfully loaded custom block extension packages.');
       
       const activeFoldersDOMMap = {};
-      
-      // EXPLICIT MANUAL ROUTER DICTIONARY MATRIX (Matches actual simple English JSON block names)
       const manualFolderSchema = {
         'SPRITES': [
           'SUMMON SPRITE OF KIND', 'SET POSITION', 'SET VELOCITY', 'DESTROY SPRITE WITH EFFECT', 
@@ -249,19 +245,19 @@ async function bootloadExtensions() {
 
       const targetCategories = ['SPRITES', 'CONTROLS', 'LOGIC', 'SCENE', 'CUSTOM'];
 
-      // Pre-render categories in locked order
       targetCategories.forEach(categoryName => {
         const headingBox = document.createElement('div');
-        headingBox.style.color = '#a78bfa';
+        headingBox.style.color = '#cbd5e1';
         headingBox.style.backgroundColor = '#1c1e27';
         headingBox.style.padding = '10px';
         headingBox.style.marginTop = '10px';
         headingBox.style.borderRadius = '4px';
         headingBox.style.cursor = 'pointer';
-        headingBox.style.fontSize = '13px';
-        headingBox.style.fontWeight = 'bold';
+        headingBox.style.fontSize = '12px';
+        headingBox.style.fontWeight = '600';
         headingBox.style.border = '1px solid #2d3139';
-        headingBox.innerText = '📁 ' + categoryName;
+        headingBox.style.letterSpacing = '0.5px';
+        headingBox.innerText = categoryName;
         toolboxPanel.appendChild(headingBox);
 
         const drawerBody = document.createElement('div');
@@ -316,7 +312,6 @@ async function bootloadExtensions() {
           drawerBody.appendChild(blockElement);
         });
       });
-      loadSavedProjectData();
     }
   } catch (err) {
     logToTerminal('Runtime Error', err.message);
