@@ -1,95 +1,3 @@
-const { ipcRenderer } = require('electron');
-
-const btnSquish = document.getElementById('btn-squish');
-const btnClean = document.getElementById('btn-clean'); 
-const canvasViewport = document.getElementById('canvas-viewport');
-const canvasGridLayer = document.getElementById('canvas-grid-layer');
-const aiLogs = document.getElementById('ai-logs');
-const toolboxPanel = document.getElementById('toolbox');
-const ollamaInput = document.getElementById('ollama-input');
-const btnOpenSpriteDrawer = document.getElementById('btn-open-sprite-drawer');
-
-const btnSaveProject = document.getElementById('btn-save-project');
-const btnReturnMenu = document.getElementById('btn-return-menu');
-const mainMenuShell = document.getElementById('nexus-main-menu');
-const menuBtnNew = document.getElementById('menu-btn-new');
-const menuBtnLoad = document.getElementById('menu-btn-load');
-
-const btnToggleDocs = document.getElementById('btn-toggle-docs');
-const docsDrawerShell = document.getElementById('nexus-docs-drawer');
-
-let libraryBlocksRegistry = [];
-
-if (btnClean) btnClean.innerText = 'Compile Project';
-
-if (menuBtnNew) {
-  menuBtnNew.addEventListener('click', () => {
-    mainMenuShell.style.display = 'none'; 
-    logToTerminal('System', 'Initialized a fresh workspace playground matrix.');
-  });
-}
-
-if (menuBtnLoad) {
-  menuBtnLoad.addEventListener('click', async () => {
-    mainMenuShell.style.display = 'none';
-    logToTerminal('Workspace', 'Synchronizing cached project configurations...');
-    await loadSavedProjectData();
-  });
-}
-
-if (btnReturnMenu) {
-  btnReturnMenu.addEventListener('click', () => {
-    mainMenuShell.style.display = 'flex'; 
-  });
-}
-
-if (btnSaveProject) {
-  btnSaveProject.addEventListener('click', async () => {
-    logToTerminal('Workspace', 'Executing explicit file freeze state pass...');
-    await triggerAutoSavePass();
-    logToTerminal('Success', 'Project metrics written to: "workspace-save.json"!');
-  });
-}
-
-if (btnToggleDocs) {
-  btnToggleDocs.addEventListener('click', (e) => {
-    docsDrawerShell.classList.toggle('drawer-active');
-    e.stopPropagation();
-  });
-}
-
-btnSquish.addEventListener('click', () => {
-  document.body.classList.toggle('squish-active');
-  logToTerminal('System', 'Layout updated. Playtest emulator swapped.');
-
-  if (document.body.classList.contains('squish-active')) {
-    if (window.HallowNexusEmulator && window.HallowNexusEmulator.mountEmulatorScreen) {
-      window.HallowNexusEmulator.mountEmulatorScreen();
-    }
-  } else {
-    if (window.HallowNexusEmulator && window.HallowNexusEmulator.stopHardwareClock) {
-      window.HallowNexusEmulator.stopHardwareClock();
-    }
-  }
-});
-
-if (btnOpenSpriteDrawer) {
-  btnOpenSpriteDrawer.addEventListener('click', () => {
-    if (window.HallowNexusSpriteEditor) {
-      window.HallowNexusSpriteEditor.initSpriteEditorModal();
-      window.HallowNexusSpriteEditor.toggleSpriteEditorModal();
-    }
-  });
-}
-
-async function triggerAutoSavePass() {
-  const stateSnapshot = {
-    nodes: (window.HallowNexusCanvas && window.HallowNexusCanvas.activeGraphNodes) || [],
-    wires: (window.HallowNexusWires && window.HallowNexusWires.establishedWires) || [],
-    chatHistory: aiLogs.innerHTML
-  };
-  await ipcRenderer.invoke('save-project-state', stateSnapshot);
-}
 btnClean.addEventListener('click', async () => {
   if (!window.HallowNexusCanvas || !window.HallowNexusCanvas.getWiredExecutionOrder) {
     logToTerminal('Compiler Error', 'Canvas architecture module buffering.');
@@ -100,22 +8,23 @@ btnClean.addEventListener('click', async () => {
     logToTerminal('Compiler Warning', 'Canvas workspace empty. Drop some blocks first!');
     return;
   }
-  logToTerminal('Compiler', 'Tracing active wire lines and compiling cards in sequence.');
+  
+  const chosenLangKey = languageSelectorInput ? languageSelectorInput.value : 'python';
+  logToTerminal('Compiler', 'Initiating cross-compilation conversion routines targeting: ' + chosenLangKey.toUpperCase());
+  
   try {
     const HallowNexusCompiler = require('../compiler.js');
     const projectCompiler = new HallowNexusCompiler(__dirname);
-    projectCompiler.transpileGraph(nodesToCompile);
-    logToTerminal('Compiler', 'Successfully generated fresh, variable-substituted text source block code.');
+    
+    const generatedPathResult = projectCompiler.transpileGraph(nodesToCompile, chosenLangKey);
+    logToTerminal('Success', 'Transpilation complete! Source script exported cleanly to: ' + generatedPathResult);
     
     const compileResult = await projectCompiler.compileToBinary('HALLOW');
     if (compileResult.success && window.HallowNexusEmulator && document.body.classList.contains('squish-active')) {
       window.HallowNexusEmulator.loadBinaryPayload(compileResult.bytecodePayload);
-      logToTerminal('Success', 'Build complete! Generated code file written safely to disk at: "generated/build_output.asm"');
-    } else if (compileResult.success) {
-      logToTerminal('Success', 'Build complete! Generated ".asm" text file records logged successfully.');
     }
   } catch (err) {
-    logToTerminal('Compiler Error', 'Pipeline interrupted: ' + err);
+    logToTerminal('Compiler Error', 'Cross-compilation loop exception caught: ' + err.message);
   }
 });
 
@@ -186,144 +95,3 @@ if (ollamaInput) {
     }
   });
 }
-async function loadSavedProjectData() {
-  const result = await ipcRenderer.invoke('load-project-state');
-  if (result.success && result.data) {
-    if (result.data.chatHistory) {
-      aiLogs.innerHTML = result.data.chatHistory;
-    }
-    if (result.data.nodes && window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) {
-      result.data.nodes.forEach(savedNode => {
-        const matchingTemplate = libraryBlocksRegistry.find(b => b.blockName === savedNode.blockName);
-        if (matchingTemplate) {
-          window.HallowNexusCanvas.spawnNodeOnCanvas(matchingTemplate);
-        }
-      });
-    }
-    logToTerminal('System', 'Successfully synchronized local drive project cache data registers.');
-  }
-}
-
-async function bootloadExtensions() {
-  try {
-    const result = await ipcRenderer.invoke('load-extensions');
-    if (result.success && result.data.length > 0) {
-      logToTerminal('Ollama', 'Successfully loaded custom block extension packages.');
-      
-      const activeFoldersDOMMap = {};
-      const manualFolderSchema = {
-        'SPRITES': [
-          'SUMMON SPRITE OF KIND', 'SET POSITION', 'SET VELOCITY', 'DESTROY SPRITE WITH EFFECT', 
-          'MOVE SPRITE WITH CONTROLLERS', 'IF OVERLAPPING KIND', 'SET AUTO DESTROY ON WALL', 
-          'SET BOUNDARY HITBOX', 'RENDER SCREEN FRAME', 'SET ANIMATION DELAY', 'FLIP HORIZONTAL', 
-          'FLIP VERTICAL', 'SCALE DOUBLE SIZE', 'SET TRANSPARENT PALETTE ALPHA',
-          'CREATE PLAYER', 'CREATE ENEMY', 'MOVE WITH BUTTONS', 'SET SPEED VECTOR',
-          'IF TOUCHING KIND', 'DESTROY CHAR', 'CAMERA FOLLOW CHAR', 'ANIMATE FRAME RATE',
-          'FLIP IMAGES', 'RESIZE IMAGE DOUBLE'
-        ],
-        'CONTROLS': [
-          'POLL KEYBOARD MATRIX', 'ALLOCATE QUICK HOTBAR', 'IF SHORTCUT PRESSED', 
-          'IF BUTTON COMBINATION HELD', 'SET CLOCK INTERRUPT SPEED', 'PLAY SOUND TONE', 
-          'PLAY PROCEDURAL CRASH SOUND', 'SET TRACKER TEMPO', 'SUSPEND THREAD TIMED TICK', 
-          'INITIALIZE MULTI GAME LAUNCHER', 'WHEN BUTTON PRESSED', 'WHEN BOTH BUTTONS HELD',
-          'PLAY MUSIC NOTE', 'PLAY EXPLOSION SOUND', 'WAIT TIMER TICK', 'LOAD NEXT SEQUEL'
-        ],
-        'LOGIC': [
-          'ALLOCATE STORAGE BAG', 'TOGGLE INVENTORY ATTRIBUTE', 'COMPARE HARDWARE VALUE REGISTERS', 
-          'COMPUTE MATH OPERATION', 'CLAMP VALUE REGISTERS', 'BITWISE AND CHECK MASK', 
-          'SCAN WIRE LOOP DEADLOCKS', 'ENCRYPT STATE SECTOR', 'COMPUTE VISIBILITY COVER SCAN', 
-          'RESET PROJECT PROGRESS DATA', 'EVALUATE ACCUMULATOR GREATER THAN EQUAL',
-          'PIPELINE GENERATE EDGE TILES', 'SCAN LOGIC WIRE DEADLOCKS', 'ALLOCATE PROGRESSION VARIABLE',
-          'ENCRYPT STATE BINARY BLOCK', 'FORCE HARDWARE FLASH SAVE PASS', 'COMPACT DATA MEMORY HEAP SECTORS',
-          'RESET GLOBAL VARIABLE MATRIX', 'CREATE ITEMS INVENTORY', 'ADD ITEM TO INVENTORY',
-          'IF VARIABLE COMPARES', 'MATH CALCULATE VALUE', 'CLAMP INSIDE BOUNDS', 'RESET GAME STATE'
-        ],
-        'SCENE': [
-          'SET MAP MATRIX', 'APPLY LIGHTING MASK', 'GO TO STAGE MAP', 'TURN ON TORCH MASK'
-        ]
-      };
-
-      const targetCategories = ['SPRITES', 'CONTROLS', 'LOGIC', 'SCENE', 'CUSTOM'];
-
-      targetCategories.forEach(categoryName => {
-        const headingBox = document.createElement('div');
-        headingBox.style.color = '#cbd5e1';
-        headingBox.style.backgroundColor = '#1c1e27';
-        headingBox.style.padding = '10px';
-        headingBox.style.marginTop = '10px';
-        headingBox.style.borderRadius = '4px';
-        headingBox.style.cursor = 'pointer';
-        headingBox.style.fontSize = '12px';
-        headingBox.style.fontWeight = '600';
-        headingBox.style.border = '1px solid #2d3139';
-        headingBox.style.letterSpacing = '0.5px';
-        headingBox.innerText = categoryName;
-        toolboxPanel.appendChild(headingBox);
-
-        const drawerBody = document.createElement('div');
-        drawerBody.className = 'nexus-toolbox-drawer';
-        drawerBody.style.display = 'none'; 
-        drawerBody.style.flexDirection = 'column';
-        drawerBody.style.gap = '6px';
-        drawerBody.style.padding = '8px 5px 4px 5px';
-        toolboxPanel.appendChild(drawerBody);
-
-        headingBox.addEventListener('click', () => {
-          const allDrawersList = document.querySelectorAll('.nexus-toolbox-drawer');
-          const isTargetCurrentlyClosed = (drawerBody.style.display === 'none');
-          allDrawersList.forEach(d => d.style.display = 'none'); 
-          drawerBody.style.display = isTargetCurrentlyClosed ? 'flex' : 'none'; 
-        });
-
-        activeFoldersDOMMap[categoryName] = drawerBody;
-      });
-
-      result.data.forEach(ext => {
-        ext.newBlocks.forEach(block => {
-          libraryBlocksRegistry.push(block);
-
-          let matchedFolder = 'CUSTOM';
-          for (const folderName in manualFolderSchema) {
-            if (manualFolderSchema[folderName].includes(block.blockName)) {
-              matchedFolder = folderName;
-              break;
-            }
-          }
-
-          const drawerBody = activeFoldersDOMMap[matchedFolder];
-          if (!drawerBody) return;
-
-          const blockElement = document.createElement('div');
-          blockElement.style.backgroundColor = '#2d3139';
-          blockElement.style.padding = '8px';
-          blockElement.style.borderRadius = '4px';
-          blockElement.style.fontSize = '12px';
-          blockElement.style.cursor = 'pointer';
-          blockElement.style.borderLeft = '4px solid #4f46e5';
-          blockElement.style.userSelect = 'none';
-          blockElement.innerText = block.blockName;
-
-          blockElement.addEventListener('click', () => {
-            if (window.HallowNexusCanvas && window.HallowNexusCanvas.spawnNodeOnCanvas) {
-              window.HallowNexusCanvas.spawnNodeOnCanvas(block);
-              logToTerminal('Canvas', 'Spawned node: "' + block.blockName + '" onto workspace grid.');
-            }
-          });
-          drawerBody.appendChild(blockElement);
-        });
-      });
-    }
-  } catch (err) {
-    logToTerminal('Runtime Error', err.message);
-  }
-}
-
-bootloadExtensions();
-
-if (window.HallowNexusWires) {
-  window.HallowNexusWires.initWireCanvas();
-}
-
-window.addEventListener('mouseup', () => {
-  triggerAutoSavePass();
-});
